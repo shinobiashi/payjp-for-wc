@@ -1,0 +1,50 @@
+# Auto-detect text files and normalize line endings to LF
+* text=auto eol=lf
+
+# PHP
+*.php text eol=lf
+
+# JavaScript / TypeScript
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+
+# Styles
+*.css text eol=lf
+*.scss text eol=lf
+
+# Config
+*.json text eol=lf
+*.xml text eol=lf
+*.neon text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Docs
+*.md text eol=lf
+*.txt text eol=lf
+
+# Binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+
+# Export-ignore (excluded from release zip)
+/.claude export-ignore
+/.git export-ignore
+/.github export-ignore
+/.gitattributes export-ignore
+/.gitignore export-ignore
+/.nvmrc export-ignore
+/.wp-env.json export-ignore
+/composer.json export-ignore
+/node_modules export-ignore
+/phpcs.xml.dist export-ignore
+/phpstan.neon export-ignore
+/src export-ignore
+/webpack.config.js export-ignore

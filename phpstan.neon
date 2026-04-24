@@ -1,0 +1,26 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+
+    paths:
+        - .
+
+    excludePaths:
+        - vendor
+        - node_modules
+        - build
+
+    bootstrapFiles:
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
+
+    # Allow dynamic properties on WC order objects (HPOS compat)
+    checkMissingIterableValueType: false
+
+    # WordPress global functions / variables handled by the extension
+    dynamicConstantNames:
+        - ABSPATH
+        - PAYJP_VERSION
+        - PAYJP_PLUGIN_FILE

@@ -1,0 +1,48 @@
+# Dependencies
+/node_modules/
+/vendor/
+
+# Build output
+/build/
+
+# wp-env
+/.wp-env/
+
+# Composer
+/composer.lock
+
+# npm
+/package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+
+# Log files
+*.log
+/error.log
+
+# Environment secrets
+.env
+.env.local
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# PHPStan
+.phpstan.result.cache
+
+# Release artifacts
+/*.zip

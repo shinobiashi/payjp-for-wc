@@ -1,0 +1,30 @@
+{
+    "name": "payjp-for-woocommerce",
+    "version": "1.0.0",
+    "description": "PAY.JP v2 payment gateway for WooCommerce",
+    "private": true,
+    "license": "GPL-2.0-or-later",
+    "scripts": {
+        "build": "wp-scripts build",
+        "start": "wp-scripts start",
+        "lint:js": "wp-scripts lint-js",
+        "lint:css": "wp-scripts lint-style",
+        "format": "wp-scripts format",
+        "env:start": "wp-env start",
+        "env:stop": "wp-env stop",
+        "env:clean": "wp-env clean",
+        "env:destroy": "wp-env destroy",
+        "env:logs": "wp-env logs",
+        "env:run": "wp-env run"
+    },
+    "devDependencies": {
+        "@woocommerce/dependency-extraction-webpack-plugin": "^4.0.0",
+        "@wordpress/env": "^11.4.0",
+        "@wordpress/scripts": "^32.0.0"
+    },
+    "dependencies": {
+        "@wordpress/components": "*",
+        "@wordpress/element": "*",
+        "@wordpress/i18n": "*"
+    }
+}

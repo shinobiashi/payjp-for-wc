@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<ruleset name="PAY.JP for WooCommerce">
+    <description>WordPress Coding Standards for PAY.JP for WooCommerce plugin</description>
+
+    <file>.</file>
+
+    <exclude-pattern>/vendor/*</exclude-pattern>
+    <exclude-pattern>/node_modules/*</exclude-pattern>
+    <exclude-pattern>/build/*</exclude-pattern>
+    <exclude-pattern>*.min.js</exclude-pattern>
+    <exclude-pattern>*.min.css</exclude-pattern>
+
+    <arg name="basepath" value="."/>
+    <arg name="parallel" value="8"/>
+    <arg name="extensions" value="php"/>
+    <arg value="sp"/>
+
+    <rule ref="WordPress-Extra"/>
+    <rule ref="WordPress-Docs"/>
+
+    <!-- Target WP 6.4+ -->
+    <config name="minimum_supported_wp_version" value="6.4"/>
+
+    <!-- Target PHP 8.0+ -->
+    <config name="testVersion" value="8.0-"/>
+
+    <!-- Enforce plugin text domain -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array" value="payjp-for-woocommerce"/>
+        </properties>
+    </rule>
+
+    <!-- Disallow short open tags -->
+    <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+
+    <!-- Yoda conditions -->
+    <rule ref="WordPress.PHP.YodaConditions"/>
+
+    <!-- Nonce verification required -->
+    <rule ref="WordPress.Security.NonceVerification"/>
+</ruleset>

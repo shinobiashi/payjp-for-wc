@@ -42,7 +42,10 @@
     <!-- Nonce verification required -->
     <rule ref="WordPress.Security.NonceVerification"/>
 
-    <!-- PHP 8.0+ minimum: short array syntax [] is the WordPress-recommended style -->
+    <!-- PHP 8.0+ minimum: allow short array syntax [].
+         WordPress-Extra includes Universal.Arrays.DisallowShortArraySyntax which bans [].
+         Suppress it (severity 0) so [] is permitted. Universal.Arrays.DisallowLongArraySyntax
+         (which would enforce []) is not available in the installed PHPCSExtra version. -->
     <rule ref="Universal.Arrays.DisallowShortArraySyntax">
         <severity>0</severity>
     </rule>

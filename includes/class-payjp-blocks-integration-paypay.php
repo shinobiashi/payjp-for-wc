@@ -7,6 +7,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
+if ( ! class_exists( 'Payjp_Blocks_Integration' ) ) {
+	return;
+}
+
 if ( class_exists( 'Payjp_Blocks_Integration_Paypay' ) ) {
 	return;
 }

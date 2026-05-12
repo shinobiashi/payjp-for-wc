@@ -99,13 +99,32 @@ class Payjp_API {
 			throw new RuntimeException( $response->get_error_message() );
 		}
 
-		$body = json_decode( wp_remote_retrieve_body( $response ), true );
+		$raw  = wp_remote_retrieve_body( $response );
+		$body = json_decode( $raw, true );
 
+		// Non-JSON body (e.g. HTML error page from a gateway or proxy).
+		if ( JSON_ERROR_NONE !== json_last_error() ) {
+			$error = __( 'PAY.JP returned an unexpected non-JSON response.', 'payjp-for-wc' );
+			throw new RuntimeException( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+		}
+
+		// PAY.JP error object — present on 4xx and some 5xx responses.
 		if ( isset( $body['error'] ) ) {
-			$message = isset( $body['error']['message'] )
+			$error = isset( $body['error']['message'] )
 				? wp_strip_all_tags( (string) $body['error']['message'] )
 				: __( 'An unknown PAY.JP error occurred.', 'payjp-for-wc' );
-			throw new RuntimeException( $message ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+			throw new RuntimeException( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+		}
+
+		// Catch non-2xx responses that did not include a PAY.JP error body.
+		$http_code = (int) wp_remote_retrieve_response_code( $response );
+		if ( $http_code < 200 || $http_code >= 300 ) {
+			$error = sprintf(
+				/* translators: %d: HTTP status code */
+				__( 'PAY.JP API returned HTTP %d.', 'payjp-for-wc' ),
+				$http_code
+			);
+			throw new RuntimeException( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 		}
 
 		return is_array( $body ) ? $body : [];

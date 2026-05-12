@@ -13,7 +13,7 @@
 | テキストドメイン | `payjp-for-wc` |
 | メインファイル | `payjp-for-wc.php` |
 | 決済 API | PAY.JP v2 |
-| 対象環境 | WordPress 6.4+ / WooCommerce 8.0+ / PHP 8.0+ |
+| 対象環境 | WordPress 6.4+ / WooCommerce 8.0+ / PHP 8.3+ |
 | ライセンス | GPL-2.0-or-later |
 | 配布 | ① wordpress.org standalone ② Japanized for WooCommerce 同梱 |
 
@@ -127,6 +127,7 @@ npm run lint:css                                       # CSS lint
 
 - WordPress Coding Standards 準拠（`vendor/bin/phpcs` でゼロエラー必須）
 - PHPStan level 5 でエラーなし（`vendor/bin/phpstan analyse`）
+- PHP 8.3+ 必須（共変戻り値型など現代的な PHP 機能を積極的に使用）
 - 全 PHP ファイルの先頭: `defined( 'ABSPATH' ) || exit;`
 - 全 PHP ファイルに GPL-2.0-or-later ライセンスヘッダー
 - クラスは `class_exists()` でガード

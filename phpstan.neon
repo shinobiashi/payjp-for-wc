@@ -22,5 +22,8 @@ parameters:
     # WordPress global functions / variables handled by the extension
     dynamicConstantNames:
         - ABSPATH
-        - PAYJP_VERSION
-        - PAYJP_PLUGIN_FILE
+        - PAYJP_FOR_WC_VERSION
+        - PAYJP_FOR_WC_FILE
+        - PAYJP_FOR_WC_DIR
+        - PAYJP_FOR_WC_URL
+        - PAYJP_API_BASE

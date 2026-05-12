@@ -30,6 +30,13 @@
 両手段とも **PAY.JP v2 Payment Flow API** を使用する。
 外部リンク型（Checkout v2）は v2 以降の対応として保留。
 
+### カード追加機能（v1.0 対象）
+
+| 機能 | 概要 |
+|------|------|
+| カードトークン保存 | Setup Flow でカードを登録し、WC Token API で管理。次回購入時にカード入力不要。|
+| WooCommerce Subscriptions 対応 | 保存カード（`customer_id`）を使った自動定期課金。WooCommerce Subscriptions プラグインが必要。|
+
 ---
 
 ## 配布形態と同梱対応
@@ -79,6 +86,8 @@ includes/
   class-payjp-webhook-handler.php       ← Webhook 受信・検証・ルーティング
   class-payjp-blocks-integration.php    ← Block Checkout 統合（PHP 側）
   class-payjp-admin-settings-page.php   ← 統合設定画面
+  class-payjp-token-manager.php         ← WC Token API + Setup Flow 管理（カード保存・取得・削除）
+  class-payjp-subscriptions.php         ← WooCommerce Subscriptions 定期支払いハンドラ
 templates/
   return.php                             ← payments.js リダイレクト後の受け口
 readme.txt                               ← wordpress.org 用 readme
@@ -234,6 +243,8 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 | `_payjp_payment_method` | string | `card` または `paypay` |
 | `_payjp_capture_method` | string | `automatic` または `manual` |
 | `_payjp_refund_id` | string | 最新の返金 ID |
+| `_payjp_customer_id` | string | PAY.JP Customer ID (`cus_xxx`)。トークン保存・Subscriptions で使用。|
+| `_payjp_payment_method_id` | string | 保存カードの PaymentMethod ID (`pm_xxx`)。|
 
 ---
 
@@ -334,7 +345,59 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ---
 
-### Phase 8: 品質・テスト
+### Phase 8: カードトークン保存
+
+**目標:** ログイン済み顧客がカードを保存し、次回購入時にカード入力なしで決済できる。
+
+- [ ] `Payjp_Token_Manager` クラス実装
+  - PAY.JP Customer 作成 (`POST /v2/customers`)
+  - Setup Flow 作成 (`POST /v2/setup_flows`) → payments.js でカード登録（決済なし）
+  - PaymentMethod を Customer に紐付け (`POST /v2/payment_methods/{id}/attach`)
+  - `WC_Payment_Token_CC` を使った WooCommerce Token API 統合
+  - `_payjp_customer_id` / `_payjp_payment_method_id` をユーザーメタ + オーダーメタに保存
+- [ ] `WC_Gateway_Payjp_Card` の `supports` に `'tokenization'`・`'add_payment_method'` を追加
+- [ ] `payment_fields()` に保存済みカード選択 UI を追加（WC 標準の `saved_payment_methods()` 利用）
+- [ ] 「このカードを保存する」チェックボックスの表示・処理
+- [ ] 保存カード選択時: `customer_id` + `confirm: true` で Payment Flow を即時作成・確定
+- [ ] マイアカウント > 支払い方法 からのカード追加（Setup Flow）・削除
+- [ ] `uninstall.php` にトークンデータのクリーンアップを追加
+
+**完了条件:** ログイン済みユーザーがカードを保存し、次回購入時に選択して決済できる。マイアカウントでカード管理ができる。
+
+---
+
+### Phase 9: WooCommerce Subscriptions 対応
+
+**目標:** WooCommerce Subscriptions を使った定期購入商品の初回決済・自動更新課金・支払い方法変更が動作する。
+
+**前提:** Phase 8（カードトークン保存）が完了していること。WooCommerce Subscriptions プラグインがインストール済みであること。
+
+- [ ] `Payjp_Subscriptions` クラス実装
+  - `class_exists( 'WC_Subscriptions' )` で存在チェック → 未インストール時は機能を無効化
+  - `woocommerce_scheduled_subscription_payment_payjp_card` フックで定期支払い処理
+  - サブスクリプション親注文の `_payjp_customer_id` を取得 → `customer_id` + `confirm: true` で自動課金
+  - 失敗時に `WCS_Retry_Manager` と連携した再試行ロジック
+- [ ] `WC_Gateway_Payjp_Card` の `supports` に以下を追加:
+  ```php
+  'subscriptions',
+  'subscription_cancellation',
+  'subscription_suspension',
+  'subscription_reactivation',
+  'subscription_amount_changes',
+  'subscription_date_changes',
+  'subscription_payment_method_change',
+  'subscription_payment_method_change_customer',
+  'subscription_payment_method_change_admin',
+  'multiple_subscriptions',
+  ```
+- [ ] 支払い方法変更: 新カードを Setup Flow で登録 → サブスクリプションの `_payjp_customer_id` を更新
+- [ ] Webhook `payment_flow.succeeded` / `payment_flow.payment_failed` でサブスクリプションのステータスを更新
+
+**完了条件:** 定期購入商品の初回購入・自動更新課金・支払い方法変更が正常に動作する。
+
+---
+
+### Phase 10: 品質・テスト
 
 - [ ] PHPCS: `vendor/bin/phpcs` — 0 エラー・0 警告
 - [ ] PHPStan: level 5 でエラーなし
@@ -343,6 +406,8 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 - [ ] HPOS 有効時の動作確認
 - [ ] 同梱テスト: Japanized for WooCommerce に組み込んで二重読み込みがないことを確認
 - [ ] Block Checkout / Classic Checkout の両方で動作確認
+- [ ] カードトークン保存: 保存・再利用・削除の動作確認
+- [ ] WooCommerce Subscriptions: 定期購入の初回・自動更新・支払い方法変更の動作確認
 
 ---
 
@@ -512,7 +577,5 @@ npm run lint:css                                      # CSS lint
 
 - Checkout v2（外部リンク型）対応
 - Apple Pay 対応
-- カード保存（顧客への紐付け・再利用 / Setup Flow）
-- 定期課金（Subscription）対応
 - オーソリ管理画面（手動キャプチャ UI）
 - 多言語対応（`.pot` ファイル生成 → GlotPress）

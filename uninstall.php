@@ -17,13 +17,27 @@ $option_keys = [
 	'woocommerce_payjp_paypay_settings',
 ];
 
-foreach ( $option_keys as $key ) {
-	delete_option( $key );
-}
-
-// On multisite, also remove any network-level options stored via add_site_option().
 if ( is_multisite() ) {
+	// Remove per-site options from every subsite.
+	$sites = get_sites(
+		[
+			'fields' => 'ids',
+			'number' => 0,
+		]
+	);
+	foreach ( $sites as $site_id ) {
+		switch_to_blog( (int) $site_id );
+		foreach ( $option_keys as $key ) {
+			delete_option( $key );
+		}
+		restore_current_blog();
+	}
+	// Remove network-level options stored via add_site_option().
 	foreach ( $option_keys as $key ) {
 		delete_site_option( $key );
+	}
+} else {
+	foreach ( $option_keys as $key ) {
+		delete_option( $key );
 	}
 }

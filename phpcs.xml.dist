@@ -27,7 +27,9 @@
     <!-- Enforce plugin text domain -->
     <rule ref="WordPress.WP.I18n">
         <properties>
-            <property name="text_domain" type="array" value="payjp-for-woocommerce"/>
+            <property name="text_domain" type="array">
+                <element value="payjp-for-woocommerce"/>
+            </property>
         </properties>
     </rule>
 
@@ -39,4 +41,9 @@
 
     <!-- Nonce verification required -->
     <rule ref="WordPress.Security.NonceVerification"/>
+
+    <!-- PHP 8.0+ minimum: short array syntax [] is the WordPress-recommended style -->
+    <rule ref="Universal.Arrays.DisallowShortArraySyntax">
+        <severity>0</severity>
+    </rule>
 </ruleset>

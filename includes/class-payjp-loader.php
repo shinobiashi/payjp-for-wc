@@ -37,14 +37,11 @@ class Payjp_Loader {
 		require_once $dir . 'class-wc-gateway-payjp-card.php';
 		require_once $dir . 'class-wc-gateway-payjp-paypay.php';
 		require_once $dir . 'class-payjp-webhook-handler.php';
-		require_once $dir . 'class-payjp-blocks-integration.php';
-		// Subclasses extend Payjp_Blocks_Integration, which is defined only when
-		// WooCommerce Blocks (AbstractPaymentMethodType) is available. Skip them
-		// if the base class was not defined to prevent a fatal "extends undefined class".
-		if ( class_exists( 'Payjp_Blocks_Integration' ) ) {
-			require_once $dir . 'class-payjp-blocks-integration-card.php';
-			require_once $dir . 'class-payjp-blocks-integration-paypay.php';
-		}
+		// Blocks integration files are NOT loaded here. They are loaded by
+		// payjp_for_wc_register_block_payment_methods() on the woocommerce_blocks_loaded
+		// hook, which fires during WooCommerce's plugins_loaded (priority 10) — before
+		// this loader runs (priority 11). Loading them here as well would be redundant
+		// and unsafe when AbstractPaymentMethodType is unavailable.
 		require_once $dir . 'class-payjp-admin-settings-page.php';
 		require_once $dir . 'class-payjp-token-manager.php';
 		require_once $dir . 'class-payjp-subscriptions.php';

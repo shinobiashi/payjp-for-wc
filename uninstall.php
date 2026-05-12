@@ -11,6 +11,19 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-delete_option( 'payjp_settings' );
-delete_option( 'woocommerce_payjp_card_settings' );
-delete_option( 'woocommerce_payjp_paypay_settings' );
+$option_keys = [
+	'payjp_settings',
+	'woocommerce_payjp_card_settings',
+	'woocommerce_payjp_paypay_settings',
+];
+
+foreach ( $option_keys as $key ) {
+	delete_option( $key );
+}
+
+// On multisite, also remove any network-level options stored via add_site_option().
+if ( is_multisite() ) {
+	foreach ( $option_keys as $key ) {
+		delete_site_option( $key );
+	}
+}

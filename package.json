@@ -1,5 +1,5 @@
 {
-    "name": "payjp-for-woocommerce",
+    "name": "payjp-for-wc",
     "version": "1.0.0",
     "description": "PAY.JP v2 payment gateway for WooCommerce",
     "private": true,

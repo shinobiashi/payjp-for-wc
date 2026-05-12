@@ -9,9 +9,9 @@
 
 | 項目 | 値 |
 |------|-----|
-| プラグインスラッグ | `payjp-for-woocommerce` |
-| テキストドメイン | `payjp-for-woocommerce` |
-| メインファイル | `payjp-for-woocommerce.php` |
+| プラグインスラッグ | `payjp-for-wc` |
+| テキストドメイン | `payjp-for-wc` |
+| メインファイル | `payjp-for-wc.php` |
 | 決済 API | PAY.JP v2 |
 | 対象環境 | WordPress 6.4+ / WooCommerce 8.0+ / PHP 8.0+ |
 | ライセンス | GPL-2.0-or-later |
@@ -44,7 +44,7 @@
 ## ファイル構成
 
 ```
-payjp-for-woocommerce.php          ← ブートストラップ・定数定義
+payjp-for-wc.php          ← ブートストラップ・定数定義
 uninstall.php                      ← プラグイン削除時のデータ削除
 includes/
   class-payjp-loader.php           ← クラスロード・フック登録
@@ -71,7 +71,7 @@ build/                             ← コンパイル済み（git 管理外）
 
 ---
 
-## 定数（`payjp-for-woocommerce.php` で定義）
+## 定数（`payjp-for-wc.php` で定義）
 
 ```php
 defined( 'PAYJP_FOR_WC_VERSION' ) || define( 'PAYJP_FOR_WC_VERSION', '1.0.0' );
@@ -152,7 +152,7 @@ npm run lint:css                                       # CSS lint
 
 ### i18n
 
-- テキストドメイン: `payjp-for-woocommerce`（プラグインスラッグと一致させること）
+- テキストドメイン: `payjp-for-wc`（プラグインスラッグと一致させること）
 - `load_plugin_textdomain()` を `plugins_loaded` フックで呼び出す
 - 変数を文字列に直接結合しない → `sprintf()` / `printf()` を使用
 

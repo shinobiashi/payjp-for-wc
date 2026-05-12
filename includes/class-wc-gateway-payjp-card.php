@@ -24,8 +24,8 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$this->id                 = 'payjp_card';
 		$this->payjp_method       = 'card';
 		$this->has_fields         = true;
-		$this->method_title       = __( 'PAY.JP Credit Card', 'payjp-for-woocommerce' );
-		$this->method_description = __( 'Accept credit card payments via PAY.JP v2 Payment Widgets.', 'payjp-for-woocommerce' );
+		$this->method_title       = __( 'PAY.JP Credit Card', 'payjp-for-wc' );
+		$this->method_description = __( 'Accept credit card payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
 		$this->supports           = [ 'products', 'refunds' ];
 
 		$this->setup();
@@ -52,7 +52,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	 */
 	public function process_payment( $order_id ): array {
 		wc_add_notice(
-			__( 'PAY.JP card payment is not yet configured. Please complete the setup.', 'payjp-for-woocommerce' ),
+			__( 'PAY.JP card payment is not yet configured. Please complete the setup.', 'payjp-for-wc' ),
 			'error'
 		);
 		return [ 'result' => 'failure' ];

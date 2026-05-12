@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: PAY.JP for WooCommerce
- * Plugin URI:  https://wordpress.org/plugins/payjp-for-woocommerce/
+ * Plugin URI:  https://wordpress.org/plugins/payjp-for-wc/
  * Description: PAY.JP v2 payment gateway for WooCommerce. Supports credit card and PayPay payments via Payment Widgets.
  * Version:     1.0.0
  * Requires at least: 6.4
@@ -10,7 +10,7 @@
  * Author URI:  https://artws.info
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: payjp-for-woocommerce
+ * Text Domain: payjp-for-wc
  * Domain Path: /languages
  * WC requires at least: 8.0
  * WC tested up to: 9.9
@@ -100,7 +100,7 @@ function payjp_for_wc_missing_wc_notice(): void {
 		echo wp_kses_post(
 			sprintf(
 				/* translators: %s: WooCommerce plugin name */
-				__( 'PAY.JP for WooCommerce requires %s to be installed and active.', 'payjp-for-woocommerce' ),
+				__( 'PAY.JP for WooCommerce requires %s to be installed and active.', 'payjp-for-wc' ),
 				'<strong>WooCommerce</strong>'
 			)
 		);

@@ -24,8 +24,8 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		$this->id                 = 'payjp_paypay';
 		$this->payjp_method       = 'paypay';
 		$this->has_fields         = true;
-		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-woocommerce' );
-		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-woocommerce' );
+		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-wc' );
+		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
 		// PayPay does not support refunds via WooCommerce admin (manual handling required).
 		$this->supports = [ 'products' ];
 
@@ -53,7 +53,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	 */
 	public function process_payment( $order_id ): array {
 		wc_add_notice(
-			__( 'PAY.JP PayPay payment is not yet configured. Please complete the setup.', 'payjp-for-woocommerce' ),
+			__( 'PAY.JP PayPay payment is not yet configured. Please complete the setup.', 'payjp-for-wc' ),
 			'error'
 		);
 		return [ 'result' => 'failure' ];

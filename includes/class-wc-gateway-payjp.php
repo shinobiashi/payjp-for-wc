@@ -55,22 +55,22 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	public function init_form_fields(): void {
 		$this->form_fields = [
 			'enabled'     => [
-				'title'   => __( 'Enable/Disable', 'payjp-for-woocommerce' ),
+				'title'   => __( 'Enable/Disable', 'payjp-for-wc' ),
 				'type'    => 'checkbox',
-				'label'   => __( 'Enable this payment method', 'payjp-for-woocommerce' ),
+				'label'   => __( 'Enable this payment method', 'payjp-for-wc' ),
 				'default' => 'yes',
 			],
 			'title'       => [
-				'title'       => __( 'Title', 'payjp-for-woocommerce' ),
+				'title'       => __( 'Title', 'payjp-for-wc' ),
 				'type'        => 'text',
-				'description' => __( 'Payment method title shown to the customer at checkout.', 'payjp-for-woocommerce' ),
+				'description' => __( 'Payment method title shown to the customer at checkout.', 'payjp-for-wc' ),
 				'default'     => $this->method_title,
 				'desc_tip'    => true,
 			],
 			'description' => [
-				'title'       => __( 'Description', 'payjp-for-woocommerce' ),
+				'title'       => __( 'Description', 'payjp-for-wc' ),
 				'type'        => 'textarea',
-				'description' => __( 'Payment method description shown to the customer at checkout.', 'payjp-for-woocommerce' ),
+				'description' => __( 'Payment method description shown to the customer at checkout.', 'payjp-for-wc' ),
 				'default'     => '',
 				'desc_tip'    => true,
 			],

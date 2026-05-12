@@ -1,5 +1,5 @@
 {
-    "name": "artws/payjp-for-woocommerce",
+    "name": "artws/payjp-for-wc",
     "description": "PAY.JP v2 payment gateway for WooCommerce",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",

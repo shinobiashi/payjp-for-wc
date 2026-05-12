@@ -104,7 +104,7 @@ class Payjp_API {
 		if ( isset( $body['error'] ) ) {
 			$message = isset( $body['error']['message'] )
 				? wp_strip_all_tags( (string) $body['error']['message'] )
-				: __( 'An unknown PAY.JP error occurred.', 'payjp-for-woocommerce' );
+				: __( 'An unknown PAY.JP error occurred.', 'payjp-for-wc' );
 			throw new RuntimeException( $message ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 		}
 

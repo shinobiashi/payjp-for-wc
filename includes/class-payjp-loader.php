@@ -51,7 +51,7 @@ class Payjp_Loader {
 	 */
 	public static function load_textdomain(): void {
 		load_plugin_textdomain(
-			'payjp-for-woocommerce',
+			'payjp-for-wc',
 			false,
 			dirname( plugin_basename( PAYJP_FOR_WC_FILE ) ) . '/languages'
 		);

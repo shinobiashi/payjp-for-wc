@@ -548,8 +548,8 @@ npm run build            # JS 本番ビルド
 ### コード品質
 
 ```bash
-vendor/bin/phpcs --standard=phpcs.xml.dist .         # PHPCS チェック
-vendor/bin/phpcs --standard=phpcs.xml.dist . --fix   # 自動修正
+vendor/bin/phpcs --standard=phpcs.xml .         # PHPCS チェック
+vendor/bin/phpcs --standard=phpcs.xml . --fix   # 自動修正
 vendor/bin/phpstan analyse                            # PHPStan
 npm run lint:js                                       # JS lint
 npm run lint:css                                      # CSS lint

@@ -28,6 +28,13 @@ defined( 'PAYJP_FOR_WC_DIR' ) || define( 'PAYJP_FOR_WC_DIR', plugin_dir_path( __
 defined( 'PAYJP_FOR_WC_URL' ) || define( 'PAYJP_FOR_WC_URL', plugin_dir_url( __FILE__ ) );
 defined( 'PAYJP_API_BASE' ) || define( 'PAYJP_API_BASE', 'https://api.pay.jp/v2' );
 
+// Prevent fatal function-redeclare errors when this file is included twice
+// (e.g. bundled inside Japanized for WooCommerce while also active standalone).
+if ( defined( 'PAYJP_FOR_WC_LOADED' ) ) {
+	return;
+}
+define( 'PAYJP_FOR_WC_LOADED', true );
+
 /**
  * Declare HPOS and Block Checkout compatibility before WooCommerce initializes.
  * Must fire before WooCommerce reads compatibility declarations.

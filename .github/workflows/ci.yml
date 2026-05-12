@@ -25,11 +25,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+          key: composer-${{ hashFiles('composer.json') }}
           restore-keys: composer-
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
+        env:
+          COMPOSER_AUTH: '{}'
 
       - name: Run PHPCS
         run: vendor/bin/phpcs --standard=phpcs.xml .
@@ -51,11 +53,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
+          key: composer-${{ hashFiles('composer.json') }}
           restore-keys: composer-
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
+        env:
+          COMPOSER_AUTH: '{}'
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --memory-limit=1G

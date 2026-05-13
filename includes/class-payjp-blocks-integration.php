@@ -7,8 +7,10 @@
 
 defined( 'ABSPATH' ) || exit;
 
-// Guard: AbstractPaymentMethodType is provided by WooCommerce Blocks.
-// This file is safe to require_once even when Blocks is unavailable.
+// Guard: this file must only be loaded after WooCommerce Blocks has defined
+// AbstractPaymentMethodType (i.e. inside the woocommerce_blocks_loaded callback).
+// If require_once'd before Blocks loads and this guard fires, PHP will not
+// re-execute the file later, so Payjp_Blocks_Integration would never be declared.
 if ( ! class_exists( 'Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType' ) ) {
 	return;
 }

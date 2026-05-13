@@ -10,8 +10,8 @@
 | 項目 | 内容 |
 |------|------|
 | プラグイン名 | PAY.JP for WooCommerce |
-| スラッグ | `payjp-for-woocommerce` |
-| テキストドメイン | `payjp-for-woocommerce` |
+| スラッグ | `payjp-for-wc` |
+| テキストドメイン | `payjp-for-wc` |
 | バージョン | 1.0.0 |
 | 対象 WooCommerce | 8.0+ |
 | 対象 WordPress | 6.4+ |
@@ -55,7 +55,7 @@
 ```php
 // Japanized for WooCommerce 側のローダー例
 if ( ! defined( 'PAYJP_FOR_WC_VERSION' ) ) {
-    require_once __DIR__ . '/gateways/payjp/payjp-for-woocommerce.php';
+    require_once __DIR__ . '/gateways/payjp/payjp-for-wc.php';
 }
 ```
 
@@ -74,7 +74,7 @@ if ( ! defined( 'PAYJP_FOR_WC_VERSION' ) ) {
 ### バックエンド
 
 ```
-payjp-for-woocommerce.php                ← ブートストラップ・定数定義
+payjp-for-wc.php                ← ブートストラップ・定数定義
 uninstall.php                            ← アンインストール時のデータ削除
 includes/
   class-payjp-loader.php                 ← クラスオートロード・フック登録
@@ -185,7 +185,7 @@ WooCommerce > 設定 > 決済 > PAY.JP 設定
 
 ## ファイル詳細設計
 
-### 定数（`payjp-for-woocommerce.php`）
+### 定数（`payjp-for-wc.php`）
 
 ```php
 defined( 'PAYJP_FOR_WC_VERSION' ) || define( 'PAYJP_FOR_WC_VERSION', '1.0.0' );
@@ -254,7 +254,7 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** プラグインとして認識され、管理画面の「決済」タブに表示される状態にする。
 
-- [ ] `payjp-for-woocommerce.php` — ヘッダー・定数・`class_exists` ガード・HPOS 宣言
+- [ ] `payjp-for-wc.php` — ヘッダー・定数・`class_exists` ガード・HPOS 宣言
 - [ ] `uninstall.php` — 削除時の設定クリア
 - [ ] `class-payjp-loader.php` — クラスロード・フック登録
 - [ ] `class-payjp-settings.php` — 共有設定管理
@@ -421,7 +421,7 @@ Contributors: shohei.tanaka
 Tags: woocommerce, payment, payjp, paypay, credit-card
 Requires at least: 6.4
 Tested up to: 6.X
-Requires PHP: 8.0
+Requires PHP: 8.3
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -485,10 +485,10 @@ readme.txt への開示を必ず行うこと。
 #### i18n（国際化）
 
 - [ ] すべてのユーザー向け文字列を翻訳関数でラップ
-  - `__( 'text', 'payjp-for-woocommerce' )`
-  - `esc_html__( 'text', 'payjp-for-woocommerce' )`
-  - `_e( 'text', 'payjp-for-woocommerce' )` など
-- [ ] テキストドメインは `payjp-for-woocommerce`（プラグインスラッグと一致）
+  - `__( 'text', 'payjp-for-wc' )`
+  - `esc_html__( 'text', 'payjp-for-wc' )`
+  - `_e( 'text', 'payjp-for-wc' )` など
+- [ ] テキストドメインは `payjp-for-wc`（プラグインスラッグと一致）
 - [ ] `load_plugin_textdomain()` を `plugins_loaded` フックで呼び出す
 - [ ] 変数を文字列に直接結合しない（`printf()` / `sprintf()` を使用）
 
@@ -548,8 +548,8 @@ npm run build            # JS 本番ビルド
 ### コード品質
 
 ```bash
-vendor/bin/phpcs --standard=phpcs.xml.dist .         # PHPCS チェック
-vendor/bin/phpcs --standard=phpcs.xml.dist . --fix   # 自動修正
+vendor/bin/phpcs --standard=phpcs.xml .         # PHPCS チェック
+vendor/bin/phpcs --standard=phpcs.xml . --fix   # 自動修正
 vendor/bin/phpstan analyse                            # PHPStan
 npm run lint:js                                       # JS lint
 npm run lint:css                                      # CSS lint

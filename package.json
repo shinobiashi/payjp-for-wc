@@ -1,5 +1,5 @@
 {
-    "name": "payjp-for-woocommerce",
+    "name": "payjp-for-wc",
     "version": "1.0.0",
     "description": "PAY.JP v2 payment gateway for WooCommerce",
     "private": true,
@@ -8,7 +8,7 @@
         "build": "wp-scripts build",
         "start": "wp-scripts start",
         "lint:js": "wp-scripts lint-js",
-        "lint:css": "wp-scripts lint-style",
+        "lint:css": "wp-scripts lint-style --allow-empty-input",
         "format": "wp-scripts format",
         "env:start": "wp-env start",
         "env:stop": "wp-env stop",

@@ -8,11 +8,7 @@
 # wp-env
 /.wp-env/
 
-# Composer
-/composer.lock
 
-# npm
-/package-lock.json
 
 # OS
 .DS_Store

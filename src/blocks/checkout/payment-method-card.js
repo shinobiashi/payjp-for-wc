@@ -6,12 +6,14 @@ import { getSetting } from '@woocommerce/settings';
 
 const settings = getSetting( 'payjp_card_data', {} );
 
-const label = settings.title || __( 'Credit Card (PAY.JP)', 'payjp-for-woocommerce' );
+const label = settings.title || __( 'Credit Card (PAY.JP)', 'payjp-for-wc' );
 
 /**
  * Label component shown in the payment method list.
  *
- * @param {Object} props
+ * @param {Object}   props
+ * @param {Object}   props.components
+ * @param {Function} props.components.PaymentMethodLabel
  */
 const Label = ( { components: { PaymentMethodLabel } } ) => (
 	<PaymentMethodLabel text={ label } />
@@ -20,10 +22,8 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
 /**
  * Content shown when card is selected.
  * payments.js widget will be mounted here via useEffect in the full implementation.
- *
- * @param {Object} props
  */
-const Content = ( props ) => {
+const Content = () => {
 	return (
 		<div id="payjp-card-block-form">
 			<div id="payjp-card-element" />

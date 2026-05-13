@@ -6,12 +6,14 @@ import { getSetting } from '@woocommerce/settings';
 
 const settings = getSetting( 'payjp_paypay_data', {} );
 
-const label = settings.title || __( 'PayPay (PAY.JP)', 'payjp-for-woocommerce' );
+const label = settings.title || __( 'PayPay (PAY.JP)', 'payjp-for-wc' );
 
 /**
  * Label component shown in the payment method list.
  *
- * @param {Object} props
+ * @param {Object}   props
+ * @param {Object}   props.components
+ * @param {Function} props.components.PaymentMethodLabel
  */
 const Label = ( { components: { PaymentMethodLabel } } ) => (
 	<PaymentMethodLabel text={ label } />
@@ -19,8 +21,6 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
 
 /**
  * Content shown when PayPay is selected.
- *
- * @param {Object} props
  */
 const Content = () => {
 	return (
@@ -28,7 +28,7 @@ const Content = () => {
 			<p>
 				{ __(
 					'You will be redirected to PayPay to complete your payment.',
-					'payjp-for-woocommerce'
+					'payjp-for-wc'
 				) }
 			</p>
 		</div>

@@ -17,12 +17,14 @@ if ( class_exists( 'Payjp_Blocks_Integration_Card' ) ) {
 
 /**
  * Registers the PAY.JP card payment method with the WooCommerce Blocks registry.
- * The name must match the gateway ID ('payjp_card') and the getSetting() key in JS.
+ * The name must match the gateway ID ('payjp_card'); the JS getSetting() key is
+ * the derived "{$name}_data" value ('payjp_card_data').
  */
 class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 
 	/**
-	 * Payment method name — matches the gateway ID and JS getSetting() key.
+	 * Payment method name — matches the gateway ID; the JS getSetting() key is
+	 * "{$name}_data" ('payjp_card_data'), not the raw name itself.
 	 *
 	 * @var string
 	 */

@@ -8,8 +8,6 @@
 # wp-env
 /.wp-env/
 
-# Composer
-/composer.lock
 
 
 # OS

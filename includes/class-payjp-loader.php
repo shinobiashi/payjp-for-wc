@@ -37,14 +37,18 @@ class Payjp_Loader {
 		require_once $dir . 'class-wc-gateway-payjp-card.php';
 		require_once $dir . 'class-wc-gateway-payjp-paypay.php';
 		require_once $dir . 'class-payjp-webhook-handler.php';
+		require_once $dir . 'class-payjp-token-manager.php';
+		require_once $dir . 'class-payjp-subscriptions.php';
 		// Blocks integration files are NOT loaded here. They are loaded by
 		// payjp_for_wc_register_block_payment_methods() on the woocommerce_blocks_loaded
 		// hook, which fires during WooCommerce's plugins_loaded (priority 10) — before
 		// this loader runs (priority 11). Loading them here as well would be redundant
 		// and unsafe when AbstractPaymentMethodType is unavailable.
-		require_once $dir . 'class-payjp-admin-settings-page.php';
-		require_once $dir . 'class-payjp-token-manager.php';
-		require_once $dir . 'class-payjp-subscriptions.php';
+
+		// Admin-only classes depend on WC_Settings_Page (WC admin class).
+		if ( is_admin() ) {
+			require_once $dir . 'class-payjp-admin-settings-page.php';
+		}
 	}
 
 	/**
@@ -65,7 +69,10 @@ class Payjp_Loader {
 	private static function register_hooks(): void {
 		add_filter( 'woocommerce_payment_gateways', [ self::class, 'register_gateways' ] );
 
-		Payjp_Admin_Settings_Page::init();
+		if ( is_admin() ) {
+			Payjp_Admin_Settings_Page::init();
+		}
+
 		Payjp_Webhook_Handler::init();
 	}
 

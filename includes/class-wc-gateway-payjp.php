@@ -58,7 +58,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 				'title'   => __( 'Enable/Disable', 'payjp-for-wc' ),
 				'type'    => 'checkbox',
 				'label'   => __( 'Enable this payment method', 'payjp-for-wc' ),
-				'default' => 'yes',
+				'default' => 'no',
 			],
 			'title'       => [
 				'title'       => __( 'Title', 'payjp-for-wc' ),

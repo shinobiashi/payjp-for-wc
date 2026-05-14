@@ -237,8 +237,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce checked by WooCommerce before woocommerce_settings_save_payjp fires.
-		$enabled_methods_raw = isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [];
-		$settings            = [
+		$settings = [
 			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ),
 			'test_public_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_public_key'] ?? '' ) ) ),
 			'test_secret_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_secret_key'] ?? '' ) ) ),
@@ -247,7 +246,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'webhook_secret'  => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_webhook_secret'] ?? '' ) ) ),
 			'enabled_methods' => array_values(
 				array_intersect(
-					array_map( 'sanitize_key', $enabled_methods_raw ),
+					array_map( 'sanitize_key', isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [] ),
 					[ 'card', 'paypay' ]
 				)
 			),

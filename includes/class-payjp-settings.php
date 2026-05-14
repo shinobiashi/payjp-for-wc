@@ -87,8 +87,8 @@ class Payjp_Settings {
 	 * @return string[] e.g. ['card', 'paypay']
 	 */
 	public static function get_enabled_methods(): array {
-		$methods = self::get( 'enabled_methods', [ 'card', 'paypay' ] );
-		return is_array( $methods ) ? $methods : [ 'card', 'paypay' ];
+		$methods = self::get( 'enabled_methods', [] );
+		return is_array( $methods ) ? $methods : [];
 	}
 
 	/**

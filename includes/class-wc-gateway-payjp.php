@@ -61,7 +61,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 		$settings   = Payjp_Settings::get_all();
 		$methods    = isset( $settings['enabled_methods'] ) && is_array( $settings['enabled_methods'] )
 			? $settings['enabled_methods']
-			: [ 'card', 'paypay' ];
+			: [];
 
 		if ( $is_enabled ) {
 			if ( ! in_array( $this->payjp_method, $methods, true ) ) {

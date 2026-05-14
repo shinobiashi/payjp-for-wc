@@ -28,15 +28,9 @@ if ( class_exists( 'Payjp_Admin_Settings_Page' ) ) {
 class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 	/**
-	 * Register the woocommerce_get_settings_pages filter.
-	 * Called by Payjp_Loader on plugins_loaded (admin-only).
-	 */
-	public static function init(): void {
-		add_filter( 'woocommerce_get_settings_pages', [ self::class, 'register_page' ] );
-	}
-
-	/**
 	 * Append this page instance to WooCommerce's settings pages list.
+	 * Called from Payjp_Loader inside the woocommerce_get_settings_pages filter,
+	 * where WC_Settings_Page is guaranteed to be defined.
 	 *
 	 * @param array<int, WC_Settings_Page> $pages Registered settings pages.
 	 * @return array<int, WC_Settings_Page>
@@ -238,12 +232,12 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce checked by WooCommerce before woocommerce_settings_save_payjp fires.
 		$settings = [
-			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ),
-			'test_public_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_public_key'] ?? '' ) ) ),
-			'test_secret_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_secret_key'] ?? '' ) ) ),
-			'live_public_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_live_public_key'] ?? '' ) ) ),
-			'live_secret_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_live_secret_key'] ?? '' ) ) ),
-			'webhook_secret'  => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_webhook_secret'] ?? '' ) ) ),
+			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ) && is_scalar( $_POST['payjp_test_mode'] ),
+			'test_public_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_test_public_key'] ?? '' ) ? $_POST['payjp_test_public_key'] : '' ) ),
+			'test_secret_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_test_secret_key'] ?? '' ) ? $_POST['payjp_test_secret_key'] : '' ) ),
+			'live_public_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_live_public_key'] ?? '' ) ? $_POST['payjp_live_public_key'] : '' ) ),
+			'live_secret_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_live_secret_key'] ?? '' ) ? $_POST['payjp_live_secret_key'] : '' ) ),
+			'webhook_secret'  => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_webhook_secret'] ?? '' ) ? $_POST['payjp_webhook_secret'] : '' ) ),
 			'enabled_methods' => array_values(
 				array_intersect(
 					array_map( 'sanitize_key', isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [] ),

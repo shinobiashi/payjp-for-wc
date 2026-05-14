@@ -226,6 +226,10 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	/**
 	 * Persist settings from POST to the payjp_settings option.
 	 * WooCommerce verifies the 'woocommerce-settings' nonce before this fires.
+	 *
+	 * Also syncs each gateway's individual WC 'enabled' option so that
+	 * WC_Payment_Gateway::is_available() (called by parent) correctly reflects
+	 * the chosen enabled_methods without requiring a separate gateway toggle.
 	 */
 	public function save(): void {
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
@@ -233,25 +237,37 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce checked by WooCommerce before woocommerce_settings_save_payjp fires.
-		$post_data = wp_unslash( $_POST );
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
-
-		$settings = [
-			'test_mode'       => ! empty( $post_data['payjp_test_mode'] ),
-			'test_public_key' => sanitize_text_field( (string) ( $post_data['payjp_test_public_key'] ?? '' ) ),
-			'test_secret_key' => sanitize_text_field( (string) ( $post_data['payjp_test_secret_key'] ?? '' ) ),
-			'live_public_key' => sanitize_text_field( (string) ( $post_data['payjp_live_public_key'] ?? '' ) ),
-			'live_secret_key' => sanitize_text_field( (string) ( $post_data['payjp_live_secret_key'] ?? '' ) ),
-			'webhook_secret'  => sanitize_text_field( (string) ( $post_data['payjp_webhook_secret'] ?? '' ) ),
+		$enabled_methods_raw = isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [];
+		$settings            = [
+			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ),
+			'test_public_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_public_key'] ?? '' ) ) ),
+			'test_secret_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_test_secret_key'] ?? '' ) ) ),
+			'live_public_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_live_public_key'] ?? '' ) ) ),
+			'live_secret_key' => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_live_secret_key'] ?? '' ) ) ),
+			'webhook_secret'  => sanitize_text_field( wp_unslash( (string) ( $_POST['payjp_webhook_secret'] ?? '' ) ) ),
 			'enabled_methods' => array_values(
 				array_intersect(
-					array_map( 'sanitize_key', (array) ( $post_data['payjp_enabled_methods'] ?? [] ) ),
+					array_map( 'sanitize_key', $enabled_methods_raw ),
 					[ 'card', 'paypay' ]
 				)
 			),
 		];
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		update_option( Payjp_Settings::OPTION_KEY, $settings );
+
+		// Sync each gateway's own WC 'enabled' flag so WC_Payment_Gateway::is_available()
+		// returns true when the method is enabled from this unified settings page.
+		$gateway_option_keys = [
+			'card'   => 'woocommerce_payjp_card_settings',
+			'paypay' => 'woocommerce_payjp_paypay_settings',
+		];
+		foreach ( $gateway_option_keys as $method => $option_key ) {
+			$gateway_settings            = (array) get_option( $option_key, [] );
+			$gateway_settings['enabled'] = in_array( $method, $settings['enabled_methods'], true ) ? 'yes' : 'no';
+			update_option( $option_key, $gateway_settings );
+		}
+
 		WC_Admin_Settings::add_message( __( 'PAY.JP の設定を保存しました。', 'payjp-for-wc' ) );
 	}
 }

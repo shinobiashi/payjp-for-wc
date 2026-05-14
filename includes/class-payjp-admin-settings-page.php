@@ -240,7 +240,13 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'webhook_secret'  => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_webhook_secret'] ?? '' ) ? $_POST['payjp_webhook_secret'] : '' ) ),
 			'enabled_methods' => array_values(
 				array_intersect(
-					array_map( 'sanitize_key', isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [] ),
+					array_map(
+						'sanitize_key',
+						array_filter(
+							isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [],
+							'is_string'
+						)
+					),
 					[ 'card', 'paypay' ]
 				)
 			),

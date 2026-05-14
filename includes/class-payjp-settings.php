@@ -87,8 +87,27 @@ class Payjp_Settings {
 	 * @return string[] e.g. ['card', 'paypay']
 	 */
 	public static function get_enabled_methods(): array {
-		$methods = self::get( 'enabled_methods', [] );
-		return is_array( $methods ) ? $methods : [];
+		$settings = self::get_all();
+
+		if ( array_key_exists( 'enabled_methods', $settings ) ) {
+			return is_array( $settings['enabled_methods'] ) ? $settings['enabled_methods'] : [];
+		}
+
+		// When enabled_methods has never been saved (fresh install or upgrade before
+		// the first unified-settings save), derive from the individual gateway options
+		// so previously enabled gateways remain available at checkout.
+		$derived         = [];
+		$gateway_methods = [
+			'woocommerce_payjp_card_settings'   => 'card',
+			'woocommerce_payjp_paypay_settings' => 'paypay',
+		];
+		foreach ( $gateway_methods as $option_key => $method ) {
+			$gateway_settings = get_option( $option_key, [] );
+			if ( is_array( $gateway_settings ) && 'yes' === ( $gateway_settings['enabled'] ?? 'no' ) ) {
+				$derived[] = $method;
+			}
+		}
+		return $derived;
 	}
 
 	/**

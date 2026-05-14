@@ -59,9 +59,10 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	private function sync_enabled_to_shared_settings(): void {
 		$is_enabled = 'yes' === $this->get_option( 'enabled' );
 		$settings   = Payjp_Settings::get_all();
-		$methods    = isset( $settings['enabled_methods'] ) && is_array( $settings['enabled_methods'] )
-			? $settings['enabled_methods']
-			: [];
+		// Seed from get_enabled_methods() so the full, correctly-derived list is
+		// used (handles upgrade from pre-Phase-2, fresh install, and saved state)
+		// rather than silently discarding other gateways when the key is absent.
+		$methods = Payjp_Settings::get_enabled_methods();
 
 		if ( $is_enabled ) {
 			if ( ! in_array( $this->payjp_method, $methods, true ) ) {

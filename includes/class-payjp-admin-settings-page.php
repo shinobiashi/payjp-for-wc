@@ -57,7 +57,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	 * Values are injected in output() via pre_option_* filters, not read
 	 * individually from wp_options, because all settings share one option key.
 	 *
-	 * @param string $current_section Current section slug (single section; unused).
+	 * @param string $current_section Current section slug (single section; unused here but passed to the filter for extension compatibility).
 	 * @return array<int, array<string, mixed>>
 	 */
 	public function get_settings( $current_section = '' ): array {
@@ -84,7 +84,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'default'     => '',
 					'placeholder' => 'pk_test_',
 					'desc_tip'    => true,
-					'description' => __( 'PAY.JP ダッシュボード（テスト環境）から取得した公開鍵（pk_test_xxx）', 'payjp-for-wc' ),
+					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した公開鍵（pk_test_xxx）', 'payjp-for-wc' ),
 				],
 				[
 					'title'       => __( 'テスト秘密鍵', 'payjp-for-wc' ),
@@ -93,7 +93,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'default'     => '',
 					'placeholder' => 'sk_test_',
 					'desc_tip'    => true,
-					'description' => __( 'PAY.JP ダッシュボード（テスト環境）から取得した秘密鍵（sk_test_xxx）', 'payjp-for-wc' ),
+					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した秘密鍵（sk_test_xxx）', 'payjp-for-wc' ),
 				],
 				[
 					'title'       => __( '本番公開鍵', 'payjp-for-wc' ),
@@ -102,7 +102,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'default'     => '',
 					'placeholder' => 'pk_live_',
 					'desc_tip'    => true,
-					'description' => __( 'PAY.JP ダッシュボード（本番環境）から取得した公開鍵（pk_live_xxx）', 'payjp-for-wc' ),
+					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した公開鍵（pk_live_xxx）', 'payjp-for-wc' ),
 				],
 				[
 					'title'       => __( '本番秘密鍵', 'payjp-for-wc' ),
@@ -111,15 +111,15 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'default'     => '',
 					'placeholder' => 'sk_live_',
 					'desc_tip'    => true,
-					'description' => __( 'PAY.JP ダッシュボード（本番環境）から取得した秘密鍵（sk_live_xxx）', 'payjp-for-wc' ),
+					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した秘密鍵（sk_live_xxx）', 'payjp-for-wc' ),
 				],
 				[
-					'title'       => __( 'Webhook シークレット', 'payjp-for-wc' ),
-					'type'        => 'password',
-					'id'          => 'payjp_webhook_secret',
-					'default'     => '',
-					'desc_tip'    => true,
-					'description' => __( 'PAY.JP の Webhook 認証トークン（X-Payjp-Webhook-Token ヘッダーの値）', 'payjp-for-wc' ),
+					'title'    => __( 'Webhook シークレット', 'payjp-for-wc' ),
+					'type'     => 'password',
+					'id'       => 'payjp_webhook_secret',
+					'default'  => '',
+					'desc_tip' => true,
+					'desc'     => __( 'PAY.JP の Webhook 認証トークン（X-Payjp-Webhook-Token ヘッダーの値）', 'payjp-for-wc' ),
 				],
 				[
 					'type' => 'sectionend',
@@ -139,7 +139,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'type' => 'sectionend',
 					'id'   => 'payjp_methods_settings',
 				],
-			]
+			],
+			$current_section
 		);
 	}
 

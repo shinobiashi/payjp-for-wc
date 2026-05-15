@@ -75,7 +75,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		// Localise widget data only when a Payment Flow already exists on the order.
 		$order_id = absint( get_query_var( 'order-pay' ) );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- order key validated against DB below.
-		$order_key = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
+		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
 		$order     = wc_get_order( $order_id );
 
 		if ( ! $order || $order->get_order_key() !== $order_key ) {
@@ -127,7 +127,11 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	 * @return array{result: string, redirect?: string}
 	 */
 	public function process_payment( $order_id ): array {
-		$order  = wc_get_order( $order_id );
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			wc_add_notice( esc_html__( 'Unable to load the order for payment.', 'payjp-for-wc' ), 'error' );
+			return [ 'result' => 'failure' ];
+		}
 		$amount = (int) round( $order->get_total() );
 
 		try {
@@ -196,12 +200,16 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
 		$order_id  = absint( $_GET['order_id'] ?? 0 );
-		$order_key = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
+		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$order = $order_id ? wc_get_order( $order_id ) : false;
 
-		if ( ! $order || $order->get_order_key() !== $order_key ) {
+		if (
+			! $order ||
+			$order->get_order_key() !== $order_key ||
+			$this->id !== $order->get_payment_method()
+		) {
 			wp_safe_redirect( wc_get_checkout_url() );
 			exit;
 		}

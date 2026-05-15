@@ -1,21 +1,31 @@
 #!/usr/bin/env bash
 # scripts/copilot-review.sh
 #
-# Requests a GitHub Copilot review (if not yet posted) and fetches inline
-# comments for the current branch's PR, formatted for Claude Code analysis.
+# Manages GitHub Copilot code reviews for the current branch's PR.
 #
-# Usage (in Claude Code prompt — the ! prefix streams output into the chat):
-#   ! bash scripts/copilot-review.sh          # auto-detect PR from current branch
-#   ! bash scripts/copilot-review.sh 4        # specify PR number explicitly
+# MODES
+#   (no flag)          Fetch inline comments → paste into Claude Code for analysis
+#   --resolve REPLIES  Post fix replies and resolve all open Copilot threads,
+#                      then show the GitHub "Re-request review" link
 #
-# Workflow:
-#   1. gh pr create  (create the PR)
-#   2. In Claude Code: ! bash scripts/copilot-review.sh
-#      → automatically requests Copilot review if not yet requested
-#      → waits up to 90 s for the review to appear
-#      → prints inline comments
-#   3. Claude Code reads comments and proposes fixes
-#   4. Approve or reject each fix manually
+# USAGE (in Claude Code — the ! prefix streams output into the conversation)
+#
+#   Step 1 – After creating the PR, fetch Copilot comments:
+#     ! bash scripts/copilot-review.sh [PR_NUMBER]
+#     → requests Copilot review if not yet posted (waits up to 90 s)
+#     → prints inline comments for Claude Code to analyze
+#
+#   Step 2 – After Claude Code fixes the issues, resolve the threads:
+#     ! bash scripts/copilot-review.sh [PR_NUMBER] --resolve \
+#         "Comment 1 fix description" \
+#         "Comment 2 fix description" \
+#         ...
+#     → posts a reply to each open Copilot thread (one reply per argument)
+#     → resolves all open Copilot threads via GitHub GraphQL API
+#     → prints a direct link to click "Re-request review" in GitHub
+#
+#   Step 3 – Click the "Re-request review" link printed by --resolve,
+#            then run with no flag again to check for new comments.
 
 set -euo pipefail
 
@@ -25,10 +35,31 @@ REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 BOT_LOGIN="copilot-pull-request-reviewer[bot]"
 BOT_INLINE="Copilot"
 
-# ── Resolve PR number ────────────────────────────────────────────────────────
-if [ "${1:-}" != "" ]; then
-  PR="$1"
-else
+# ── Parse arguments ───────────────────────────────────────────────────────────
+PR=""
+MODE="fetch"
+REPLIES=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --resolve)
+      MODE="resolve"
+      shift
+      while [ $# -gt 0 ]; do
+        REPLIES+=("$1")
+        shift
+      done
+      ;;
+    *)
+      if [ -z "$PR" ]; then
+        PR="$1"
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$PR" ]; then
   BRANCH=$(git rev-parse --abbrev-ref HEAD)
   PR=$(gh pr list --head "$BRANCH" --json number -q '.[0].number' 2>/dev/null || true)
   if [ -z "$PR" ]; then
@@ -40,9 +71,104 @@ else
 fi
 
 PR_URL="https://github.com/$REPO/pull/$PR"
-echo "🤖  Copilot review comments — PR #$PR"
+echo "🤖  Copilot review — PR #$PR"
 echo "    $PR_URL"
 echo ""
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MODE: resolve — post replies + resolve threads + show re-request link
+# ══════════════════════════════════════════════════════════════════════════════
+if [ "$MODE" = "resolve" ]; then
+  # Fetch open Copilot threads (unresolved, root-level comments only)
+  THREADS_JSON=$(gh api graphql -f query="
+  {
+    repository(owner: \"$(echo "$REPO" | cut -d/ -f1)\", name: \"$(echo "$REPO" | cut -d/ -f2)\") {
+      pullRequest(number: $PR) {
+        reviewThreads(first: 50) {
+          nodes {
+            id
+            isResolved
+            comments(first: 1) {
+              nodes {
+                databaseId
+                author { login }
+                body
+              }
+            }
+          }
+        }
+      }
+    }
+  }" 2>/dev/null)
+
+  # Extract open Copilot thread IDs and root comment databaseIds
+  OPEN_THREAD_DATA=$(echo "$THREADS_JSON" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+threads = d['data']['repository']['pullRequest']['reviewThreads']['nodes']
+result = []
+for t in threads:
+    if t['isResolved']:
+        continue
+    c = t['comments']['nodes'][0] if t['comments']['nodes'] else {}
+    author = c.get('author', {}).get('login', '')
+    if author in ('Copilot', 'copilot-pull-request-reviewer'):
+        result.append({'thread_id': t['id'], 'comment_db_id': c.get('databaseId', 0)})
+for r in result:
+    print(r['thread_id'], r['comment_db_id'])
+")
+
+  THREAD_COUNT=$(echo "$OPEN_THREAD_DATA" | grep -c . || true)
+  echo "── Open Copilot threads: $THREAD_COUNT ──────────────────────────────────"
+
+  if [ "$THREAD_COUNT" -eq 0 ]; then
+    echo "✅  No open Copilot threads to resolve."
+  else
+    REPLY_IDX=0
+    while IFS=' ' read -r THREAD_ID COMMENT_DB_ID; do
+      [ -z "$THREAD_ID" ] && continue
+
+      # Post reply if a message was supplied for this index
+      if [ "$REPLY_IDX" -lt "${#REPLIES[@]}" ]; then
+        REPLY_TEXT="${REPLIES[$REPLY_IDX]}"
+        gh api "repos/$REPO/pulls/$PR/comments" \
+          --method POST \
+          --field "body=$REPLY_TEXT" \
+          --field "in_reply_to=$COMMENT_DB_ID" > /dev/null 2>&1 && \
+          echo "  💬  Reply posted to thread $(( REPLY_IDX + 1 ))"
+      fi
+
+      # Resolve the thread via GraphQL
+      RESULT=$(gh api graphql -f query="
+mutation {
+  resolveReviewThread(input: {threadId: \"$THREAD_ID\"}) {
+    thread { id isResolved }
+  }
+}" 2>/dev/null)
+      RESOLVED=$(echo "$RESULT" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(d['data']['resolveReviewThread']['thread']['isResolved'])
+" 2>/dev/null || echo "error")
+      echo "  ✅  Thread $(( REPLY_IDX + 1 )) resolved (isResolved=$RESOLVED)"
+      REPLY_IDX=$(( REPLY_IDX + 1 ))
+    done <<< "$OPEN_THREAD_DATA"
+  fi
+
+  echo ""
+  echo "── Re-request Copilot review ────────────────────────────────────────────"
+  echo "  GitHub API does not support programmatic re-request for Copilot bot."
+  echo "  👉  Click 'Re-request review' next to Copilot here (refresh if needed):"
+  echo "      $PR_URL"
+  echo ""
+  echo "  After Copilot posts the new review, run:"
+  echo "      bash scripts/copilot-review.sh $PR"
+  exit 0
+fi
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MODE: fetch — request review if needed, then print comments
+# ══════════════════════════════════════════════════════════════════════════════
 
 # ── Request Copilot review if not yet posted ─────────────────────────────────
 EXISTING=$(gh api "repos/$REPO/pulls/$PR/reviews" \
@@ -93,7 +219,6 @@ fi
 
 echo "── Review state: $REVIEW_STATE ──────────────────────────────────────────"
 if [ -n "$REVIEW_BODY" ]; then
-  # Print only the overview section (before "### Reviewed changes") to keep output short
   echo "$REVIEW_BODY" | python3 -c "
 import sys
 lines = sys.stdin.read().split('\n')
@@ -105,17 +230,58 @@ for line in lines:
 fi
 echo ""
 
-# ── Inline comments (root-level only, from Copilot) ─────────────────────────
-INLINE_JSON=$(gh api "repos/$REPO/pulls/$PR/comments" \
-  --jq "[.[] | select((.user.login == \"$BOT_LOGIN\" or .user.login == \"$BOT_INLINE\") and .in_reply_to_id == null)
-        | {path, line: (.line // .original_line), body, url: .html_url}]")
+# ── Open inline comments (root-level, unresolved, from Copilot) ──────────────
+THREADS_JSON=$(gh api graphql -f query="
+{
+  repository(owner: \"$(echo "$REPO" | cut -d/ -f1)\", name: \"$(echo "$REPO" | cut -d/ -f2)\") {
+    pullRequest(number: $PR) {
+      reviewThreads(first: 50) {
+        nodes {
+          isResolved
+          comments(first: 1) {
+            nodes {
+              databaseId
+              author { login }
+              path
+              line
+              originalLine
+              body
+              url
+            }
+          }
+        }
+      }
+    }
+  }
+}" 2>/dev/null)
+
+INLINE_JSON=$(echo "$THREADS_JSON" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+threads = d['data']['repository']['pullRequest']['reviewThreads']['nodes']
+result = []
+for t in threads:
+    if t['isResolved']:
+        continue
+    c = t['comments']['nodes'][0] if t['comments']['nodes'] else {}
+    author = c.get('author', {}).get('login', '')
+    if author in ('Copilot', 'copilot-pull-request-reviewer'):
+        result.append({
+            'path': c.get('path', ''),
+            'line': c.get('line') or c.get('originalLine'),
+            'body': c.get('body', ''),
+            'url':  c.get('url', ''),
+        })
+import json as j
+print(j.dumps(result))
+")
 
 COUNT=$(echo "$INLINE_JSON" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")
 
-echo "── Inline comments: $COUNT ──────────────────────────────────────────────"
+echo "── Open inline comments: $COUNT ─────────────────────────────────────────"
 
 if [ "$COUNT" -eq 0 ]; then
-  echo "✅  No inline comments from Copilot. Nothing to fix."
+  echo "✅  No open inline comments from Copilot. Nothing to fix."
   exit 0
 fi
 
@@ -128,7 +294,6 @@ for i, c in enumerate(comments, 1):
     print(f'[{i}/{len(comments)}] {c[\"path\"]}  (line {c[\"line\"]})')
     print(f'URL: {c[\"url\"]}')
     print()
-    # Indent the body for readability
     for line in c['body'].split('\n'):
         print(f'  {line}')
     print()
@@ -137,5 +302,7 @@ for i, c in enumerate(comments, 1):
 "
 
 echo ""
-echo "👉  Paste or run this output into Claude Code to analyze and stage fixes."
-echo "    After Claude Code prepares the edits, review them and commit manually."
+echo "👉  After fixing, resolve threads with:"
+echo "    bash scripts/copilot-review.sh $PR --resolve \\"
+echo '        "Fix 1: description" \'
+echo '        "Fix 2: description" ...'

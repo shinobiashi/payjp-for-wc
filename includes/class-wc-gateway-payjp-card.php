@@ -145,8 +145,16 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 				]
 			);
 
-			$order->update_meta_data( '_payjp_payment_flow_id', $flow['id'] );
-			$order->update_meta_data( '_payjp_client_secret', $flow['client_secret'] );
+			$flow_id       = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
+			$client_secret = isset( $flow['client_secret'] ) && is_string( $flow['client_secret'] ) ? $flow['client_secret'] : '';
+
+			if ( ! $flow_id || ! $client_secret ) {
+				wc_add_notice( esc_html__( 'PAY.JP returned an incomplete payment session. Please try again.', 'payjp-for-wc' ), 'error' );
+				return [ 'result' => 'failure' ];
+			}
+
+			$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
+			$order->update_meta_data( '_payjp_client_secret', $client_secret );
 			$order->update_meta_data( '_payjp_payment_method', 'card' );
 			$order->update_meta_data( '_payjp_capture_method', 'automatic' );
 			$order->save();
@@ -174,9 +182,15 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		}
 
 		if ( ! $order->get_meta( '_payjp_client_secret' ) ) {
-			wc_add_notice( __( 'Payment session expired. Please try again.', 'payjp-for-wc' ), 'error' );
-			wp_safe_redirect( wc_get_checkout_url() );
-			exit;
+			// Headers are already sent at this point (inside the order-pay template),
+			// so wp_safe_redirect() would fail. Render an inline error with a link instead.
+			printf(
+				'<p class="woocommerce-error">%s <a href="%s">%s</a></p>',
+				esc_html__( 'Payment session expired.', 'payjp-for-wc' ),
+				esc_url( wc_get_checkout_url() ),
+				esc_html__( 'Return to checkout', 'payjp-for-wc' )
+			);
+			return;
 		}
 		?>
 		<div id="payjp-card-receipt-form"></div>

@@ -1,7 +1,21 @@
 # PAY.JP for WooCommerce — 開発計画書
 
-> このファイルは `CLAUDE.md` として使用することを想定した開発計画書です。
-> レビュー後に `CLAUDE.md` にリネームしてください。
+---
+
+## 進捗サマリー
+
+| フェーズ | 内容 | ステータス | PR | マージ日 |
+|---------|------|-----------|-----|---------|
+| Phase 1 | プラグインスケルトン | ✅ 完了 | #3 | 2026-05-14 |
+| Phase 2 | 統合設定画面 | ✅ 完了 | #4 | 2026-05-15 |
+| Phase 3 | カード決済（埋め込み型） | 🔄 進行中 | — | — |
+| Phase 4 | PayPay 決済（埋め込み型） | ⬜ 未着手 | — | — |
+| Phase 5 | Webhook ハンドラ | ⬜ 未着手 | — | — |
+| Phase 6 | 返金処理 | ⬜ 未着手 | — | — |
+| Phase 7 | Block Checkout 統合 | ⬜ 未着手 | — | — |
+| Phase 8 | カードトークン保存 | ⬜ 未着手 | — | — |
+| Phase 9 | WooCommerce Subscriptions 対応 | ⬜ 未着手 | — | — |
+| Phase 10 | 品質・テスト | ⬜ 未着手 | — | — |
 
 ---
 
@@ -250,31 +264,38 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ## 開発フェーズ
 
-### Phase 1: プラグインスケルトン
+### Phase 1: プラグインスケルトン ✅
 
 **目標:** プラグインとして認識され、管理画面の「決済」タブに表示される状態にする。
 
-- [ ] `payjp-for-wc.php` — ヘッダー・定数・`class_exists` ガード・HPOS 宣言
-- [ ] `uninstall.php` — 削除時の設定クリア
-- [ ] `class-payjp-loader.php` — クラスロード・フック登録
-- [ ] `class-payjp-settings.php` — 共有設定管理
-- [ ] 各クラスファイルの空実装
-- [ ] `add_filter( 'woocommerce_payment_gateways', ... )` でゲートウェイ登録
+- [x] `payjp-for-wc.php` — ヘッダー・定数・`class_exists` ガード・HPOS 宣言
+- [x] `uninstall.php` — 削除時の設定クリア
+- [x] `class-payjp-loader.php` — クラスロード・フック登録
+- [x] `class-payjp-settings.php` — 共有設定管理
+- [x] 各クラスファイルの空実装
+- [x] `add_filter( 'woocommerce_payment_gateways', ... )` でゲートウェイ登録
 
 **完了条件:** WooCommerce > 設定 > 決済 にカード・PayPay が表示される。
 
+> ✅ 2026-05-14 完了 — PR #3 mainマージ済み
+
 ---
 
-### Phase 2: 統合設定画面
+### Phase 2: 統合設定画面 ✅
 
 **目標:** PAY.JP 設定画面から API キーと有効決済手段を設定できる。
 
-- [ ] `class-payjp-admin-settings-page.php` — WC Settings API を使った設定ページ
-- [ ] `payjp_settings` オプションへの保存・読み込み
-- [ ] `Payjp_Settings::get_public_key()` / `get_secret_key()` の test/live 自動切替
-- [ ] `is_available()` で `Payjp_Settings::is_method_enabled()` を確認
+- [x] `class-payjp-admin-settings-page.php` — WC Settings API を使った設定ページ
+- [x] `payjp_settings` オプションへの保存・読み込み
+- [x] `Payjp_Settings::get_public_key()` / `get_secret_key()` の test/live 自動切替
+- [x] `is_available()` で `Payjp_Settings::is_method_enabled()` を確認
+- [x] 統合設定画面 ↔ 個別ゲートウェイ設定の双方向同期
+- [x] `.github/instructions/` Copilot カスタム指示追加
+- [x] `scripts/copilot-review.sh` Copilot コメント取得スクリプト追加
 
 **完了条件:** 設定を保存し、`Payjp_Settings::get()` で取得できる。
+
+> ✅ 2026-05-15 完了 — PR #4 mainマージ済み
 
 ---
 

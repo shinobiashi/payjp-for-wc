@@ -9,6 +9,8 @@ module.exports = {
 		'blocks/checkout': './src/blocks/checkout/index.js',
 		// Admin settings page
 		'admin/settings': './src/admin/settings/index.js',
+		// Classic checkout — card payment widget (order-pay page)
+		'frontend/checkout-card': './src/frontend/checkout-card.js',
 	},
 
 	plugins: [

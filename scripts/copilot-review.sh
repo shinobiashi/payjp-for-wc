@@ -20,7 +20,10 @@
 set -euo pipefail
 
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+# Review body is posted by copilot-pull-request-reviewer[bot];
+# inline comments are posted by Copilot (no [bot] suffix).
 BOT_LOGIN="copilot-pull-request-reviewer[bot]"
+BOT_INLINE="Copilot"
 
 # ── Resolve PR number ────────────────────────────────────────────────────────
 if [ "${1:-}" != "" ]; then
@@ -43,7 +46,7 @@ echo ""
 
 # ── Request Copilot review if not yet posted ─────────────────────────────────
 EXISTING=$(gh api "repos/$REPO/pulls/$PR/reviews" \
-  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | length" 2>/dev/null || echo "0")
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\" or .user.login == \"$BOT_INLINE\")] | length" 2>/dev/null || echo "0")
 
 if [ "$EXISTING" = "0" ]; then
   echo "📨  Requesting Copilot review..."
@@ -55,7 +58,7 @@ if [ "$EXISTING" = "0" ]; then
   for i in $(seq 1 9); do
     sleep 10
     COUNT=$(gh api "repos/$REPO/pulls/$PR/reviews" \
-      --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | length" 2>/dev/null || echo "0")
+      --jq "[.[] | select(.user.login == \"$BOT_LOGIN\" or .user.login == \"$BOT_INLINE\")] | length" 2>/dev/null || echo "0")
     if [ "$COUNT" != "0" ]; then
       echo "✅  Copilot review posted."
       break
@@ -69,7 +72,7 @@ echo ""
 
 # ── Latest Copilot review body (summary) ────────────────────────────────────
 LATEST_REVIEW=$(gh api "repos/$REPO/pulls/$PR/reviews" \
-  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | last // {}")
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\" or .user.login == \"$BOT_INLINE\")] | last // {}")
 
 REVIEW_STATE=$(echo "$LATEST_REVIEW" | python3 -c "
 import sys, json
@@ -104,7 +107,7 @@ echo ""
 
 # ── Inline comments (root-level only, from Copilot) ─────────────────────────
 INLINE_JSON=$(gh api "repos/$REPO/pulls/$PR/comments" \
-  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\" and .in_reply_to_id == null)
+  --jq "[.[] | select((.user.login == \"$BOT_LOGIN\" or .user.login == \"$BOT_INLINE\") and .in_reply_to_id == null)
         | {path, line: (.line // .original_line), body, url: .html_url}]")
 
 COUNT=$(echo "$INLINE_JSON" | python3 -c "import sys,json; print(len(json.load(sys.stdin)))")

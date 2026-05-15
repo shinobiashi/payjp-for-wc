@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 # scripts/copilot-review.sh
 #
-# Fetches GitHub Copilot review comments for the current branch's PR and
-# prints them in a format ready for Claude Code to analyze and fix.
+# Requests a GitHub Copilot review (if not yet posted) and fetches inline
+# comments for the current branch's PR, formatted for Claude Code analysis.
 #
 # Usage (in Claude Code prompt — the ! prefix streams output into the chat):
 #   ! bash scripts/copilot-review.sh          # auto-detect PR from current branch
 #   ! bash scripts/copilot-review.sh 4        # specify PR number explicitly
 #
 # Workflow:
-#   1. git push
-#   2. Wait ~30-60 s for Copilot to post its review
-#   3. In Claude Code: ! bash scripts/copilot-review.sh
-#   4. Claude Code reads comments and proposes fixes
-#   5. Approve or reject each fix manually
+#   1. gh pr create  (create the PR)
+#   2. In Claude Code: ! bash scripts/copilot-review.sh
+#      → automatically requests Copilot review if not yet requested
+#      → waits up to 90 s for the review to appear
+#      → prints inline comments
+#   3. Claude Code reads comments and proposes fixes
+#   4. Approve or reject each fix manually
 
 set -euo pipefail
 
@@ -37,6 +39,32 @@ fi
 PR_URL="https://github.com/$REPO/pull/$PR"
 echo "🤖  Copilot review comments — PR #$PR"
 echo "    $PR_URL"
+echo ""
+
+# ── Request Copilot review if not yet posted ─────────────────────────────────
+EXISTING=$(gh api "repos/$REPO/pulls/$PR/reviews" \
+  --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | length" 2>/dev/null || echo "0")
+
+if [ "$EXISTING" = "0" ]; then
+  echo "📨  Requesting Copilot review..."
+  gh api "repos/$REPO/pulls/$PR/requested_reviewers" \
+    --method POST \
+    --field 'reviewers[]=Copilot' > /dev/null 2>&1 || true
+
+  echo "⏳  Waiting for Copilot to post review (up to 90 s)..."
+  for i in $(seq 1 9); do
+    sleep 10
+    COUNT=$(gh api "repos/$REPO/pulls/$PR/reviews" \
+      --jq "[.[] | select(.user.login == \"$BOT_LOGIN\")] | length" 2>/dev/null || echo "0")
+    if [ "$COUNT" != "0" ]; then
+      echo "✅  Copilot review posted."
+      break
+    fi
+    echo "    ... still waiting (${i}0 s elapsed)"
+  done
+else
+  echo "✅  Copilot review already exists."
+fi
 echo ""
 
 # ── Latest Copilot review body (summary) ────────────────────────────────────

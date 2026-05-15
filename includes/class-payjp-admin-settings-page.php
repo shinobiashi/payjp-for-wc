@@ -49,7 +49,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 		parent::__construct();
 
-		add_action( 'woocommerce_admin_field_payjp_enabled_methods', [ $this, 'output_enabled_methods_field' ] );
+		add_action( 'woocommerce_admin_field_payjp_enabled_methods', array( $this, 'output_enabled_methods_field' ) );
 	}
 
 	/**
@@ -63,21 +63,21 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	public function get_settings( $current_section = '' ): array {
 		return apply_filters(
 			'woocommerce_get_settings_payjp',
-			[
+			array(
 				// ── API / Mode ──────────────────────────────────────────────────
-				[
+				array(
 					'title' => __( 'API 設定', 'payjp-for-wc' ),
 					'type'  => 'title',
 					'id'    => 'payjp_api_settings',
-				],
-				[
+				),
+				array(
 					'title'   => __( 'テストモード', 'payjp-for-wc' ),
 					'type'    => 'checkbox',
 					'id'      => 'payjp_test_mode',
 					'default' => 'yes',
 					'label'   => __( 'テスト環境の API キーを使用する', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'title'       => __( 'テスト公開鍵', 'payjp-for-wc' ),
 					'type'        => 'text',
 					'id'          => 'payjp_test_public_key',
@@ -85,8 +85,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'placeholder' => 'pk_test_',
 					'desc_tip'    => true,
 					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した公開鍵（pk_test_xxx）', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'title'       => __( 'テスト秘密鍵', 'payjp-for-wc' ),
 					'type'        => 'password',
 					'id'          => 'payjp_test_secret_key',
@@ -94,8 +94,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'placeholder' => 'sk_test_',
 					'desc_tip'    => true,
 					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した秘密鍵（sk_test_xxx）', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'title'       => __( '本番公開鍵', 'payjp-for-wc' ),
 					'type'        => 'text',
 					'id'          => 'payjp_live_public_key',
@@ -103,8 +103,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'placeholder' => 'pk_live_',
 					'desc_tip'    => true,
 					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した公開鍵（pk_live_xxx）', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'title'       => __( '本番秘密鍵', 'payjp-for-wc' ),
 					'type'        => 'password',
 					'id'          => 'payjp_live_secret_key',
@@ -112,34 +112,34 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'placeholder' => 'sk_live_',
 					'desc_tip'    => true,
 					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した秘密鍵（sk_live_xxx）', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'title'    => __( 'Webhook シークレット', 'payjp-for-wc' ),
 					'type'     => 'password',
 					'id'       => 'payjp_webhook_secret',
 					'default'  => '',
 					'desc_tip' => true,
 					'desc'     => __( 'PAY.JP の Webhook 認証トークン（X-Payjp-Webhook-Token ヘッダーの値）', 'payjp-for-wc' ),
-				],
-				[
+				),
+				array(
 					'type' => 'sectionend',
 					'id'   => 'payjp_api_settings',
-				],
+				),
 				// ── Enabled payment methods ──────────────────────────────────
-				[
+				array(
 					'title' => __( '有効にする決済手段', 'payjp-for-wc' ),
 					'type'  => 'title',
 					'id'    => 'payjp_methods_settings',
-				],
-				[
+				),
+				array(
 					'type' => 'payjp_enabled_methods',
 					'id'   => 'payjp_enabled_methods',
-				],
-				[
+				),
+				array(
 					'type' => 'sectionend',
 					'id'   => 'payjp_methods_settings',
-				],
-			],
+				),
+			),
 			$current_section
 		);
 	}
@@ -155,16 +155,16 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		$current   = Payjp_Settings::get_all();
 		$test_mode = isset( $current['test_mode'] ) ? (bool) $current['test_mode'] : true;
 
-		$option_map = [
+		$option_map = array(
 			'payjp_test_mode'       => $test_mode ? 'yes' : 'no',
 			'payjp_test_public_key' => (string) ( $current['test_public_key'] ?? '' ),
 			'payjp_test_secret_key' => (string) ( $current['test_secret_key'] ?? '' ),
 			'payjp_live_public_key' => (string) ( $current['live_public_key'] ?? '' ),
 			'payjp_live_secret_key' => (string) ( $current['live_secret_key'] ?? '' ),
 			'payjp_webhook_secret'  => (string) ( $current['webhook_secret'] ?? '' ),
-		];
+		);
 
-		$closures = [];
+		$closures = array();
 		foreach ( $option_map as $key => $val ) {
 			$closures[ $key ] = static function () use ( $val ): string {
 				return $val;
@@ -188,10 +188,10 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	 */
 	public function output_enabled_methods_field( array $value ): void {
 		$enabled = Payjp_Settings::get_enabled_methods();
-		$methods = [
+		$methods = array(
 			'card'   => __( 'クレジットカード（PAY.JP）', 'payjp-for-wc' ),
 			'paypay' => __( 'PayPay（PAY.JP）', 'payjp-for-wc' ),
-		];
+		);
 		?>
 		<tr valign="top">
 			<th scope="row" class="titledesc"><?php esc_html_e( '決済手段', 'payjp-for-wc' ); ?></th>
@@ -232,7 +232,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce checked by WooCommerce before woocommerce_settings_save_payjp fires.
-		$settings = [
+		$settings = array(
 			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ) && is_scalar( $_POST['payjp_test_mode'] ),
 			'test_public_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_test_public_key'] ?? '' ) ? $_POST['payjp_test_public_key'] : '' ) ),
 			'test_secret_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_test_secret_key'] ?? '' ) ? $_POST['payjp_test_secret_key'] : '' ) ),
@@ -244,14 +244,14 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					array_map(
 						'sanitize_key',
 						array_filter(
-							isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( $_POST['payjp_enabled_methods'] ) : [],
+							isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( (array) $_POST['payjp_enabled_methods'] ) : array(),
 							'is_string'
 						)
 					),
-					[ 'card', 'paypay' ]
+					array( 'card', 'paypay' )
 				)
 			),
-		];
+		);
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Merge with existing settings so custom keys added by extensions via the
@@ -262,12 +262,12 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 		// Sync each gateway's own WC 'enabled' flag so WC_Payment_Gateway::is_available()
 		// returns true when the method is enabled from this unified settings page.
-		$gateway_option_keys = [
+		$gateway_option_keys = array(
 			'card'   => 'woocommerce_payjp_card_settings',
 			'paypay' => 'woocommerce_payjp_paypay_settings',
-		];
+		);
 		foreach ( $gateway_option_keys as $method => $option_key ) {
-			$gateway_settings            = (array) get_option( $option_key, [] );
+			$gateway_settings            = (array) get_option( $option_key, array() );
 			$gateway_settings['enabled'] = in_array( $method, $settings['enabled_methods'], true ) ? 'yes' : 'no';
 			update_option( $option_key, $gateway_settings );
 		}

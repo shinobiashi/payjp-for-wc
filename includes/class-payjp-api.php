@@ -45,11 +45,11 @@ class Payjp_API {
 	public function post( string $endpoint, array $body ): array {
 		$response = wp_remote_post(
 			PAYJP_API_BASE . $endpoint,
-			[
+			array(
 				'headers' => $this->build_headers(),
 				'body'    => wp_json_encode( $body ),
 				'timeout' => 30,
-			]
+			)
 		);
 
 		return $this->parse_response( $response );
@@ -65,10 +65,10 @@ class Payjp_API {
 	public function get( string $endpoint ): array {
 		$response = wp_remote_get(
 			PAYJP_API_BASE . $endpoint,
-			[
+			array(
 				'headers' => $this->build_headers(),
 				'timeout' => 30,
-			]
+			)
 		);
 
 		return $this->parse_response( $response );
@@ -80,10 +80,10 @@ class Payjp_API {
 	 * @return array<string, string>
 	 */
 	private function build_headers(): array {
-		return [
+		return array(
 			'Authorization' => 'Bearer ' . $this->secret_key,
 			'Content-Type'  => 'application/json',
-		];
+		);
 	}
 
 	/**
@@ -127,6 +127,6 @@ class Payjp_API {
 			throw new RuntimeException( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 		}
 
-		return is_array( $body ) ? $body : [];
+		return is_array( $body ) ? $body : array();
 	}
 }

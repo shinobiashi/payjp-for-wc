@@ -42,6 +42,15 @@
     <!-- Nonce verification required -->
     <rule ref="WordPress.Security.NonceVerification"/>
 
+    <!-- WooCommerce-specific capabilities not in WordPress core -->
+    <rule ref="WordPress.WP.Capabilities">
+        <properties>
+            <property name="custom_capabilities" type="array">
+                <element value="manage_woocommerce"/>
+            </property>
+        </properties>
+    </rule>
+
     <!-- PHP 8.0+ minimum: short array syntax [] is required project-wide.
          WordPress-Extra (via PHPCSExtra) includes Universal.Arrays.DisallowShortArraySyntax
          which bans []. Suppress it at severity 0 to allow [] everywhere. -->

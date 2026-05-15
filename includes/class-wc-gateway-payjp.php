@@ -44,8 +44,36 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			'woocommerce_update_options_payment_gateways_' . $this->id,
 			function () {
 				$this->process_admin_options();
+				// Keep payjp_settings['enabled_methods'] in sync when the individual
+				// gateway settings page is saved, so neither source of truth diverges.
+				$this->sync_enabled_to_shared_settings();
 			}
 		);
+	}
+
+	/**
+	 * After saving individual gateway options, propagate the 'enabled' state
+	 * back to payjp_settings['enabled_methods'] so the unified PAY.JP settings
+	 * page always reflects the current state.
+	 */
+	private function sync_enabled_to_shared_settings(): void {
+		$is_enabled = 'yes' === $this->get_option( 'enabled' );
+		$settings   = Payjp_Settings::get_all();
+		// Seed from get_enabled_methods() so the full, correctly-derived list is
+		// used (handles upgrade from pre-Phase-2, fresh install, and saved state)
+		// rather than silently discarding other gateways when the key is absent.
+		$methods = Payjp_Settings::get_enabled_methods();
+
+		if ( $is_enabled ) {
+			if ( ! in_array( $this->payjp_method, $methods, true ) ) {
+				$methods[] = $this->payjp_method;
+			}
+		} else {
+			$methods = array_values( array_diff( $methods, [ $this->payjp_method ] ) );
+		}
+
+		$settings['enabled_methods'] = $methods;
+		update_option( Payjp_Settings::OPTION_KEY, $settings );
 	}
 
 	/**

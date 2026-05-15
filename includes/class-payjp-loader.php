@@ -37,14 +37,17 @@ class Payjp_Loader {
 		require_once $dir . 'class-wc-gateway-payjp-card.php';
 		require_once $dir . 'class-wc-gateway-payjp-paypay.php';
 		require_once $dir . 'class-payjp-webhook-handler.php';
+		require_once $dir . 'class-payjp-token-manager.php';
+		require_once $dir . 'class-payjp-subscriptions.php';
 		// Blocks integration files are NOT loaded here. They are loaded by
 		// payjp_for_wc_register_block_payment_methods() on the woocommerce_blocks_loaded
 		// hook, which fires during WooCommerce's plugins_loaded (priority 10) — before
 		// this loader runs (priority 11). Loading them here as well would be redundant
 		// and unsafe when AbstractPaymentMethodType is unavailable.
-		require_once $dir . 'class-payjp-admin-settings-page.php';
-		require_once $dir . 'class-payjp-token-manager.php';
-		require_once $dir . 'class-payjp-subscriptions.php';
+		//
+		// class-payjp-admin-settings-page.php extends WC_Settings_Page which is NOT
+		// available at plugins_loaded; it is required inside the woocommerce_get_settings_pages
+		// filter callback (see register_hooks()) where WC admin has already booted.
 	}
 
 	/**
@@ -65,7 +68,20 @@ class Payjp_Loader {
 	private static function register_hooks(): void {
 		add_filter( 'woocommerce_payment_gateways', [ self::class, 'register_gateways' ] );
 
-		Payjp_Admin_Settings_Page::init();
+		if ( is_admin() ) {
+			// Defer requiring class-payjp-admin-settings-page.php to the
+			// woocommerce_get_settings_pages filter: WC_Settings_Page is guaranteed
+			// to be defined by the time this filter fires (after WC admin boots),
+			// whereas it may not exist yet during plugins_loaded.
+			add_filter(
+				'woocommerce_get_settings_pages',
+				static function ( array $pages ): array {
+					require_once PAYJP_FOR_WC_DIR . 'includes/class-payjp-admin-settings-page.php';
+					return Payjp_Admin_Settings_Page::register_page( $pages );
+				}
+			);
+		}
+
 		Payjp_Webhook_Handler::init();
 	}
 

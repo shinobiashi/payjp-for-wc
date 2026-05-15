@@ -41,6 +41,55 @@
 
 ---
 
+## コード作成後の必須チェック（省略不可）
+
+**PHP ファイルを新規作成・編集した後は、必ず以下を順番に実行すること。**
+コミット前に全項目がクリアされていない場合はコミットしてはならない。
+
+### 1. PHPCS（WordPress コーディング規約）
+
+```bash
+vendor/bin/phpcs --standard=phpcs.xml .
+```
+
+- エラー・警告が 0 件であること
+- 自動修正可能なものは先に `--fix` で直してから再チェック:
+  ```bash
+  vendor/bin/phpcbf --standard=phpcs.xml .
+  vendor/bin/phpcs --standard=phpcs.xml .
+  ```
+
+### 2. PHPStan（静的解析 level 5）
+
+```bash
+vendor/bin/phpstan analyse --memory-limit=1G
+```
+
+- エラーが 0 件であること
+
+### 3. 手動セルフレビュー（ツールでは検出できない項目）
+
+コードを書いた後、以下を自分でチェックすること:
+
+| # | チェック項目 | 確認ポイント |
+|---|------------|------------|
+| 1 | **ファイルヘッダー** | `defined( 'ABSPATH' ) \|\| exit;` が先頭にあるか。GPL ライセンスヘッダーと `@package` があるか |
+| 2 | **DocBlock** | 全クラス・メソッド・プロパティに PHPDoc があるか。`@param`・`@return`・`@throws` の漏れはないか |
+| 3 | **i18n** | ユーザー向け文字列がすべて `__( 'text', 'payjp-for-wc' )` 等でラップされているか |
+| 4 | **出力エスケープ** | `echo` する変数に `esc_html()`・`esc_attr()`・`esc_url()` が必ず付いているか |
+| 5 | **入力サニタイズ** | `$_POST`・`$_GET` は `wp_unslash()` + `sanitize_*()` + `is_string()` ガードがあるか |
+| 6 | **Webhook** | トークン検証は `hash_equals()` のみか（`===` / `strcmp()` は不可） |
+| 7 | **HPOS** | オーダーメタは `$order->get_meta()` / `update_meta_data()` のみか。`get_post_meta()` を使っていないか |
+| 8 | **HTTP リクエスト** | `wp_remote_*` を使っているか。`curl` を直接呼んでいないか。`is_wp_error()` を確認しているか |
+| 9 | **Yoda 条件** | 定数・リテラルを左辺に書いているか（`'yes' === $var`、`null === $x`） |
+| 10 | **クラスガード** | `class_exists()` で二重定義を防いでいるか |
+
+### 4. チェック完了後にコミット
+
+上記がすべてパスしたら初めてコミットする。コミットメッセージに「PHPCS/PHPStan: 0 errors」と書く必要はないが、チェック未実施のままコミットしてはならない。
+
+---
+
 ## ファイル構成
 
 ```

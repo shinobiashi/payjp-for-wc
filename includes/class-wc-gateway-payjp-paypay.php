@@ -56,6 +56,15 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	}
 
 	/**
+	 * Returns the compiled JS filename basename under build/frontend/.
+	 *
+	 * @return string
+	 */
+	protected function get_checkout_script_filename(): string {
+		return 'checkout-paypay';
+	}
+
+	/**
 	 * Returns the JS variable name for wp_localize_script.
 	 *
 	 * @return string

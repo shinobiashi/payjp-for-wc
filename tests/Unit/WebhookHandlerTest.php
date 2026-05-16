@@ -187,8 +187,8 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_refund_id' )->andReturn( '' );
-		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_refund_id', 'ref_abc' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_refund_processed_ref_abc' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_refund_processed_ref_abc', '1' );
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
@@ -207,6 +207,33 @@ class WebhookHandlerTest extends TestCase {
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function refund_created_skips_when_refund_id_already_recorded(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_refund_processed_ref_abc' )->andReturn( '1' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'save' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+
+		$payload = [
+			'type' => 'refund.created',
+			'data' => [
+				'object' => [
+					'id'           => 'ref_abc',
+					'payment_flow' => 'pflw_xyz',
+					'amount'       => 1000,
+				],
+			],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
 	}
 
 	#[Test]

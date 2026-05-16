@@ -190,12 +190,12 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
-		// Idempotency: skip if this refund ID has already been recorded.
-		if ( (string) $order->get_meta( '_payjp_refund_id' ) === $refund_id ) {
+		// Idempotency: skip if this refund has already been processed.
+		if ( $order->get_meta( '_payjp_refund_processed_' . $refund_id ) ) {
 			return;
 		}
 
-		$order->update_meta_data( '_payjp_refund_id', $refund_id );
+		$order->update_meta_data( '_payjp_refund_processed_' . $refund_id, '1' );
 		$order->save();
 
 		$order->add_order_note(

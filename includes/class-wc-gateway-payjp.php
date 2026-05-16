@@ -146,12 +146,20 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	// ── Template-method hooks for payment_scripts() ───────────────────────────
 
 	/**
-	 * Script handle used by wp_enqueue_script; also determines the build path
-	 * (build/frontend/{handle}.js). Example: 'payjp-checkout-card'.
+	 * WordPress script handle passed to wp_enqueue_script / wp_localize_script.
+	 * Example: 'payjp-checkout-card'.
 	 *
 	 * @return string
 	 */
 	abstract protected function get_checkout_script_handle(): string;
+
+	/**
+	 * Basename of the compiled JS file under build/frontend/ (without .js).
+	 * Example: 'checkout-card'.
+	 *
+	 * @return string
+	 */
+	abstract protected function get_checkout_script_filename(): string;
 
 	/**
 	 * JavaScript variable name used by wp_localize_script.
@@ -210,7 +218,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
 			wp_enqueue_script(
 				$script_handle,
-				PAYJP_FOR_WC_URL . 'build/frontend/' . $script_handle . '.js',
+				PAYJP_FOR_WC_URL . 'build/frontend/' . $this->get_checkout_script_filename() . '.js',
 				[ 'payjp-payments-js' ],
 				PAYJP_FOR_WC_VERSION,
 				true
@@ -233,7 +241,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
 		wp_enqueue_script(
 			$script_handle,
-			PAYJP_FOR_WC_URL . 'build/frontend/' . $script_handle . '.js',
+			PAYJP_FOR_WC_URL . 'build/frontend/' . $this->get_checkout_script_filename() . '.js',
 			[ 'payjp-payments-js' ],
 			PAYJP_FOR_WC_VERSION,
 			true
@@ -259,13 +267,14 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 
 		$order = $order_id ? wc_get_order( $order_id ) : false;
 
-		if (
-			! $order ||
-			$order->get_order_key() !== $order_key ||
-			$this->id !== $order->get_payment_method()
-		) {
+		if ( ! $order || $order->get_order_key() !== $order_key ) {
 			wp_safe_redirect( wc_get_checkout_url() );
 			exit;
+		}
+
+		// Order belongs to another PAY.JP gateway — let its handle_return() run.
+		if ( $this->id !== $order->get_payment_method() ) {
+			return;
 		}
 
 		if ( $order->is_paid() ) {

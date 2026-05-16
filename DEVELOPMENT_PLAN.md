@@ -11,7 +11,7 @@
 | Phase 3 | カード決済（埋め込み型） | ✅ 完了 | #5 | 2026-05-16 |
 | Phase 4 | PayPay 決済（埋め込み型） | ✅ 完了 | #6 | 2026-05-16 |
 | Phase 5 | Webhook ハンドラ | ✅ 完了 | #6 | 2026-05-16 |
-| Phase 6 | 返金処理 | ⬜ 未着手 | — | — |
+| Phase 6 | 返金処理 | ✅ 完了 | — | 2026-05-17 |
 | Phase 7 | Block Checkout 統合 | ⬜ 未着手 | — | — |
 | Phase 8 | カードトークン保存 | ⬜ 未着手 | — | — |
 | Phase 9 | WooCommerce Subscriptions 対応 | ⬜ 未着手 | — | — |
@@ -256,7 +256,7 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 | `_payjp_payment_flow_id` | string | Payment Flow ID (`pflw_xxx`) |
 | `_payjp_payment_method` | string | `card` または `paypay` |
 | `_payjp_capture_method` | string | `automatic` または `manual` |
-| `_payjp_refund_id` | string | 最新の返金 ID |
+| `_payjp_refund_processed_{id}` | string `'1'` | 処理済み返金 ID ごとに 1 エントリ（複数部分返金対応）|
 | `_payjp_customer_id` | string | PAY.JP Customer ID (`cus_xxx`)。トークン保存・Subscriptions で使用。|
 | `_payjp_payment_method_id` | string | 保存カードの PaymentMethod ID (`pm_xxx`)。|
 
@@ -341,14 +341,16 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ---
 
-### Phase 6: 返金処理
+### Phase 6: 返金処理 ✅
 
 **目標:** WooCommerce 管理画面からの返金が PAY.JP に反映される。
 
-- [ ] カード: `process_refund()` → `POST /v2/refunds`
-- [ ] PayPay: `supports` に `refunds` を含めず、手動対応とする
+- [x] カード: `process_refund()` → `POST /v2/refunds`（部分返金・全額返金対応）
+- [x] PayPay: `supports` に `refunds` を含めず、手動対応とする
 
 **完了条件:** カード注文に対して部分・全額返金が成功する。
+
+> ✅ 2026-05-17 完了
 
 ---
 

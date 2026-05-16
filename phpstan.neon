@@ -12,6 +12,7 @@ parameters:
         - vendor
         - node_modules (?)
         - build (?)
+        - tests
 
     bootstrapFiles:
         - phpstan-bootstrap.php

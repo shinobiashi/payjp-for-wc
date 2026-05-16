@@ -78,7 +78,7 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
 		$payload  = [ 'type' => 'unsupported.event', 'data' => [ 'object' => [] ] ];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
@@ -96,7 +96,7 @@ class WebhookHandlerTest extends TestCase {
 			'type' => 'payment_flow.succeeded',
 			'data' => [ 'object' => [ 'id' => 'pflw_unknown', 'status' => 'succeeded' ] ],
 		];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
@@ -115,7 +115,7 @@ class WebhookHandlerTest extends TestCase {
 			'type' => 'payment_flow.succeeded',
 			'data' => [ 'object' => [ 'id' => 'pflw_abc123', 'status' => 'succeeded' ] ],
 		];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
@@ -136,7 +136,7 @@ class WebhookHandlerTest extends TestCase {
 			'type' => 'payment_flow.succeeded',
 			'data' => [ 'object' => [ 'id' => 'pflw_paid', 'status' => 'succeeded' ] ],
 		];
-		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );
 	}
 
@@ -155,7 +155,7 @@ class WebhookHandlerTest extends TestCase {
 			'type' => 'payment_flow.payment_failed',
 			'data' => [ 'object' => [ 'id' => 'pflw_fail', 'status' => 'payment_failed' ] ],
 		];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
@@ -176,7 +176,7 @@ class WebhookHandlerTest extends TestCase {
 			'type' => 'payment_flow.payment_failed',
 			'data' => [ 'object' => [ 'id' => 'pflw_already_failed', 'status' => 'payment_failed' ] ],
 		];
-		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );
 	}
 
@@ -187,6 +187,7 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
 		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_refund_id' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_refund_id', 'ref_abc' );
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
@@ -202,7 +203,7 @@ class WebhookHandlerTest extends TestCase {
 				],
 			],
 		];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );
@@ -222,7 +223,7 @@ class WebhookHandlerTest extends TestCase {
 				],
 			],
 		];
-		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret' ], $payload );
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
 		$this->assertSame( 200, $response->get_status() );

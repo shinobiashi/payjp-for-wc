@@ -17,13 +17,13 @@ if ( class_exists( 'WC_Gateway_Payjp_Paypay' ) ) {
  * Payment flow:
  *   1. process_payment() creates a PAY.JP Payment Flow and redirects to the
  *      WooCommerce order-pay page.
- *   2. payment_scripts() localises the client_secret on the order-pay page;
- *      receipt_page() renders the widget mount point.
+ *   2. payment_scripts() (base class) localises the client_secret on the
+ *      order-pay page; receipt_page() renders the widget mount point.
  *   3. checkout-paypay.js mounts the payments.js widget and calls
  *      widgets.confirmPayment({ return_url }) on the "Pay with PayPay" button.
  *   4. PAY.JP redirects the customer to the PayPay app or website.
- *   5. handle_return() (template_redirect) verifies the Payment Flow server-side
- *      and calls $order->payment_complete().
+ *   5. handle_return() (base class, template_redirect) verifies the Payment Flow
+ *      server-side and calls $order->payment_complete().
  */
 class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 
@@ -40,79 +40,43 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 
 		$this->setup();
 
-		add_action( 'wp_enqueue_scripts', [ $this, 'payment_scripts' ] );
+		// payment_scripts() and handle_return() are registered by setup() via the base class.
 		add_action( 'woocommerce_receipt_' . $this->id, [ $this, 'receipt_page' ] );
-		add_action( 'template_redirect', [ $this, 'handle_return' ] );
+	}
+
+	// ── Template-method implementations ──────────────────────────────────────
+
+	/**
+	 * Returns the script handle for the PayPay checkout widget.
+	 *
+	 * @return string
+	 */
+	protected function get_checkout_script_handle(): string {
+		return 'payjp-checkout-paypay';
 	}
 
 	/**
-	 * Enqueue payments.js (CDN) and checkout-paypay.js.
-	 * On the order-pay page, validates order ownership first so scripts are not
-	 * enqueued for orders belonging to a different gateway.
-	 * Also localises the Payment Flow data for the widget.
+	 * Returns the JS variable name for wp_localize_script.
+	 *
+	 * @return string
 	 */
-	public function payment_scripts(): void {
-		if ( ! is_checkout() && ! is_wc_endpoint_url( 'order-pay' ) ) {
-			return;
-		}
-		if ( ! $this->is_available() ) {
-			return;
-		}
-
-		if ( is_wc_endpoint_url( 'order-pay' ) ) {
-			// Resolve order before enqueuing: skip if this gateway does not own the order.
-			$order_id = absint( get_query_var( 'order-pay' ) );
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- order key validated against DB below.
-			$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
-			$order     = wc_get_order( $order_id );
-
-			if ( ! $order || $order->get_order_key() !== $order_key || $this->id !== $order->get_payment_method() ) {
-				return;
-			}
-
-			$client_secret = (string) $order->get_meta( '_payjp_client_secret' );
-			$flow_id       = (string) $order->get_meta( '_payjp_payment_flow_id' );
-
-			if ( ! $client_secret || ! $flow_id ) {
-				return;
-			}
-
-			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
-			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
-			wp_enqueue_script(
-				'payjp-checkout-paypay',
-				PAYJP_FOR_WC_URL . 'build/frontend/checkout-paypay.js',
-				[ 'payjp-payments-js' ],
-				PAYJP_FOR_WC_VERSION,
-				true
-			);
-			wp_localize_script(
-				'payjp-checkout-paypay',
-				'payjpPaypayData',
-				[
-					'publicKey'    => Payjp_Settings::get_public_key(),
-					'clientSecret' => $client_secret,
-					'returnUrl'    => $this->build_return_url( $order ),
-					'i18n'         => [
-						'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
-						'processing' => __( 'Processing…', 'payjp-for-wc' ),
-					],
-				]
-			);
-			return;
-		}
-
-		// Checkout page: enqueue scripts for the payment option display.
-		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
-		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
-		wp_enqueue_script(
-			'payjp-checkout-paypay',
-			PAYJP_FOR_WC_URL . 'build/frontend/checkout-paypay.js',
-			[ 'payjp-payments-js' ],
-			PAYJP_FOR_WC_VERSION,
-			true
-		);
+	protected function get_script_localize_var(): string {
+		return 'payjpPaypayData';
 	}
+
+	/**
+	 * Returns i18n strings passed to the PayPay payment widget JS.
+	 *
+	 * @return array{payNow: string, processing: string}
+	 */
+	protected function get_script_i18n(): array {
+		return [
+			'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
+			'processing' => __( 'Processing…', 'payjp-for-wc' ),
+		];
+	}
+
+	// ── Gateway-specific methods ──────────────────────────────────────────────
 
 	/**
 	 * Render the payment form placeholder shown at WooCommerce checkout.
@@ -202,94 +166,9 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		?>
 		<div id="payjp-paypay-receipt-form"></div>
 		<div id="payjp-paypay-errors" role="alert" aria-live="polite"></div>
-		<button id="payjp-paypay-pay-button" class="button alt">
+		<button id="payjp-paypay-pay-button" type="button" class="button alt">
 			<?php esc_html_e( 'Pay with PayPay', 'payjp-for-wc' ); ?>
 		</button>
 		<?php
-	}
-
-	/**
-	 * Handle the PAY.JP return redirect after confirmPayment().
-	 * Verifies the Payment Flow server-side, then marks the order complete.
-	 * Fires on template_redirect.
-	 */
-	public function handle_return(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- return URL set by PAY.JP; validated via order key + server-side API call.
-		if ( empty( $_GET['payjp-return'] ) ) {
-			return;
-		}
-
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$order_id  = absint( $_GET['order_id'] ?? 0 );
-		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
-
-		$order = $order_id ? wc_get_order( $order_id ) : false;
-
-		if (
-			! $order ||
-			$order->get_order_key() !== $order_key ||
-			$this->id !== $order->get_payment_method()
-		) {
-			wp_safe_redirect( wc_get_checkout_url() );
-			exit;
-		}
-
-		if ( $order->is_paid() ) {
-			wp_safe_redirect( $order->get_checkout_order_received_url() );
-			exit;
-		}
-
-		// Authoritative flow ID comes from order meta, not the URL.
-		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
-		if ( ! $flow_id ) {
-			wc_add_notice( __( 'Payment verification failed. Please contact support.', 'payjp-for-wc' ), 'error' );
-			wp_safe_redirect( wc_get_checkout_url() );
-			exit;
-		}
-
-		try {
-			$flow = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ) );
-		} catch ( RuntimeException $e ) {
-			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
-			wp_safe_redirect( wc_get_checkout_url() );
-			exit;
-		}
-
-		$status = (string) ( $flow['status'] ?? '' );
-
-		if ( 'succeeded' === $status ) {
-			$order->payment_complete( $flow_id );
-			wp_safe_redirect( $order->get_checkout_order_received_url() );
-			exit;
-		}
-
-		if ( 'requires_capture' === $status ) {
-			/* translators: PAY.JP order-hold note shown in WooCommerce admin */
-			$order->update_status( 'on-hold', __( 'PAY.JP authorised. Awaiting manual capture.', 'payjp-for-wc' ) );
-			wp_safe_redirect( $order->get_checkout_order_received_url() );
-			exit;
-		}
-
-		wc_add_notice( __( 'Payment was not completed. Please try again.', 'payjp-for-wc' ), 'error' );
-		wp_safe_redirect( wc_get_checkout_url() );
-		exit;
-	}
-
-	/**
-	 * Build the return URL to which PAY.JP redirects after confirmPayment().
-	 *
-	 * @param WC_Order $order WooCommerce order.
-	 * @return string Absolute URL with order_id and key query args.
-	 */
-	private function build_return_url( WC_Order $order ): string {
-		return add_query_arg(
-			[
-				'payjp-return' => '1',
-				'order_id'     => $order->get_id(),
-				'key'          => $order->get_order_key(),
-			],
-			home_url( '/' )
-		);
 	}
 }

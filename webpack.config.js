@@ -11,6 +11,8 @@ module.exports = {
 		'admin/settings': './src/admin/settings/index.js',
 		// Classic checkout — card payment widget (order-pay page)
 		'frontend/checkout-card': './src/frontend/checkout-card.js',
+		// Classic checkout — PayPay payment widget (order-pay page)
+		'frontend/checkout-paypay': './src/frontend/checkout-paypay.js',
 	},
 
 	plugins: [

@@ -57,6 +57,7 @@ class Payjp_Webhook_Handler {
 			[
 				'methods'             => 'POST',
 				'callback'            => [ self::class, 'handle_request' ],
+				// PAY.JP servers have no WP session; token auth is done inside handle_request() via hash_equals().
 				'permission_callback' => '__return_true',
 			]
 		);

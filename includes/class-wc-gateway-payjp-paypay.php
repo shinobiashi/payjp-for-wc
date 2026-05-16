@@ -47,7 +47,9 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 
 	/**
 	 * Enqueue payments.js (CDN) and checkout-paypay.js.
-	 * On the order-pay page, also localises the Payment Flow data for the widget.
+	 * On the order-pay page, validates order ownership first so scripts are not
+	 * enqueued for orders belonging to a different gateway.
+	 * Also localises the Payment Flow data for the widget.
 	 */
 	public function payment_scripts(): void {
 		if ( ! is_checkout() && ! is_wc_endpoint_url( 'order-pay' ) ) {
@@ -57,53 +59,58 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			return;
 		}
 
+		if ( is_wc_endpoint_url( 'order-pay' ) ) {
+			// Resolve order before enqueuing: skip if this gateway does not own the order.
+			$order_id = absint( get_query_var( 'order-pay' ) );
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- order key validated against DB below.
+			$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
+			$order     = wc_get_order( $order_id );
+
+			if ( ! $order || $order->get_order_key() !== $order_key || $this->id !== $order->get_payment_method() ) {
+				return;
+			}
+
+			$client_secret = (string) $order->get_meta( '_payjp_client_secret' );
+			$flow_id       = (string) $order->get_meta( '_payjp_payment_flow_id' );
+
+			if ( ! $client_secret || ! $flow_id ) {
+				return;
+			}
+
+			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
+			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
+			wp_enqueue_script(
+				'payjp-checkout-paypay',
+				PAYJP_FOR_WC_URL . 'build/frontend/checkout-paypay.js',
+				[ 'payjp-payments-js' ],
+				PAYJP_FOR_WC_VERSION,
+				true
+			);
+			wp_localize_script(
+				'payjp-checkout-paypay',
+				'payjpPaypayData',
+				[
+					'publicKey'    => Payjp_Settings::get_public_key(),
+					'clientSecret' => $client_secret,
+					'returnUrl'    => $this->build_return_url( $order ),
+					'i18n'         => [
+						'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
+						'processing' => __( 'Processing…', 'payjp-for-wc' ),
+					],
+				]
+			);
+			return;
+		}
+
+		// Checkout page: enqueue scripts for the payment option display.
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
 		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
-
 		wp_enqueue_script(
 			'payjp-checkout-paypay',
 			PAYJP_FOR_WC_URL . 'build/frontend/checkout-paypay.js',
 			[ 'payjp-payments-js' ],
 			PAYJP_FOR_WC_VERSION,
 			true
-		);
-
-		if ( ! is_wc_endpoint_url( 'order-pay' ) ) {
-			return;
-		}
-
-		// Localise widget data only when a Payment Flow already exists on the order.
-		$order_id = absint( get_query_var( 'order-pay' ) );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- order key validated against DB below.
-		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
-		$order     = wc_get_order( $order_id );
-
-		if ( ! $order || $order->get_order_key() !== $order_key ) {
-			return;
-		}
-		if ( $this->id !== $order->get_payment_method() ) {
-			return;
-		}
-
-		$client_secret = (string) $order->get_meta( '_payjp_client_secret' );
-		$flow_id       = (string) $order->get_meta( '_payjp_payment_flow_id' );
-
-		if ( ! $client_secret || ! $flow_id ) {
-			return;
-		}
-
-		wp_localize_script(
-			'payjp-checkout-paypay',
-			'payjpPaypayData',
-			[
-				'publicKey'    => Payjp_Settings::get_public_key(),
-				'clientSecret' => $client_secret,
-				'returnUrl'    => $this->build_return_url( $order ),
-				'i18n'         => [
-					'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
-					'processing' => __( 'Processing…', 'payjp-for-wc' ),
-				],
-			]
 		);
 	}
 

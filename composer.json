@@ -12,7 +12,9 @@
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "phpstan/phpstan": "^2.0",
         "szepeviktor/phpstan-wordpress": "^2.0",
-        "php-stubs/woocommerce-stubs": "^10.0"
+        "php-stubs/woocommerce-stubs": "^10.0",
+        "phpunit/phpunit": "^11",
+        "brain/monkey": "^2"
     },
     "config": {
         "allow-plugins": {

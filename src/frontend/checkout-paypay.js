@@ -55,7 +55,9 @@
 		} catch ( sdkError ) {
 			// SDK threw unexpectedly (network error, malformed clientSecret, etc.).
 			errorEl.textContent =
-				sdkError instanceof Error ? sdkError.message : String( sdkError );
+				sdkError instanceof Error
+					? sdkError.message
+					: String( sdkError );
 			payButton.disabled = false;
 			payButton.textContent = i18n.payNow;
 		}

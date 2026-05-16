@@ -10,8 +10,8 @@ parameters:
 
     excludePaths:
         - vendor
-        - node_modules
-        - build
+        - node_modules (?)
+        - build (?)
         - tests
 
     bootstrapFiles:

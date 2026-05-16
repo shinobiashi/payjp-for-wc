@@ -40,5 +40,8 @@ wp-content/upgrade/
 # PHPStan
 .phpstan.result.cache
 
+# PHPUnit
+.phpunit.cache/
+
 # Release artifacts
 /*.zip

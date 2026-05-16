@@ -57,6 +57,7 @@ class Payjp_Webhook_Handler {
 			[
 				'methods'             => 'POST',
 				'callback'            => [ self::class, 'handle_request' ],
+				// PAY.JP servers have no WP session; token auth is done inside handle_request() via hash_equals().
 				'permission_callback' => '__return_true',
 			]
 		);
@@ -71,6 +72,12 @@ class Payjp_Webhook_Handler {
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
 		if ( ! self::verify_token( $request ) ) {
 			return new WP_REST_Response( [ 'error' => 'Unauthorized' ], 401 );
+		}
+
+		// Defense-in-depth: reject requests that are not JSON.
+		$content_type = $request->get_header( 'Content-Type' );
+		if ( ! is_string( $content_type ) || false === strpos( $content_type, 'application/json' ) ) {
+			return new WP_REST_Response( [ 'error' => 'Unsupported Media Type' ], 415 );
 		}
 
 		$event = $request->get_json_params();
@@ -172,7 +179,8 @@ class Payjp_Webhook_Handler {
 	private static function handle_refund_created( array $refund ): void {
 		$flow_id   = isset( $refund['payment_flow'] ) && is_string( $refund['payment_flow'] ) ? $refund['payment_flow'] : '';
 		$refund_id = isset( $refund['id'] ) && is_string( $refund['id'] ) ? $refund['id'] : '';
-		$amount    = isset( $refund['amount'] ) && is_int( $refund['amount'] ) ? $refund['amount'] : 0;
+		// Accept any numeric value; cast to int for consistent formatting.
+		$amount = isset( $refund['amount'] ) && is_numeric( $refund['amount'] ) ? (int) $refund['amount'] : 0;
 
 		if ( ! $flow_id || ! $refund_id ) {
 			return;
@@ -183,7 +191,12 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
-		$order->update_meta_data( '_payjp_refund_id', $refund_id );
+		// Idempotency: skip if this refund has already been processed.
+		if ( $order->get_meta( '_payjp_refund_processed_' . $refund_id ) ) {
+			return;
+		}
+
+		$order->update_meta_data( '_payjp_refund_processed_' . $refund_id, '1' );
 		$order->save();
 
 		$order->add_order_note(

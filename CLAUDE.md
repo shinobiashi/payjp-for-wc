@@ -5,6 +5,19 @@
 
 ---
 
+## Git ワークフロー（必須ルール）
+
+| 操作 | 可否 | 備考 |
+|------|------|------|
+| コードの編集・作成 | ✅ OK | 通常どおり行う |
+| `git commit` | ❌ 禁止 | **ユーザーが手動で行う** |
+| `git push` | ❌ 禁止 | **ユーザーが手動で行う** |
+| `gh pr create` | ✅ OK | ユーザーに確認後に作成する |
+
+> **コミットは絶対に自動で行わないこと。** コード変更後は「変更内容の説明」を出力し、ユーザーがコミット・プッシュするのを待つ。
+
+---
+
 ## プロジェクト概要
 
 | 項目 | 値 |
@@ -141,7 +154,7 @@ defined( 'PAYJP_API_BASE' )       || define( 'PAYJP_API_BASE',       'https://ap
 | `_payjp_payment_flow_id` | string | Payment Flow ID (`pflw_xxx`) |
 | `_payjp_payment_method` | string | `card` または `paypay` |
 | `_payjp_capture_method` | string | `automatic` または `manual` |
-| `_payjp_refund_id` | string | 最新の返金 ID |
+| `_payjp_refund_processed_{id}` | string `'1'` | 処理済み返金 ID ごとに 1 エントリ（複数部分返金対応）|
 | `_payjp_customer_id` | string | PAY.JP Customer ID（トークン保存・Subscriptions 用）|
 | `_payjp_payment_method_id` | string | 保存カードの PaymentMethod ID |
 

@@ -40,16 +40,26 @@
 		payButton.textContent = i18n.processing;
 		errorEl.textContent = '';
 
-		const result = await widgets.confirmPayment( {
-			return_url: returnUrl,
-		} );
+		try {
+			const result = await widgets.confirmPayment( {
+				return_url: returnUrl,
+			} );
 
-		if ( result.error ) {
-			// Display PAY.JP error message; PAY.JP does not redirect on failure.
-			errorEl.textContent = result.error.message;
+			if ( result.error ) {
+				// Display PAY.JP error message; PAY.JP does not redirect on failure.
+				errorEl.textContent = result.error.message;
+				payButton.disabled = false;
+				payButton.textContent = i18n.payNow;
+			}
+			// On success PAY.JP redirects automatically via return_url.
+		} catch ( sdkError ) {
+			// SDK threw unexpectedly (network error, malformed clientSecret, etc.).
+			errorEl.textContent =
+				sdkError instanceof Error
+					? sdkError.message
+					: String( sdkError );
 			payButton.disabled = false;
 			payButton.textContent = i18n.payNow;
 		}
-		// On success PAY.JP redirects automatically via return_url.
 	} );
 } )();

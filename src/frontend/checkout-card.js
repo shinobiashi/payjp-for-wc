@@ -26,7 +26,7 @@
 	const widgets = payments.widgets( { clientSecret } );
 
 	const form = widgets.createForm( 'payment', {
-		layout: 'accordion',
+		layout: { type: 'accordion', defaultCollapsed: false },
 		paymentMethodOrder: [ 'card' ],
 		defaultValues: {
 			billingDetails: {

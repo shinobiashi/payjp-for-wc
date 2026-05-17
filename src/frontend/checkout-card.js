@@ -30,7 +30,6 @@
 		paymentMethodOrder: [ 'card' ],
 		defaultValues: {
 			billingDetails: {
-				name: billingDetails.name || '',
 				email: billingDetails.email || '',
 				phone: billingDetails.phone || '',
 			},
@@ -56,7 +55,6 @@
 				return_url: returnUrl,
 				payment_method_data: {
 					billing_details: {
-						name: billingDetails.name || '',
 						email: billingDetails.email || '',
 						phone: billingDetails.phone || '',
 					},

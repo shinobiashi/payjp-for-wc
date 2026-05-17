@@ -1,7 +1,11 @@
 /**
  * Block Checkout: PAY.JP PayPay payment method component.
+ *
+ * When selected, process_payment() (PHP) creates a Payment Flow and redirects
+ * to the order-pay page where the payments.js widget triggers the PayPay redirect.
  */
 import { __ } from '@wordpress/i18n';
+import { RawHTML } from '@wordpress/element';
 import { getSetting } from '@woocommerce/settings';
 
 const settings = getSetting( 'payjp_paypay_data', {} );
@@ -21,16 +25,18 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
 
 /**
  * Content shown when PayPay is selected.
+ * Displays the gateway description, or a default redirect notice.
  */
 const Content = () => {
+	const description =
+		settings.description ||
+		`<p>${ __(
+			'You will be redirected to PayPay to complete your payment.',
+			'payjp-for-wc'
+		) }</p>`;
 	return (
-		<div id="payjp-paypay-block-form">
-			<p>
-				{ __(
-					'You will be redirected to PayPay to complete your payment.',
-					'payjp-for-wc'
-				) }
-			</p>
+		<div className="payjp-paypay-block-form">
+			<RawHTML>{ description }</RawHTML>
 		</div>
 	);
 };

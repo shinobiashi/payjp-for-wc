@@ -85,6 +85,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 
 		$settings['enabled_methods'] = $methods;
 		update_option( Payjp_Settings::OPTION_KEY, $settings );
+		Payjp_Settings::flush_cache();
 	}
 
 	/**

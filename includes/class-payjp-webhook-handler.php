@@ -210,12 +210,28 @@ class Payjp_Webhook_Handler {
 	}
 
 	/**
-	 * Find a WooCommerce order by its PAY.JP Payment Flow ID stored in order meta.
+	 * Find a WooCommerce order by its PAY.JP Payment Flow ID.
+	 *
+	 * Strategy: query by transaction_id first (direct column on HPOS; fast), then
+	 * fall back to a meta query for orders not yet completed (rare race condition
+	 * where the webhook arrives before the customer's return-URL redirect is handled).
 	 *
 	 * @param string $flow_id PAY.JP Payment Flow ID.
 	 * @return WC_Order|false WooCommerce order, or false if not found.
 	 */
 	private static function find_order_by_flow_id( string $flow_id ): WC_Order|false {
+		// payment_complete( $flow_id ) sets transaction_id — fast indexed lookup on HPOS.
+		$orders = wc_get_orders(
+			[
+				'limit'          => 1,
+				'transaction_id' => $flow_id,
+			]
+		);
+		if ( ! empty( $orders ) ) {
+			return $orders[0];
+		}
+
+		// Fallback: meta query covers the window before payment_complete() has been called.
 		$orders = wc_get_orders(
 			[
 				'limit'      => 1,

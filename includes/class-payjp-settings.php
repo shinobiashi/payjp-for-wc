@@ -47,13 +47,33 @@ class Payjp_Settings {
 	}
 
 	/**
+	 * In-memory cache: avoids repeated get_option() calls within the same request.
+	 * Invalidated by flush_cache() whenever the option is updated.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private static ?array $cache = null;
+
+	/**
 	 * Get all settings as an associative array.
 	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get_all(): array {
-		$settings = get_option( self::OPTION_KEY, [] );
-		return is_array( $settings ) ? $settings : [];
+		if ( null === self::$cache ) {
+			$settings    = get_option( self::OPTION_KEY, [] );
+			self::$cache = is_array( $settings ) ? $settings : [];
+		}
+		return self::$cache;
+	}
+
+	/**
+	 * Invalidate the in-memory settings cache.
+	 * Must be called after any update_option( self::OPTION_KEY, ... ) to ensure
+	 * subsequent reads within the same request see the updated values.
+	 */
+	public static function flush_cache(): void {
+		self::$cache = null;
 	}
 
 	/**

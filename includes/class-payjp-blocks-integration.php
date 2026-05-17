@@ -102,7 +102,7 @@ abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\P
 		$gateway = $this->gateway;
 		return [
 			'title'          => null !== $gateway ? (string) $gateway->get_option( 'title' ) : '',
-			'description'    => null !== $gateway ? (string) $gateway->get_option( 'description' ) : '',
+			'description'    => null !== $gateway ? wp_kses_post( wpautop( (string) $gateway->get_option( 'description' ) ) ) : '',
 			'supports'       => array_values( null !== $gateway ? $gateway->supports : [] ),
 			'showInCheckout' => $this->is_active(),
 		];

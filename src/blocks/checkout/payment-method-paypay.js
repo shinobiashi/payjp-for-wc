@@ -5,6 +5,7 @@
  * to the order-pay page where the payments.js widget triggers the PayPay redirect.
  */
 import { __ } from '@wordpress/i18n';
+import { RawHTML } from '@wordpress/element';
 import { getSetting } from '@woocommerce/settings';
 
 const settings = getSetting( 'payjp_paypay_data', {} );
@@ -29,13 +30,13 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
 const Content = () => {
 	const description =
 		settings.description ||
-		__(
+		`<p>${ __(
 			'You will be redirected to PayPay to complete your payment.',
 			'payjp-for-wc'
-		);
+		) }</p>`;
 	return (
 		<div className="payjp-paypay-block-form">
-			<p>{ description }</p>
+			<RawHTML>{ description }</RawHTML>
 		</div>
 	);
 };

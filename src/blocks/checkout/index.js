@@ -16,10 +16,10 @@ import PayPayPaymentMethod from './payment-method-paypay';
 const cardSettings = getSetting( 'payjp_card_data', {} );
 const paypaySettings = getSetting( 'payjp_paypay_data', {} );
 
-if ( cardSettings.supports?.showInCheckout ) {
+if ( cardSettings.showInCheckout ) {
 	registerPaymentMethod( CardPaymentMethod );
 }
 
-if ( paypaySettings.supports?.showInCheckout ) {
+if ( paypaySettings.showInCheckout ) {
 	registerPaymentMethod( PayPayPaymentMethod );
 }

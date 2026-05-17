@@ -7,6 +7,7 @@
  * the WC order exists would prevent linking the payment to the order on return.
  */
 import { __ } from '@wordpress/i18n';
+import { RawHTML } from '@wordpress/element';
 import { getSetting } from '@woocommerce/settings';
 
 const settings = getSetting( 'payjp_card_data', {} );
@@ -31,10 +32,13 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
 const Content = () => {
 	const description =
 		settings.description ||
-		__( 'Pay securely with your credit card via PAY.JP.', 'payjp-for-wc' );
+		`<p>${ __(
+			'Pay securely with your credit card via PAY.JP.',
+			'payjp-for-wc'
+		) }</p>`;
 	return (
 		<div className="payjp-card-block-form">
-			<p>{ description }</p>
+			<RawHTML>{ description }</RawHTML>
 		</div>
 	);
 };

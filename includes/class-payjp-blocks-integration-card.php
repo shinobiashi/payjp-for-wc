@@ -50,9 +50,9 @@ class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 		$save_enabled = null !== $this->gateway && $this->gateway->supports( 'tokenization' );
 		return array_merge(
 			parent::get_payment_method_data(),
-			[
+			array(
 				'showSaveOption' => $save_enabled,
-			]
+			)
 		);
 	}
 }

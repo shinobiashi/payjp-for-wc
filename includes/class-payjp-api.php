@@ -117,7 +117,7 @@ class Payjp_API {
 
 			// Append individual field-level validation errors when present.
 			if ( ! empty( $body['errors'] ) && is_array( $body['errors'] ) ) {
-				$field_errors = [];
+				$field_errors = array();
 				foreach ( $body['errors'] as $e ) {
 					if ( isset( $e['field'], $e['message'] ) && is_string( $e['field'] ) && is_string( $e['message'] ) ) {
 						$field_errors[] = wp_strip_all_tags( $e['field'] ) . ': ' . wp_strip_all_tags( $e['message'] );

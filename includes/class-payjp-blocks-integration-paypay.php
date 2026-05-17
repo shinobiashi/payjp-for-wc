@@ -46,9 +46,9 @@ class Payjp_Blocks_Integration_Paypay extends Payjp_Blocks_Integration {
 	public function get_payment_method_data(): array {
 		return array_merge(
 			parent::get_payment_method_data(),
-			[
+			array(
 				'icon' => PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg',
-			]
+			)
 		);
 	}
 }

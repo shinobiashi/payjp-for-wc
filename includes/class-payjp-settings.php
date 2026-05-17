@@ -61,8 +61,8 @@ class Payjp_Settings {
 	 */
 	public static function get_all(): array {
 		if ( null === self::$cache ) {
-			$settings    = get_option( self::OPTION_KEY, [] );
-			self::$cache = is_array( $settings ) ? $settings : [];
+			$settings    = get_option( self::OPTION_KEY, array() );
+			self::$cache = is_array( $settings ) ? $settings : array();
 		}
 		return self::$cache;
 	}
@@ -110,18 +110,18 @@ class Payjp_Settings {
 		$settings = self::get_all();
 
 		if ( array_key_exists( 'enabled_methods', $settings ) ) {
-			return is_array( $settings['enabled_methods'] ) ? $settings['enabled_methods'] : [];
+			return is_array( $settings['enabled_methods'] ) ? $settings['enabled_methods'] : array();
 		}
 
 		// When enabled_methods has never been saved, derive from the individual gateway
 		// options so that an upgrade from a pre-unified-settings version preserves
 		// which gateways were already enabled. On a genuine fresh install (no gateway
 		// options exist yet) return [] — payment methods are opt-in, not opt-out.
-		$derived         = [];
-		$gateway_methods = [
+		$derived         = array();
+		$gateway_methods = array(
 			'woocommerce_payjp_card_settings'   => 'card',
 			'woocommerce_payjp_paypay_settings' => 'paypay',
-		];
+		);
 		foreach ( $gateway_methods as $option_key => $method ) {
 			$gateway_settings = get_option( $option_key, null );
 			if ( is_array( $gateway_settings ) && 'yes' === ( $gateway_settings['enabled'] ?? 'no' ) ) {

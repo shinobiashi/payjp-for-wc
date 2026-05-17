@@ -73,11 +73,11 @@ abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\P
 		$asset_path = PAYJP_FOR_WC_DIR . 'build/blocks/checkout.asset.php';
 		$asset      = file_exists( $asset_path )
 			? require $asset_path
-			: [
-				'dependencies' => [],
+			: array(
+				'dependencies' => array(),
 				'version'      => PAYJP_FOR_WC_VERSION,
-			];
-		$deps       = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : [];
+			);
+		$deps       = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : array();
 		$version    = isset( $asset['version'] ) && is_string( $asset['version'] ) ? $asset['version'] : PAYJP_FOR_WC_VERSION;
 
 		if ( ! wp_script_is( 'payjp-blocks-checkout', 'registered' ) ) {
@@ -90,7 +90,7 @@ abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\P
 			);
 		}
 
-		return [ 'payjp-blocks-checkout' ];
+		return array( 'payjp-blocks-checkout' );
 	}
 
 	/**
@@ -100,11 +100,11 @@ abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\P
 	 */
 	public function get_payment_method_data(): array {
 		$gateway = $this->gateway;
-		return [
+		return array(
 			'title'          => null !== $gateway ? (string) $gateway->get_option( 'title' ) : '',
 			'description'    => null !== $gateway ? wp_kses_post( wpautop( (string) $gateway->get_option( 'description' ) ) ) : '',
-			'supports'       => array_values( null !== $gateway ? $gateway->supports : [] ),
+			'supports'       => array_values( null !== $gateway ? $gateway->supports : array() ),
 			'showInCheckout' => $this->is_active(),
-		];
+		);
 	}
 }

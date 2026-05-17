@@ -39,12 +39,12 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		$this->icon               = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
 		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
-		$this->supports           = [ 'products' ];
+		$this->supports           = array( 'products' );
 
 		$this->setup();
 
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
-		add_action( 'woocommerce_receipt_' . $this->id, [ $this, 'receipt_page' ] );
+		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
 	}
 
 	// ── Template-method implementations ──────────────────────────────────────
@@ -93,10 +93,10 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	 * @return array{payNow: string, processing: string}
 	 */
 	protected function get_script_i18n(): array {
-		return [
+		return array(
 			'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
 			'processing' => __( 'Processing…', 'payjp-for-wc' ),
-		];
+		);
 	}
 
 	/**
@@ -135,19 +135,19 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			wc_add_notice( esc_html__( 'Unable to load the order for payment.', 'payjp-for-wc' ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 		$amount = (int) round( $order->get_total() );
 
 		try {
 			$flow = $this->get_api()->post(
 				'/payment_flows',
-				[
+				array(
 					'amount'               => $amount,
 					'currency'             => 'jpy',
-					'payment_method_types' => [ 'paypay' ],
+					'payment_method_types' => array( 'paypay' ),
 					'capture_method'       => 'automatic',
-				]
+				)
 			);
 
 			$flow_id       = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
@@ -155,7 +155,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 
 			if ( ! $flow_id || ! $client_secret ) {
 				wc_add_notice( esc_html__( 'PAY.JP returned an incomplete payment session. Please try again.', 'payjp-for-wc' ), 'error' );
-				return [ 'result' => 'failure' ];
+				return array( 'result' => 'failure' );
 			}
 
 			$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
@@ -164,13 +164,13 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			$order->update_meta_data( '_payjp_capture_method', 'automatic' );
 			$order->save();
 
-			return [
+			return array(
 				'result'   => 'success',
 				'redirect' => $order->get_checkout_payment_url( true ),
-			];
+			);
 		} catch ( RuntimeException $e ) {
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 	}
 

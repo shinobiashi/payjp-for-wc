@@ -29,8 +29,8 @@ class Payjp_Token_Manager {
 	 * Register REST and template_redirect hooks.
 	 */
 	public static function init(): void {
-		add_action( 'rest_api_init', [ self::class, 'register_rest_routes' ] );
-		add_action( 'template_redirect', [ self::class, 'handle_setup_return' ] );
+		add_action( 'rest_api_init', array( self::class, 'register_rest_routes' ) );
+		add_action( 'template_redirect', array( self::class, 'handle_setup_return' ) );
 	}
 
 	/**
@@ -40,13 +40,13 @@ class Payjp_Token_Manager {
 		register_rest_route(
 			'payjp/v1',
 			'/setup-flow',
-			[
+			array(
 				'methods'             => 'POST',
-				'callback'            => [ self::class, 'rest_create_setup_flow' ],
+				'callback'            => array( self::class, 'rest_create_setup_flow' ),
 				'permission_callback' => static function (): bool {
 					return is_user_logged_in();
 				},
-			]
+			)
 		);
 	}
 
@@ -64,14 +64,14 @@ class Payjp_Token_Manager {
 			$customer_id = self::get_or_create_customer( $user_id, $api );
 		} catch ( RuntimeException $e ) {
 			return new WP_REST_Response(
-				[ 'error' => esc_html( $e->getMessage() ) ],
+				array( 'error' => esc_html( $e->getMessage() ) ),
 				500
 			);
 		}
 
 		if ( ! $customer_id ) {
 			return new WP_REST_Response(
-				[ 'error' => __( 'Failed to create PAY.JP customer.', 'payjp-for-wc' ) ],
+				array( 'error' => __( 'Failed to create PAY.JP customer.', 'payjp-for-wc' ) ),
 				500
 			);
 		}
@@ -79,14 +79,14 @@ class Payjp_Token_Manager {
 		try {
 			$setup_flow = $api->post(
 				'/setup_flows',
-				[
-					'payment_method_types' => [ 'card' ],
+				array(
+					'payment_method_types' => array( 'card' ),
 					'customer'             => $customer_id,
-				]
+				)
 			);
 		} catch ( RuntimeException $e ) {
 			return new WP_REST_Response(
-				[ 'error' => esc_html( $e->getMessage() ) ],
+				array( 'error' => esc_html( $e->getMessage() ) ),
 				500
 			);
 		}
@@ -96,16 +96,16 @@ class Payjp_Token_Manager {
 
 		if ( ! $flow_id || ! $client_secret ) {
 			return new WP_REST_Response(
-				[ 'error' => __( 'Failed to create card setup session.', 'payjp-for-wc' ) ],
+				array( 'error' => __( 'Failed to create card setup session.', 'payjp-for-wc' ) ),
 				500
 			);
 		}
 
 		return new WP_REST_Response(
-			[
+			array(
 				'setup_flow_id' => $flow_id,
 				'client_secret' => $client_secret,
-			]
+			)
 		);
 	}
 
@@ -169,7 +169,7 @@ class Payjp_Token_Manager {
 
 		try {
 			$pm   = $api->get( '/payment_methods/' . rawurlencode( $pm_id ) );
-			$card = isset( $pm['card'] ) && is_array( $pm['card'] ) ? $pm['card'] : [];
+			$card = isset( $pm['card'] ) && is_array( $pm['card'] ) ? $pm['card'] : array();
 			self::save_wc_token( $user_id, $pm_id, $card );
 		} catch ( RuntimeException $e ) {
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
@@ -216,7 +216,7 @@ class Payjp_Token_Manager {
 			return $customer_id;
 		}
 
-		$body = [];
+		$body = array();
 		$user = get_userdata( $user_id );
 		if ( $user instanceof WP_User ) {
 			$body['email'] = $user->user_email;
@@ -308,11 +308,11 @@ class Payjp_Token_Manager {
 			if ( $customer_id ) {
 				$api->post(
 					'/payment_methods/' . rawurlencode( $pm_id ) . '/attach',
-					[ 'customer_id' => $customer_id ]
+					array( 'customer_id' => $customer_id )
 				);
 			}
 
-			$card = isset( $pm['card'] ) && is_array( $pm['card'] ) ? $pm['card'] : [];
+			$card = isset( $pm['card'] ) && is_array( $pm['card'] ) ? $pm['card'] : array();
 			self::save_wc_token( $user_id, $pm_id, $card );
 		} catch ( RuntimeException $e ) {
 			if ( function_exists( 'wc_get_logger' ) ) {
@@ -323,7 +323,7 @@ class Payjp_Token_Manager {
 						esc_html( $pm_id ),
 						esc_html( $e->getMessage() )
 					),
-					[ 'source' => 'payjp-for-wc' ]
+					array( 'source' => 'payjp-for-wc' )
 				);
 			}
 			return;

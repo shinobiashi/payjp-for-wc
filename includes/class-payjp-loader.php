@@ -66,7 +66,7 @@ class Payjp_Loader {
 	 * Register WordPress and WooCommerce hooks.
 	 */
 	private static function register_hooks(): void {
-		add_filter( 'woocommerce_payment_gateways', [ self::class, 'register_gateways' ] );
+		add_filter( 'woocommerce_payment_gateways', array( self::class, 'register_gateways' ) );
 
 		if ( is_admin() ) {
 			// Defer requiring class-payjp-admin-settings-page.php to the

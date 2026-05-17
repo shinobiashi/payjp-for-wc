@@ -108,7 +108,30 @@ class Payjp_API {
 			throw new RuntimeException( $error ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
 		}
 
-		// PAY.JP error object — present on 4xx and some 5xx responses.
+		// PAY.JP v2 error (RFC 9457 format): {"status":4xx,"code":"...","detail":"...","errors":[...]}.
+		// The top-level "status" key is an integer >= 400; no "error" wrapper key.
+		if ( isset( $body['status'] ) && is_int( $body['status'] ) && $body['status'] >= 400 ) {
+			$message = isset( $body['detail'] ) && is_string( $body['detail'] )
+				? wp_strip_all_tags( $body['detail'] )
+				: __( 'An unknown PAY.JP error occurred.', 'payjp-for-wc' );
+
+			// Append individual field-level validation errors when present.
+			if ( ! empty( $body['errors'] ) && is_array( $body['errors'] ) ) {
+				$field_errors = [];
+				foreach ( $body['errors'] as $e ) {
+					if ( isset( $e['field'], $e['message'] ) && is_string( $e['field'] ) && is_string( $e['message'] ) ) {
+						$field_errors[] = wp_strip_all_tags( $e['field'] ) . ': ' . wp_strip_all_tags( $e['message'] );
+					}
+				}
+				if ( $field_errors ) {
+					$message .= ' (' . implode( ', ', $field_errors ) . ')';
+				}
+			}
+
+			throw new RuntimeException( $message ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
+		}
+
+		// PAY.JP v1 error legacy format: top-level "error" object with a "message" field.
 		if ( isset( $body['error'] ) ) {
 			$error = isset( $body['error']['message'] )
 				? wp_strip_all_tags( (string) $body['error']['message'] )

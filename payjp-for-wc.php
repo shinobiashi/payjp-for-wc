@@ -65,9 +65,9 @@ function payjp_for_wc_register_block_payment_methods(): void {
 		return;
 	}
 
-	require_once PAYJP_FOR_WC_DIR . 'includes/class-payjp-blocks-integration.php';
-	require_once PAYJP_FOR_WC_DIR . 'includes/class-payjp-blocks-integration-card.php';
-	require_once PAYJP_FOR_WC_DIR . 'includes/class-payjp-blocks-integration-paypay.php';
+	require_once PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/class-payjp-blocks-integration.php';
+	require_once PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/class-payjp-blocks-integration-card.php';
+	require_once PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/class-payjp-blocks-integration-paypay.php';
 
 	add_action(
 		'woocommerce_blocks_payment_method_type_registration',

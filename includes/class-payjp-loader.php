@@ -29,7 +29,7 @@ class Payjp_Loader {
 	 * Require all plugin class files.
 	 */
 	private static function load_classes(): void {
-		$dir = PAYJP_FOR_WC_DIR . 'includes/';
+		$dir = PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/';
 
 		require_once $dir . 'class-payjp-settings.php';
 		require_once $dir . 'class-payjp-api.php';

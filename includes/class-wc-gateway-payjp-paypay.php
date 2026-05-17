@@ -31,9 +31,11 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	 * Constructor: set gateway properties and initialize settings.
 	 */
 	public function __construct() {
-		$this->id                 = 'payjp_paypay';
-		$this->payjp_method       = 'paypay';
-		$this->has_fields         = true;
+		$this->id           = 'payjp_paypay';
+		$this->payjp_method = 'paypay';
+		$this->has_fields   = true;
+		// Used by the WooCommerce admin payment provider list (not the checkout icon,
+		// which is rendered by the overridden get_icon() below).
 		$this->icon               = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
 		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );

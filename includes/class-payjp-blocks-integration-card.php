@@ -39,7 +39,10 @@ class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 
 	/**
 	 * Data passed to the payment method JS component via getSetting().
-	 * Extends the base data with flags that enable the saved-card UI in Block Checkout.
+	 * Passes showSaveOption so the JS component can show the "save for later"
+	 * checkbox when tokenization is enabled. showSavedCards is intentionally
+	 * omitted: the Content component renders saved cards inline itself so
+	 * WC Blocks' global saved-token section is suppressed (showSavedCards: false).
 	 *
 	 * @return array<string, mixed>
 	 */
@@ -48,7 +51,6 @@ class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 		return array_merge(
 			parent::get_payment_method_data(),
 			[
-				'showSavedCards' => $save_enabled,
 				'showSaveOption' => $save_enabled,
 			]
 		);

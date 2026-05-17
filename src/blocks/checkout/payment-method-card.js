@@ -64,6 +64,7 @@ const EditContent = () => {
  */
 const Content = ( { eventRegistration, emitResponse } ) => {
 	// Fetch saved tokens for payjp_card from the WC payment store.
+	// No deps array: let React re-evaluate whenever the store updates.
 	const savedCards = useSelect( ( select ) => {
 		const store = select( PAYMENT_STORE_KEY );
 		if ( typeof store?.getSavedPaymentMethods !== 'function' ) {
@@ -71,7 +72,7 @@ const Content = ( { eventRegistration, emitResponse } ) => {
 		}
 		const methods = store.getSavedPaymentMethods();
 		return Array.isArray( methods?.payjp_card ) ? methods.payjp_card : [];
-	}, [] );
+	} );
 
 	// Start with 'new'; auto-select the default saved card once data loads.
 	const [ selectedToken, setSelectedToken ] = useState( 'new' );
@@ -82,9 +83,7 @@ const Content = ( { eventRegistration, emitResponse } ) => {
 			initialized.current = true;
 			const def =
 				savedCards.find( ( t ) => t.is_default ) || savedCards[ 0 ];
-			if ( def ) {
-				setSelectedToken( String( def.tokenId ) );
-			}
+			setSelectedToken( String( def.tokenId ) );
 		}
 	}, [ savedCards ] );
 

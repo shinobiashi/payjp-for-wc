@@ -175,9 +175,14 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		?>
 		<div id="payjp-paypay-receipt-form"></div>
 		<div id="payjp-paypay-errors" role="alert" aria-live="polite"></div>
-		<button id="payjp-paypay-pay-button" type="button" class="button alt">
+		<button id="payjp-paypay-pay-button" type="button" class="button alt wp-element-button">
 			<?php esc_html_e( 'Pay with PayPay', 'payjp-for-wc' ); ?>
 		</button>
+		<p class="payjp-back-to-checkout">
+			<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">
+				&larr; <?php esc_html_e( 'Change payment method', 'payjp-for-wc' ); ?>
+			</a>
+		</p>
 		<?php
 	}
 }

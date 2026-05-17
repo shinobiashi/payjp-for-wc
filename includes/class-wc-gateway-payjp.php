@@ -214,6 +214,12 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				return;
 			}
 
+			wp_enqueue_style(
+				'payjp-receipt',
+				PAYJP_FOR_WC_URL . 'assets/css/payjp-receipt.css',
+				[],
+				PAYJP_FOR_WC_VERSION
+			);
 			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
 			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
 			wp_enqueue_script(

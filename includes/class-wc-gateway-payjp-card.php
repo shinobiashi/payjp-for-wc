@@ -468,9 +468,14 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		?>
 		<div id="payjp-card-receipt-form"></div>
 		<div id="payjp-card-errors" role="alert" aria-live="polite"></div>
-		<button id="payjp-card-pay-button" type="button" class="button alt">
+		<button id="payjp-card-pay-button" type="button" class="button alt wp-element-button">
 			<?php esc_html_e( 'Pay now', 'payjp-for-wc' ); ?>
 		</button>
+		<p class="payjp-back-to-checkout">
+			<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">
+				&larr; <?php esc_html_e( 'Change payment method', 'payjp-for-wc' ); ?>
+			</a>
+		</p>
 		<?php
 	}
 }

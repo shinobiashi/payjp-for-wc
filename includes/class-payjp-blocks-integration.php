@@ -21,42 +21,90 @@ if ( class_exists( 'Payjp_Blocks_Integration' ) ) {
 
 /**
  * Abstract base for PAY.JP Block Checkout integrations.
- * Concrete subclasses (Card, PayPay) supply the gateway-specific name.
- * Full implementation in Phase 7.
+ *
+ * Concrete subclasses (Payjp_Blocks_Integration_Card, Payjp_Blocks_Integration_Paypay)
+ * set $name and implement get_name(). All shared logic lives here.
+ *
+ * Payment flow: Block Checkout → process_payment() creates a Payment Flow and
+ * redirects to the order-pay page → payments.js widget on order-pay page →
+ * PAY.JP redirect → handle_return() completes the order.
+ * This avoids calling confirmPayment() before the WC order exists, which would
+ * make it impossible to link the payment to the order on the return URL.
  */
 abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType {
 
 	/**
-	 * Initialize gateway settings for block data.
-	 * Full implementation in Phase 7.
+	 * WooCommerce gateway instance, resolved in initialize().
+	 *
+	 * @var WC_Payment_Gateway|null
 	 */
-	public function initialize(): void {}
+	protected ?WC_Payment_Gateway $gateway = null;
 
 	/**
-	 * Whether this payment method is currently active.
-	 * Returns false until Phase 7 implements the full block integration.
+	 * Resolve the corresponding WooCommerce gateway from the payment gateway registry.
 	 */
-	public function is_active(): bool {
-		return false;
+	public function initialize(): void {
+		$gateways = WC()->payment_gateways()->payment_gateways();
+		$gw       = $gateways[ $this->name ] ?? null;
+		if ( $gw instanceof WC_Payment_Gateway ) {
+			$this->gateway = $gw;
+		}
 	}
 
 	/**
-	 * Registered script handles for this payment method's JS component.
-	 * Full implementation in Phase 7.
+	 * Whether this payment method is currently active and available for checkout.
+	 *
+	 * @return bool
+	 */
+	public function is_active(): bool {
+		return null !== $this->gateway && $this->gateway->is_available();
+	}
+
+	/**
+	 * Register and return the JS script handle for the Block Checkout payment component.
+	 *
+	 * Both card and PayPay share the same compiled bundle (build/blocks/checkout.js),
+	 * which calls registerPaymentMethod() for each method. The script is registered
+	 * only once even though two integration instances call this method.
 	 *
 	 * @return string[]
 	 */
 	public function get_payment_method_script_handles(): array {
-		return [];
+		$asset_path = PAYJP_FOR_WC_DIR . 'build/blocks/checkout.asset.php';
+		$asset      = file_exists( $asset_path )
+			? require $asset_path
+			: [
+				'dependencies' => [],
+				'version'      => PAYJP_FOR_WC_VERSION,
+			];
+		$deps       = isset( $asset['dependencies'] ) && is_array( $asset['dependencies'] ) ? $asset['dependencies'] : [];
+		$version    = isset( $asset['version'] ) && is_string( $asset['version'] ) ? $asset['version'] : PAYJP_FOR_WC_VERSION;
+
+		if ( ! wp_script_is( 'payjp-blocks-checkout', 'registered' ) ) {
+			wp_register_script(
+				'payjp-blocks-checkout',
+				PAYJP_FOR_WC_URL . 'build/blocks/checkout.js',
+				$deps,
+				$version,
+				true
+			);
+		}
+
+		return [ 'payjp-blocks-checkout' ];
 	}
 
 	/**
 	 * Data passed to the payment method JS component via getSetting().
-	 * Full implementation in Phase 7.
 	 *
 	 * @return array<string, mixed>
 	 */
 	public function get_payment_method_data(): array {
-		return [];
+		$gateway = $this->gateway;
+		return [
+			'title'          => null !== $gateway ? (string) $gateway->get_option( 'title' ) : '',
+			'description'    => null !== $gateway ? (string) $gateway->get_option( 'description' ) : '',
+			'supports'       => array_values( null !== $gateway ? $gateway->supports : [] ),
+			'showInCheckout' => $this->is_active(),
+		];
 	}
 }

@@ -12,7 +12,7 @@
 | Phase 4 | PayPay 決済（埋め込み型） | ✅ 完了 | #6 | 2026-05-16 |
 | Phase 5 | Webhook ハンドラ | ✅ 完了 | #6 | 2026-05-16 |
 | Phase 6 | 返金処理 | ✅ 完了 | — | 2026-05-17 |
-| Phase 7 | Block Checkout 統合 | ⬜ 未着手 | — | — |
+| Phase 7 | Block Checkout 統合 | ✅ 完了 | — | 2026-05-17 |
 | Phase 8 | カードトークン保存 | ⬜ 未着手 | — | — |
 | Phase 9 | WooCommerce Subscriptions 対応 | ⬜ 未着手 | — | — |
 | Phase 10 | 品質・テスト | ⬜ 未着手 | — | — |
@@ -354,15 +354,21 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ---
 
-### Phase 7: Block Checkout 統合
+### Phase 7: Block Checkout 統合 ✅
 
 **目標:** WooCommerce Block Checkout でカード・PayPay が使用できる。
 
-- [ ] `Payjp_Blocks_Integration` クラス（`AbstractPaymentMethodType` 実装）
-- [ ] `woocommerce_blocks_payment_method_type_registration` フックで登録
-- [ ] `get_payment_method_data()` で JS に設定値を渡す
-- [ ] `payment-method-card.js`: payments.js ウィジェット統合（`useEffect` でマウント）
-- [ ] Block Checkout の `onPaymentSetup` フックで client_secret を WC に渡す
+- [x] `Payjp_Blocks_Integration` クラス（`AbstractPaymentMethodType` 実装）
+- [x] `woocommerce_blocks_payment_method_type_registration` フックで登録
+- [x] `get_payment_method_data()` で JS に設定値（title/description/supports）を渡す
+- [x] `payment-method-card.js` / `payment-method-paypay.js`: label + description 表示
+- [x] 支払いフロー: Block Checkout → `process_payment()` → order-pay ページ(widget) → return URL
+
+> **設計注記:** PAY.JP の `confirmPayment()` は常にリダイレクトするため、注文生成前に
+> ウィジェットをブロックチェックアウトに埋め込むと order ID が不明になりリンク不可。
+> redirect-to-order-pay アプローチを採用（Stripe 等の埋め込みとは異なる）。
+
+> ✅ 2026-05-17 完了
 
 **完了条件:** Gutenberg チェックアウトブロックでカード・PayPay が表示・決済できる。
 

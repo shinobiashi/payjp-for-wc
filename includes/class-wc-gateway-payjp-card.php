@@ -225,6 +225,14 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 		$amount = (int) round( $order->get_total() );
 
+		if ( $amount < 50 ) {
+			wc_add_notice(
+				__( 'The minimum order amount for PAY.JP card payments is ¥50.', 'payjp-for-wc' ),
+				'error'
+			);
+			return [ 'result' => 'failure' ];
+		}
+
 		try {
 			$flow = $this->get_api()->post(
 				'/payment_flows',

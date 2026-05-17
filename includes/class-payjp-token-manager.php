@@ -241,6 +241,14 @@ class Payjp_Token_Manager {
 	 * @return WC_Payment_Token_CC The saved WooCommerce token.
 	 */
 	public static function save_wc_token( int $user_id, string $pm_id, array $card ): WC_Payment_Token_CC {
+		// Return the existing WC token if this PM ID is already saved to avoid duplicates.
+		$existing_tokens = WC_Payment_Tokens::get_customer_tokens( $user_id, 'payjp_card' );
+		foreach ( $existing_tokens as $existing ) {
+			if ( $existing instanceof WC_Payment_Token_CC && $existing->get_token() === $pm_id ) {
+				return $existing;
+			}
+		}
+
 		$token = new WC_Payment_Token_CC();
 		$token->set_token( $pm_id );
 		$token->set_gateway_id( 'payjp_card' );

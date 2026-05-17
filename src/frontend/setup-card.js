@@ -24,6 +24,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 
 	let widgetsInstance = null;
 	let setupInitialised = false;
+	let isInitializing = false;
 
 	/**
 	 * Display an error message in the accessible error container.
@@ -39,12 +40,15 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	/**
 	 * Initialise the setup widget by calling the REST endpoint to obtain a
 	 * client_secret, then mounting the payments.js setup form.
+	 * Returns true on success, false on failure (allowing the caller to retry).
+	 *
+	 * @return {Promise<boolean>} True if the widget was successfully mounted.
 	 */
 	async function initSetupWidget() {
-		if ( setupInitialised ) {
-			return;
+		if ( setupInitialised || isInitializing ) {
+			return setupInitialised;
 		}
-		setupInitialised = true;
+		isInitializing = true;
 
 		let flowData;
 		try {
@@ -58,12 +62,14 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			flowData = await response.json();
 		} catch {
 			showError( i18n.errorGeneric );
-			return;
+			isInitializing = false;
+			return false;
 		}
 
 		if ( flowData.error || ! flowData.client_secret ) {
 			showError( flowData.error || i18n.errorGeneric );
-			return;
+			isInitializing = false;
+			return false;
 		}
 
 		const payments = PayjpPayments( publicKey );
@@ -75,6 +81,10 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			layout: 'accordion',
 		} );
 		setupForm.mount( mountEl );
+
+		setupInitialised = true;
+		isInitializing = false;
+		return true;
 	}
 
 	// Initialise as soon as the page loads.
@@ -87,12 +97,24 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			e.preventDefault();
 			e.stopImmediatePropagation();
 
+			const submitButton = form.querySelector( '[type="submit"]' );
+
+			// If init failed on page load, retry before giving up.
 			if ( ! widgetsInstance ) {
-				showError( i18n.errorGeneric );
-				return;
+				if ( submitButton ) {
+					submitButton.disabled = true;
+					submitButton.textContent = i18n.processing;
+				}
+				const ready = await initSetupWidget();
+				if ( ! ready ) {
+					if ( submitButton ) {
+						submitButton.disabled = false;
+						submitButton.textContent = i18n.addCard;
+					}
+					return;
+				}
 			}
 
-			const submitButton = form.querySelector( '[type="submit"]' );
 			if ( submitButton ) {
 				submitButton.disabled = true;
 				submitButton.textContent = i18n.processing;

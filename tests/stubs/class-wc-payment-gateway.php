@@ -86,6 +86,94 @@ abstract class WC_Payment_Gateway {
 }
 
 /**
+ * Stub for WC_Payment_Token used in PHPUnit tests.
+ */
+class WC_Payment_Token {
+
+	/** @var string */
+	protected string $token = '';
+
+	/** @var string */
+	protected string $gateway_id = '';
+
+	/** @var int */
+	protected int $user_id = 0;
+
+	/**
+	 * @return string
+	 */
+	public function get_token(): string {
+		return $this->token;
+	}
+
+	/**
+	 * @param string $token Token value.
+	 */
+	public function set_token( string $token ): void {
+		$this->token = $token;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_gateway_id(): string {
+		return $this->gateway_id;
+	}
+
+	/**
+	 * @param string $gateway_id Gateway ID.
+	 */
+	public function set_gateway_id( string $gateway_id ): void {
+		$this->gateway_id = $gateway_id;
+	}
+
+	/**
+	 * @return int
+	 */
+	public function get_user_id(): int {
+		return $this->user_id;
+	}
+
+	/**
+	 * @param int $user_id WordPress user ID.
+	 */
+	public function set_user_id( int $user_id ): void {
+		$this->user_id = $user_id;
+	}
+
+	/**
+	 * Persist the token (no-op in stub).
+	 */
+	public function save(): void {}
+}
+
+/**
+ * Stub for WC_Payment_Token_CC used in PHPUnit tests.
+ */
+class WC_Payment_Token_CC extends WC_Payment_Token {
+
+	/**
+	 * @param string $type Card type (visa, mastercard, etc.).
+	 */
+	public function set_card_type( string $type ): void {}
+
+	/**
+	 * @param string $last4 Last 4 digits.
+	 */
+	public function set_last4( string $last4 ): void {}
+
+	/**
+	 * @param string $month Expiry month (1-12).
+	 */
+	public function set_expiry_month( string $month ): void {}
+
+	/**
+	 * @param string $year Expiry year (4 digits).
+	 */
+	public function set_expiry_year( string $year ): void {}
+}
+
+/**
  * Stub for WC_Payment_Gateway_CC used in PHPUnit tests.
  * Extends WC_Payment_Gateway and adds tokenization-related no-op methods.
  */

@@ -311,6 +311,12 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			];
 		}
 
+		// Explicit failure — surface an error immediately without redirecting.
+		if ( in_array( $status, [ 'payment_failed', 'requires_payment_method' ], true ) ) {
+			wc_add_notice( esc_html__( 'Payment failed. Please try a different card.', 'payjp-for-wc' ), 'error' );
+			return [ 'result' => 'failure' ];
+		}
+
 		// 3DS or other action required — redirect to order-pay page for widget handling.
 		if ( $client_secret ) {
 			$order->update_meta_data( '_payjp_client_secret', $client_secret );
@@ -336,17 +342,18 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	/**
 	 * Handle "Add payment method" from My Account.
 	 *
-	 * The setup-card.js script intercepts the form submit, creates the Setup Flow
-	 * via REST, and redirects to handle_setup_return(). This method is only reached
-	 * if JS is unavailable; redirect back to the same page to avoid a silent failure.
+	 * The setup-card.js script intercepts the form submit and handles the full
+	 * Setup Flow in the browser. This method is only reached when JavaScript is
+	 * unavailable; show an explicit error rather than silently looping.
 	 *
-	 * @return array{result: string, redirect: string}
+	 * @return array{result: string}
 	 */
 	public function add_payment_method(): array {
-		return [
-			'result'   => 'success',
-			'redirect' => wc_get_account_endpoint_url( 'add-payment-method' ),
-		];
+		wc_add_notice(
+			__( 'JavaScript is required to add a payment method. Please enable JavaScript and try again.', 'payjp-for-wc' ),
+			'error'
+		);
+		return [ 'result' => 'failure' ];
 	}
 
 	/**

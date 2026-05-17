@@ -64,6 +64,13 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 		$this->setup();
 
+		// Remove tokenization support when the merchant has disabled card saving.
+		if ( 'yes' !== $this->get_option( 'save_payment_methods', 'yes' ) ) {
+			$this->supports = array_values(
+				array_diff( $this->supports, [ 'tokenization', 'add_payment_method' ] )
+			);
+		}
+
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
 		add_action( 'woocommerce_receipt_' . $this->id, [ $this, 'receipt_page' ] );
 		add_action( 'wp_enqueue_scripts', [ $this, 'setup_card_scripts' ] );
@@ -72,7 +79,8 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	// ── Template-method implementations ──────────────────────────────────────
 
 	/**
-	 * Initialize form fields, overriding the description default for card payments.
+	 * Initialize form fields, overriding the description default and adding a
+	 * "save payment methods" toggle specific to card payments.
 	 */
 	public function init_form_fields(): void {
 		parent::init_form_fields();
@@ -80,6 +88,12 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			'After clicking "Place order", you will be taken to a secure page to enter your card details.',
 			'payjp-for-wc'
 		);
+		$this->form_fields['save_payment_methods']   = [
+			'title'   => __( 'Save payment methods', 'payjp-for-wc' ),
+			'type'    => 'checkbox',
+			'label'   => __( 'Allow customers to save their card for future purchases', 'payjp-for-wc' ),
+			'default' => 'yes',
+		];
 	}
 
 	/**

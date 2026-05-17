@@ -52,6 +52,8 @@ const CardPaymentMethod = {
 	ariaLabel: label,
 	supports: {
 		features: settings.supports || [],
+		showSavedCards: settings.showSavedCards || false,
+		showSaveOption: settings.showSaveOption || false,
 	},
 };
 

@@ -36,4 +36,21 @@ class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 	public function get_name(): string {
 		return $this->name;
 	}
+
+	/**
+	 * Data passed to the payment method JS component via getSetting().
+	 * Extends the base data with flags that enable the saved-card UI in Block Checkout.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function get_payment_method_data(): array {
+		$save_enabled = null !== $this->gateway && $this->gateway->supports( 'tokenization' );
+		return array_merge(
+			parent::get_payment_method_data(),
+			[
+				'showSavedCards' => $save_enabled,
+				'showSaveOption' => $save_enabled,
+			]
+		);
+	}
 }

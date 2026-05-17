@@ -18,6 +18,7 @@ parameters:
         - phpstan-bootstrap.php
         - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
         - vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
+        - phpstan-wcs-stubs.php
 
     # WordPress global functions / variables handled by the extension
     dynamicConstantNames:

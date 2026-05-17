@@ -58,8 +58,8 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		);
 
 		// Shared frontend hooks — subclasses only need to register receipt_page.
-		add_action( 'wp_enqueue_scripts', [ $this, 'payment_scripts' ] );
-		add_action( 'template_redirect', [ $this, 'handle_return' ] );
+		add_action( 'wp_enqueue_scripts', array( $this, 'payment_scripts' ) );
+		add_action( 'template_redirect', array( $this, 'handle_return' ) );
 	}
 
 	/**
@@ -80,11 +80,12 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				$methods[] = $this->payjp_method;
 			}
 		} else {
-			$methods = array_values( array_diff( $methods, [ $this->payjp_method ] ) );
+			$methods = array_values( array_diff( $methods, array( $this->payjp_method ) ) );
 		}
 
 		$settings['enabled_methods'] = $methods;
 		update_option( Payjp_Settings::OPTION_KEY, $settings );
+		Payjp_Settings::flush_cache();
 	}
 
 	/**
@@ -92,28 +93,29 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	 * Subclasses may override and call parent to merge additional fields.
 	 */
 	public function init_form_fields(): void {
-		$this->form_fields = [
-			'enabled'     => [
+		$this->form_fields = array(
+			'enabled'     => array(
 				'title'   => __( 'Enable/Disable', 'payjp-for-wc' ),
 				'type'    => 'checkbox',
 				'label'   => __( 'Enable this payment method', 'payjp-for-wc' ),
 				'default' => 'no',
-			],
-			'title'       => [
+			),
+			'title'       => array(
 				'title'       => __( 'Title', 'payjp-for-wc' ),
 				'type'        => 'text',
 				'description' => __( 'Payment method title shown to the customer at checkout.', 'payjp-for-wc' ),
 				'default'     => $this->method_title,
 				'desc_tip'    => true,
-			],
-			'description' => [
+			),
+			'description' => array(
 				'title'       => __( 'Description', 'payjp-for-wc' ),
 				'type'        => 'textarea',
-				'description' => __( 'Payment method description shown to the customer at checkout.', 'payjp-for-wc' ),
+				/* translators: Admin tooltip for payment method description field. */
+				'description' => __( 'Payment method description shown to the customer at checkout. Basic HTML tags are supported (e.g. &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;).', 'payjp-for-wc' ),
 				'default'     => '',
 				'desc_tip'    => true,
-			],
-		];
+			),
+		);
 	}
 
 	/**
@@ -214,35 +216,45 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				return;
 			}
 
+			wp_enqueue_style(
+				'payjp-receipt',
+				PAYJP_FOR_WC_URL . 'assets/css/payjp-receipt.css',
+				array(),
+				PAYJP_FOR_WC_VERSION
+			);
 			// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
-			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
+			wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', array(), null, true );
 			wp_enqueue_script(
 				$script_handle,
 				PAYJP_FOR_WC_URL . 'build/frontend/' . $this->get_checkout_script_filename() . '.js',
-				[ 'payjp-payments-js' ],
+				array( 'payjp-payments-js' ),
 				PAYJP_FOR_WC_VERSION,
 				true
 			);
 			wp_localize_script(
 				$script_handle,
 				$this->get_script_localize_var(),
-				[
-					'publicKey'    => Payjp_Settings::get_public_key(),
-					'clientSecret' => $client_secret,
-					'returnUrl'    => $this->build_return_url( $order ),
-					'i18n'         => $this->get_script_i18n(),
-				]
+				array(
+					'publicKey'      => Payjp_Settings::get_public_key(),
+					'clientSecret'   => $client_secret,
+					'returnUrl'      => $this->build_return_url( $order ),
+					'billingDetails' => array(
+						'email' => $order->get_billing_email(),
+						'phone' => $order->get_billing_phone(),
+					),
+					'i18n'           => $this->get_script_i18n(),
+				)
 			);
 			return;
 		}
 
 		// Checkout page: enqueue scripts for the payment option display.
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
-		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
+		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', array(), null, true );
 		wp_enqueue_script(
 			$script_handle,
 			PAYJP_FOR_WC_URL . 'build/frontend/' . $this->get_checkout_script_filename() . '.js',
-			[ 'payjp-payments-js' ],
+			array( 'payjp-payments-js' ),
 			PAYJP_FOR_WC_VERSION,
 			true
 		);
@@ -339,11 +351,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	 */
 	protected function build_return_url( WC_Order $order ): string {
 		return add_query_arg(
-			[
+			array(
 				'payjp-return' => '1',
 				'order_id'     => $order->get_id(),
 				'key'          => $order->get_order_key(),
-			],
+			),
 			home_url( '/' )
 		);
 	}

@@ -29,7 +29,7 @@ class Payjp_Loader {
 	 * Require all plugin class files.
 	 */
 	private static function load_classes(): void {
-		$dir = PAYJP_FOR_WC_DIR . 'includes/';
+		$dir = PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/';
 
 		require_once $dir . 'class-payjp-settings.php';
 		require_once $dir . 'class-payjp-api.php';
@@ -45,7 +45,7 @@ class Payjp_Loader {
 		// this loader runs (priority 11). Loading them here as well would be redundant
 		// and unsafe when AbstractPaymentMethodType is unavailable.
 		//
-		// class-payjp-admin-settings-page.php extends WC_Settings_Page which is NOT
+		// admin/class-payjp-admin-settings-page.php extends WC_Settings_Page which is NOT
 		// available at plugins_loaded; it is required inside the woocommerce_get_settings_pages
 		// filter callback (see register_hooks()) where WC admin has already booted.
 	}
@@ -66,17 +66,17 @@ class Payjp_Loader {
 	 * Register WordPress and WooCommerce hooks.
 	 */
 	private static function register_hooks(): void {
-		add_filter( 'woocommerce_payment_gateways', [ self::class, 'register_gateways' ] );
+		add_filter( 'woocommerce_payment_gateways', array( self::class, 'register_gateways' ) );
 
 		if ( is_admin() ) {
-			// Defer requiring class-payjp-admin-settings-page.php to the
+			// Defer requiring admin/class-payjp-admin-settings-page.php to the
 			// woocommerce_get_settings_pages filter: WC_Settings_Page is guaranteed
 			// to be defined by the time this filter fires (after WC admin boots),
 			// whereas it may not exist yet during plugins_loaded.
 			add_filter(
 				'woocommerce_get_settings_pages',
 				static function ( array $pages ): array {
-					require_once PAYJP_FOR_WC_DIR . 'includes/class-payjp-admin-settings-page.php';
+					require_once PAYJP_FOR_WC_DIR . 'includes/admin/class-payjp-admin-settings-page.php';
 					return Payjp_Admin_Settings_Page::register_page( $pages );
 				}
 			);

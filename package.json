@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "@wordpress/components": "*",
+        "@wordpress/data": "*",
         "@wordpress/element": "*",
         "@wordpress/i18n": "*"
     }

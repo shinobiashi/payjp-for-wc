@@ -14,13 +14,25 @@ const label = settings.title || __( 'PayPay (PAY.JP)', 'payjp-for-wc' );
 
 /**
  * Label component shown in the payment method list.
- *
- * @param {Object}   props
- * @param {Object}   props.components
- * @param {Function} props.components.PaymentMethodLabel
+ * Renders a custom <img> for the PayPay logo because WooCommerce's
+ * PaymentMethodLabel only accepts predefined icon names (bank, card, etc.),
+ * not arbitrary SVG URLs.
  */
-const Label = ( { components: { PaymentMethodLabel } } ) => (
-	<PaymentMethodLabel text={ label } />
+const Label = () => (
+	<span className="wc-block-components-payment-method-label">
+		{ settings.icon && (
+			<img
+				src={ settings.icon }
+				alt=""
+				style={ {
+					height: '2em',
+					width: 'auto',
+					verticalAlign: 'middle',
+				} }
+			/>
+		) }
+		{ label }
+	</span>
 );
 
 /**

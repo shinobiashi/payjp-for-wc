@@ -259,6 +259,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		// Extensions that render extra fields must hook woocommerce_settings_save_payjp
 		// to persist their own POST values; this merge preserves already-saved custom keys.
 		update_option( Payjp_Settings::OPTION_KEY, array_merge( Payjp_Settings::get_all(), $settings ) );
+		Payjp_Settings::flush_cache();
 
 		// Sync each gateway's own WC 'enabled' flag so WC_Payment_Gateway::is_available()
 		// returns true when the method is enabled from this unified settings page.

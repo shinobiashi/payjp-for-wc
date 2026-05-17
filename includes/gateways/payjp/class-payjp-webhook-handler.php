@@ -44,7 +44,7 @@ class Payjp_Webhook_Handler {
 	 * Register webhook-related hooks.
 	 */
 	public static function init(): void {
-		add_action( 'rest_api_init', [ self::class, 'register_endpoint' ] );
+		add_action( 'rest_api_init', array( self::class, 'register_endpoint' ) );
 	}
 
 	/**
@@ -54,12 +54,12 @@ class Payjp_Webhook_Handler {
 		register_rest_route(
 			self::REST_NAMESPACE,
 			self::REST_ROUTE,
-			[
+			array(
 				'methods'             => 'POST',
-				'callback'            => [ self::class, 'handle_request' ],
+				'callback'            => array( self::class, 'handle_request' ),
 				// PAY.JP servers have no WP session; token auth is done inside handle_request() via hash_equals().
 				'permission_callback' => '__return_true',
-			]
+			)
 		);
 	}
 
@@ -71,13 +71,13 @@ class Payjp_Webhook_Handler {
 	 */
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
 		if ( ! self::verify_token( $request ) ) {
-			return new WP_REST_Response( [ 'error' => 'Unauthorized' ], 401 );
+			return new WP_REST_Response( array( 'error' => 'Unauthorized' ), 401 );
 		}
 
 		// Defense-in-depth: reject requests that are not JSON.
 		$content_type = $request->get_header( 'Content-Type' );
 		if ( ! is_string( $content_type ) || false === strpos( $content_type, 'application/json' ) ) {
-			return new WP_REST_Response( [ 'error' => 'Unsupported Media Type' ], 415 );
+			return new WP_REST_Response( array( 'error' => 'Unsupported Media Type' ), 415 );
 		}
 
 		$event = $request->get_json_params();
@@ -85,7 +85,7 @@ class Payjp_Webhook_Handler {
 		$type   = isset( $event['type'] ) && is_string( $event['type'] ) ? $event['type'] : '';
 		$object = isset( $event['data']['object'] ) && is_array( $event['data']['object'] )
 			? $event['data']['object']
-			: [];
+			: array();
 
 		switch ( $type ) {
 			case 'payment_flow.succeeded':
@@ -101,7 +101,7 @@ class Payjp_Webhook_Handler {
 				break;
 		}
 
-		return new WP_REST_Response( [ 'received' => true ] );
+		return new WP_REST_Response( array( 'received' => true ) );
 	}
 
 	/**
@@ -163,7 +163,7 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
-		if ( $order->has_status( [ 'failed', 'cancelled' ] ) ) {
+		if ( $order->has_status( array( 'failed', 'cancelled' ) ) ) {
 			return;
 		}
 
@@ -210,18 +210,34 @@ class Payjp_Webhook_Handler {
 	}
 
 	/**
-	 * Find a WooCommerce order by its PAY.JP Payment Flow ID stored in order meta.
+	 * Find a WooCommerce order by its PAY.JP Payment Flow ID.
+	 *
+	 * Strategy: query by transaction_id first (direct column on HPOS; fast), then
+	 * fall back to a meta query for orders not yet completed (rare race condition
+	 * where the webhook arrives before the customer's return-URL redirect is handled).
 	 *
 	 * @param string $flow_id PAY.JP Payment Flow ID.
 	 * @return WC_Order|false WooCommerce order, or false if not found.
 	 */
 	private static function find_order_by_flow_id( string $flow_id ): WC_Order|false {
+		// payment_complete( $flow_id ) sets transaction_id — fast indexed lookup on HPOS.
 		$orders = wc_get_orders(
-			[
+			array(
+				'limit'          => 1,
+				'transaction_id' => $flow_id,
+			)
+		);
+		if ( ! empty( $orders ) ) {
+			return $orders[0];
+		}
+
+		// Fallback: meta query covers the window before payment_complete() has been called.
+		$orders = wc_get_orders(
+			array(
 				'limit'      => 1,
 				'meta_key'   => '_payjp_payment_flow_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_value' => $flow_id,                 // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-			]
+			)
 		);
 
 		return ! empty( $orders ) ? $orders[0] : false;

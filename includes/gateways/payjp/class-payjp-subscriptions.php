@@ -41,14 +41,14 @@ class Payjp_Subscriptions {
 
 		add_action(
 			'woocommerce_scheduled_subscription_payment_payjp_card',
-			[ self::class, 'handle_scheduled_payment' ],
+			array( self::class, 'handle_scheduled_payment' ),
 			10,
 			2
 		);
 
 		add_action(
 			'woocommerce_subscription_payment_method_updated',
-			[ self::class, 'on_payment_method_updated' ],
+			array( self::class, 'on_payment_method_updated' ),
 			10,
 			2
 		);
@@ -73,7 +73,7 @@ class Payjp_Subscriptions {
 
 		$subscriptions = function_exists( 'wcs_get_subscriptions_for_renewal_order' )
 			? wcs_get_subscriptions_for_renewal_order( $renewal_order )
-			: [];
+			: array();
 
 		/* @var WC_Subscription|false $subscription */ // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
 		$subscription = ! empty( $subscriptions ) ? reset( $subscriptions ) : false;
@@ -104,15 +104,15 @@ class Payjp_Subscriptions {
 		try {
 			$flow = $api->post(
 				'/payment_flows',
-				[
+				array(
 					'amount'               => (int) round( $amount ),
 					'currency'             => strtolower( get_woocommerce_currency() ),
-					'payment_method_types' => [ 'card' ],
+					'payment_method_types' => array( 'card' ),
 					'payment_method'       => $pm_id,
 					'customer'             => $customer_id,
 					'confirm'              => true,
 					'capture_method'       => 'automatic',
-				]
+				)
 			);
 		} catch ( RuntimeException $e ) {
 			$renewal_order->update_status( 'failed', esc_html( $e->getMessage() ) );

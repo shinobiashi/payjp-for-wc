@@ -11,19 +11,19 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-$option_keys = [
+$option_keys = array(
 	'payjp_settings',
 	'woocommerce_payjp_card_settings',
 	'woocommerce_payjp_paypay_settings',
-];
+);
 
 if ( is_multisite() ) {
 	// Remove per-site options from every subsite.
 	$sites = get_sites(
-		[
+		array(
 			'fields' => 'ids',
 			'number' => 0,
-		]
+		)
 	);
 	foreach ( $sites as $site_id ) {
 		switch_to_blog( (int) $site_id );

@@ -53,10 +53,5 @@
         </properties>
     </rule>
 
-    <!-- PHP 8.0+ minimum: short array syntax [] is required project-wide.
-         WordPress-Extra (via PHPCSExtra) includes Universal.Arrays.DisallowShortArraySyntax
-         which bans []. Suppress it at severity 0 to allow [] everywhere. -->
-    <rule ref="Universal.Arrays.DisallowShortArraySyntax">
-        <severity>0</severity>
-    </rule>
+    <!-- Enforce long array syntax array() per WordPress Coding Standards. -->
 </ruleset>

@@ -41,13 +41,13 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$this->has_fields         = true;
 		$this->method_title       = __( 'PAY.JP Credit Card', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept credit card payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
-		$this->supports           = [ 'products', 'refunds', 'tokenization', 'add_payment_method' ];
+		$this->supports           = array( 'products', 'refunds', 'tokenization', 'add_payment_method' );
 
 		// Extend supports when WooCommerce Subscriptions is active.
 		if ( class_exists( 'WC_Subscriptions' ) ) {
 			$this->supports = array_merge(
 				$this->supports,
-				[
+				array(
 					'subscriptions',
 					'subscription_cancellation',
 					'subscription_suspension',
@@ -58,18 +58,43 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 					'subscription_payment_method_change_customer',
 					'subscription_payment_method_change_admin',
 					'multiple_subscriptions',
-				]
+				)
 			);
 		}
 
 		$this->setup();
 
+		// Remove tokenization support when the merchant has disabled card saving.
+		if ( 'yes' !== $this->get_option( 'save_payment_methods', 'yes' ) ) {
+			$this->supports = array_values(
+				array_diff( $this->supports, array( 'tokenization', 'add_payment_method' ) )
+			);
+		}
+
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
-		add_action( 'woocommerce_receipt_' . $this->id, [ $this, 'receipt_page' ] );
-		add_action( 'wp_enqueue_scripts', [ $this, 'setup_card_scripts' ] );
+		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'setup_card_scripts' ) );
 	}
 
 	// ── Template-method implementations ──────────────────────────────────────
+
+	/**
+	 * Initialize form fields, overriding the description default and adding a
+	 * "save payment methods" toggle specific to card payments.
+	 */
+	public function init_form_fields(): void {
+		parent::init_form_fields();
+		$this->form_fields['description']['default'] = __(
+			'After clicking "Place order", you will be taken to a secure page to enter your card details.',
+			'payjp-for-wc'
+		);
+		$this->form_fields['save_payment_methods']   = array(
+			'title'   => __( 'Save payment methods', 'payjp-for-wc' ),
+			'type'    => 'checkbox',
+			'label'   => __( 'Allow customers to save their card for future purchases', 'payjp-for-wc' ),
+			'default' => 'yes',
+		);
+	}
 
 	/**
 	 * Returns the script handle for the card checkout widget.
@@ -104,10 +129,10 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	 * @return array{payNow: string, processing: string}
 	 */
 	protected function get_script_i18n(): array {
-		return [
+		return array(
 			'payNow'     => __( 'Pay now', 'payjp-for-wc' ),
 			'processing' => __( 'Processing…', 'payjp-for-wc' ),
-		];
+		);
 	}
 
 	// ── Gateway-specific methods ──────────────────────────────────────────────
@@ -133,28 +158,28 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		);
 
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
-		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
+		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', array(), null, true );
 		wp_enqueue_script(
 			'payjp-setup-card',
 			PAYJP_FOR_WC_URL . 'build/frontend/setup-card.js',
-			[ 'payjp-payments-js' ],
+			array( 'payjp-payments-js' ),
 			PAYJP_FOR_WC_VERSION,
 			true
 		);
 		wp_localize_script(
 			'payjp-setup-card',
 			'payjpSetupData',
-			[
+			array(
 				'publicKey' => Payjp_Settings::get_public_key(),
 				'returnUrl' => $return_url,
 				'restUrl'   => rest_url( 'payjp/v1/setup-flow' ),
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
-				'i18n'      => [
+				'i18n'      => array(
 					'addCard'      => __( 'Add card', 'payjp-for-wc' ),
 					'processing'   => __( 'Processing…', 'payjp-for-wc' ),
 					'errorGeneric' => __( 'An error occurred. Please try again.', 'payjp-for-wc' ),
-				],
-			]
+				),
+			)
 		);
 	}
 
@@ -183,8 +208,10 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			$this->save_payment_method_checkbox();
 		}
 
+		echo '<div class="wc-payment-form">';
 		echo '<div id="payjp-card-form"></div>';
 		echo '<div id="payjp-card-errors" role="alert" aria-live="polite"></div>';
+		echo '</div>';
 	}
 
 	/**
@@ -201,7 +228,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$order = wc_get_order( $order_id );
 		if ( ! $order ) {
 			wc_add_notice( esc_html__( 'Unable to load the order for payment.', 'payjp-for-wc' ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		// WC checkout verifies nonce before calling process_payment; no further nonce check needed here.
@@ -211,8 +238,12 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			: '';
 
 		// Flag the order for card saving if the customer checked the checkbox.
-		$save_card = isset( $_POST['wc-payjp_card-new-payment-method'] )
-			&& 'true' === sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-new-payment-method'] ) );
+		// Classic checkout sends the string 'true'; Block checkout (WC Blocks Store API)
+		// serialises the JS boolean as '1', so both values must be accepted.
+		$save_card_raw = isset( $_POST['wc-payjp_card-new-payment-method'] ) && is_string( $_POST['wc-payjp_card-new-payment-method'] )
+			? sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-new-payment-method'] ) )
+			: '';
+		$save_card     = 'true' === $save_card_raw || '1' === $save_card_raw;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( $raw_token_id && 'new' !== $raw_token_id ) {
@@ -230,18 +261,18 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 				__( 'The minimum order amount for PAY.JP card payments is ¥50.', 'payjp-for-wc' ),
 				'error'
 			);
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		try {
 			$flow = $this->get_api()->post(
 				'/payment_flows',
-				[
+				array(
 					'amount'               => $amount,
 					'currency'             => 'jpy',
-					'payment_method_types' => [ 'card' ],
+					'payment_method_types' => array( 'card' ),
 					'capture_method'       => 'automatic',
-				]
+				)
 			);
 
 			$flow_id       = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
@@ -249,7 +280,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 			if ( ! $flow_id || ! $client_secret ) {
 				wc_add_notice( esc_html__( 'PAY.JP returned an incomplete payment session. Please try again.', 'payjp-for-wc' ), 'error' );
-				return [ 'result' => 'failure' ];
+				return array( 'result' => 'failure' );
 			}
 
 			$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
@@ -258,13 +289,13 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			$order->update_meta_data( '_payjp_capture_method', 'automatic' );
 			$order->save();
 
-			return [
+			return array(
 				'result'   => 'success',
 				'redirect' => $order->get_checkout_payment_url( true ),
-			];
+			);
 		} catch ( RuntimeException $e ) {
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 	}
 
@@ -287,32 +318,31 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			|| 'payjp_card' !== $token->get_gateway_id()
 		) {
 			wc_add_notice( esc_html__( 'Invalid payment token. Please try again.', 'payjp-for-wc' ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		$pm_id       = $token->get_token();
 		$amount      = (int) round( $order->get_total() );
 		$customer_id = Payjp_Token_Manager::get_customer_id( (int) $order->get_customer_id() );
 
-		$payload = [
-			'amount'               => $amount,
-			'currency'             => 'jpy',
-			'payment_method_types' => [ 'card' ],
-			'payment_method'       => $pm_id,
-			'confirm'              => true,
-			'return_url'           => $this->build_return_url( $order ),
-			'capture_method'       => 'automatic',
-		];
+		$payload = array(
+			'amount'            => $amount,
+			'currency'          => 'jpy',
+			'payment_method_id' => $pm_id,
+			'confirm'           => true,
+			'return_url'        => $this->build_return_url( $order ),
+			'capture_method'    => 'automatic',
+		);
 
 		if ( $customer_id ) {
-			$payload['customer'] = $customer_id;
+			$payload['customer_id'] = $customer_id;
 		}
 
 		try {
 			$flow = $this->get_api()->post( '/payment_flows', $payload );
 		} catch ( RuntimeException $e ) {
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		$flow_id       = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
@@ -321,7 +351,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 		if ( ! $flow_id ) {
 			wc_add_notice( esc_html__( 'PAY.JP returned an incomplete payment session. Please try again.', 'payjp-for-wc' ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
@@ -332,16 +362,16 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			$order->save();
 			$order->payment_complete( $flow_id );
 			$this->after_payment_complete( $order, $flow );
-			return [
+			return array(
 				'result'   => 'success',
 				'redirect' => $order->get_checkout_order_received_url(),
-			];
+			);
 		}
 
 		// Explicit failure — surface an error immediately without redirecting.
-		if ( in_array( $status, [ 'payment_failed', 'requires_payment_method' ], true ) ) {
+		if ( in_array( $status, array( 'payment_failed', 'requires_payment_method' ), true ) ) {
 			wc_add_notice( esc_html__( 'Payment failed. Please try a different card.', 'payjp-for-wc' ), 'error' );
-			return [ 'result' => 'failure' ];
+			return array( 'result' => 'failure' );
 		}
 
 		// 3DS or other action required — redirect to order-pay page for widget handling.
@@ -350,10 +380,10 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		}
 		$order->save();
 
-		return [
+		return array(
 			'result'   => 'success',
 			'redirect' => $order->get_checkout_payment_url( true ),
-		];
+		);
 	}
 
 	/**
@@ -381,7 +411,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			__( 'JavaScript is required to add a payment method. Please enable JavaScript and try again.', 'payjp-for-wc' ),
 			'error'
 		);
-		return [ 'result' => 'failure' ];
+		return array( 'result' => 'failure' );
 	}
 
 	/**
@@ -406,7 +436,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			);
 		}
 
-		$body = [ 'payment_flow' => $flow_id ];
+		$body = array( 'payment_flow' => $flow_id );
 
 		// Only send amount for partial refunds; omit to trigger a full refund.
 		if ( null !== $amount && $amount > 0 ) {
@@ -468,9 +498,14 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		?>
 		<div id="payjp-card-receipt-form"></div>
 		<div id="payjp-card-errors" role="alert" aria-live="polite"></div>
-		<button id="payjp-card-pay-button" type="button" class="button alt">
+		<button id="payjp-card-pay-button" type="button" class="button alt wp-element-button">
 			<?php esc_html_e( 'Pay now', 'payjp-for-wc' ); ?>
 		</button>
+		<p class="payjp-back-to-checkout">
+			<a href="<?php echo esc_url( wc_get_checkout_url() ); ?>">
+				&larr; <?php esc_html_e( 'Change payment method', 'payjp-for-wc' ); ?>
+			</a>
+		</p>
 		<?php
 	}
 }

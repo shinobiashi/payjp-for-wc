@@ -36,4 +36,23 @@ class Payjp_Blocks_Integration_Card extends Payjp_Blocks_Integration {
 	public function get_name(): string {
 		return $this->name;
 	}
+
+	/**
+	 * Data passed to the payment method JS component via getSetting().
+	 * Passes showSaveOption so the JS component can show the "save for later"
+	 * checkbox when tokenization is enabled. showSavedCards is intentionally
+	 * omitted: the Content component renders saved cards inline itself so
+	 * WC Blocks' global saved-token section is suppressed (showSavedCards: false).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function get_payment_method_data(): array {
+		$save_enabled = null !== $this->gateway && $this->gateway->supports( 'tokenization' );
+		return array_merge(
+			parent::get_payment_method_data(),
+			array(
+				'showSaveOption' => $save_enabled,
+			)
+		);
+	}
 }

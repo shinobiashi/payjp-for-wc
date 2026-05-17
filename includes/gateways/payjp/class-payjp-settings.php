@@ -47,13 +47,33 @@ class Payjp_Settings {
 	}
 
 	/**
+	 * In-memory cache: avoids repeated get_option() calls within the same request.
+	 * Invalidated by flush_cache() whenever the option is updated.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private static ?array $cache = null;
+
+	/**
 	 * Get all settings as an associative array.
 	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get_all(): array {
-		$settings = get_option( self::OPTION_KEY, [] );
-		return is_array( $settings ) ? $settings : [];
+		if ( null === self::$cache ) {
+			$settings    = get_option( self::OPTION_KEY, array() );
+			self::$cache = is_array( $settings ) ? $settings : array();
+		}
+		return self::$cache;
+	}
+
+	/**
+	 * Invalidate the in-memory settings cache.
+	 * Must be called after any update_option( self::OPTION_KEY, ... ) to ensure
+	 * subsequent reads within the same request see the updated values.
+	 */
+	public static function flush_cache(): void {
+		self::$cache = null;
 	}
 
 	/**
@@ -90,18 +110,18 @@ class Payjp_Settings {
 		$settings = self::get_all();
 
 		if ( array_key_exists( 'enabled_methods', $settings ) ) {
-			return is_array( $settings['enabled_methods'] ) ? $settings['enabled_methods'] : [];
+			return is_array( $settings['enabled_methods'] ) ? $settings['enabled_methods'] : array();
 		}
 
 		// When enabled_methods has never been saved, derive from the individual gateway
 		// options so that an upgrade from a pre-unified-settings version preserves
 		// which gateways were already enabled. On a genuine fresh install (no gateway
 		// options exist yet) return [] — payment methods are opt-in, not opt-out.
-		$derived         = [];
-		$gateway_methods = [
+		$derived         = array();
+		$gateway_methods = array(
 			'woocommerce_payjp_card_settings'   => 'card',
 			'woocommerce_payjp_paypay_settings' => 'paypay',
-		];
+		);
 		foreach ( $gateway_methods as $option_key => $method ) {
 			$gateway_settings = get_option( $option_key, null );
 			if ( is_array( $gateway_settings ) && 'yes' === ( $gateway_settings['enabled'] ?? 'no' ) ) {

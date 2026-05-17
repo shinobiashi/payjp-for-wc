@@ -23,7 +23,7 @@ if ( class_exists( 'WC_Gateway_Payjp' ) ) {
  *   - receipt_page()
  *   - process_payment()
  */
-abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
+abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 
 	/**
 	 * PAY.JP payment method slug: 'card' or 'paypay'.
@@ -302,6 +302,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 
 		if ( 'succeeded' === $status ) {
 			$order->payment_complete( $flow_id );
+			$this->after_payment_complete( $order, $flow );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;
 		}
@@ -320,6 +321,15 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 		wp_safe_redirect( wc_get_checkout_url() );
 		exit;
 	}
+
+	/**
+	 * Called after $order->payment_complete() when the Payment Flow status is 'succeeded'.
+	 * Subclasses may override to perform post-payment actions such as saving a card token.
+	 *
+	 * @param WC_Order             $order WooCommerce order.
+	 * @param array<string, mixed> $flow  PAY.JP Payment Flow object.
+	 */
+	protected function after_payment_complete( WC_Order $order, array $flow ): void {}
 
 	/**
 	 * Build the return URL to which PAY.JP redirects after confirmPayment().

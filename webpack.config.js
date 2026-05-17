@@ -13,6 +13,8 @@ module.exports = {
 		'frontend/checkout-card': './src/frontend/checkout-card.js',
 		// Classic checkout — PayPay payment widget (order-pay page)
 		'frontend/checkout-paypay': './src/frontend/checkout-paypay.js',
+		// My Account — Add payment method setup widget
+		'frontend/setup-card': './src/frontend/setup-card.js',
 	},
 
 	plugins: [

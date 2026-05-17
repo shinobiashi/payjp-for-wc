@@ -41,3 +41,6 @@ if ( is_multisite() ) {
 		delete_option( $key );
 	}
 }
+
+// Remove PAY.JP Customer ID from all users.
+delete_metadata( 'user', 0, '_payjp_customer_id', '', true );

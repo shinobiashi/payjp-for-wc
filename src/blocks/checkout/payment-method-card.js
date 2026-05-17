@@ -29,10 +29,12 @@ const Label = ( { components: { PaymentMethodLabel } } ) => (
  * Displays the gateway description configured in WooCommerce settings.
  */
 const Content = () => {
-	const description = settings.description;
+	const description =
+		settings.description ||
+		__( 'Pay securely with your credit card via PAY.JP.', 'payjp-for-wc' );
 	return (
 		<div className="payjp-card-block-form">
-			{ description && <p>{ description }</p> }
+			<p>{ description }</p>
 		</div>
 	);
 };

@@ -28,11 +28,11 @@ function wcs_get_subscriptions_for_renewal_order( WC_Order $renewal_order ): arr
 }
 
 /**
- * Return all subscriptions associated with a given order ID.
+ * Return all subscriptions associated with a given order.
  *
- * @param int $order_id WooCommerce order ID.
+ * @param WC_Order|int $order WooCommerce order object or order ID.
  * @return WC_Subscription[]
  */
-function wcs_get_subscriptions_for_order( int $order_id ): array {
+function wcs_get_subscriptions_for_order( WC_Order|int $order ): array {
 	return [];
 }

@@ -65,6 +65,12 @@ class Payjp_Subscriptions {
 	 * @param WC_Order $renewal_order WooCommerce renewal order.
 	 */
 	public static function handle_scheduled_payment( float $amount, WC_Order $renewal_order ): void {
+		// Free trials or $0 renewals: complete immediately without charging.
+		if ( $amount <= 0.0 ) {
+			$renewal_order->payment_complete();
+			return;
+		}
+
 		$subscriptions = function_exists( 'wcs_get_subscriptions_for_renewal_order' )
 			? wcs_get_subscriptions_for_renewal_order( $renewal_order )
 			: [];
@@ -100,7 +106,7 @@ class Payjp_Subscriptions {
 				'/payment_flows',
 				[
 					'amount'               => (int) round( $amount ),
-					'currency'             => 'jpy',
+					'currency'             => strtolower( get_woocommerce_currency() ),
 					'payment_method_types' => [ 'card' ],
 					'payment_method'       => $pm_id,
 					'customer'             => $customer_id,
@@ -149,6 +155,12 @@ class Payjp_Subscriptions {
 		}
 
 		if ( 'payjp_card' !== $order->get_payment_method() ) {
+			return;
+		}
+
+		// Guest orders cannot have a PAY.JP Customer ID, so renewal payments would fail.
+		// WCS should prevent guest subscriptions, but guard explicitly for safety.
+		if ( ! $order->get_customer_id() ) {
 			return;
 		}
 
@@ -230,7 +242,11 @@ class Payjp_Subscriptions {
 		}
 
 		$default = WC_Payment_Tokens::get_customer_default_token( $user_id );
-		if ( $default instanceof WC_Payment_Token_CC && 'payjp_card' === $default->get_gateway_id() ) {
+		if (
+			$default instanceof WC_Payment_Token_CC &&
+			'payjp_card' === $default->get_gateway_id() &&
+			(int) $default->get_user_id() === $user_id
+		) {
 			return $default->get_token();
 		}
 

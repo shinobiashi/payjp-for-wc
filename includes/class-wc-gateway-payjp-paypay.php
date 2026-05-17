@@ -34,6 +34,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		$this->id                 = 'payjp_paypay';
 		$this->payjp_method       = 'paypay';
 		$this->has_fields         = true;
+		$this->icon               = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
 		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
 		$this->supports           = [ 'products' ];
@@ -94,6 +95,17 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			'payNow'     => __( 'Pay with PayPay', 'payjp-for-wc' ),
 			'processing' => __( 'Processing…', 'payjp-for-wc' ),
 		];
+	}
+
+	/**
+	 * Returns the gateway icon HTML using pp_logo_02.svg for all contexts.
+	 *
+	 * @return string
+	 */
+	public function get_icon(): string {
+		$url  = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
+		$icon = '<img src="' . esc_url( $url ) . '" alt="' . esc_attr( $this->get_title() ) . '" style="height:2em;width:auto;vertical-align:middle;" />';
+		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
 	}
 
 	// ── Gateway-specific methods ──────────────────────────────────────────────

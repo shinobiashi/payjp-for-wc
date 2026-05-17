@@ -23,8 +23,8 @@ if ( class_exists( 'Payjp_Blocks_Integration_Paypay' ) ) {
 class Payjp_Blocks_Integration_Paypay extends Payjp_Blocks_Integration {
 
 	/**
-	 * Payment method name — matches the gateway ID; the JS getSetting() key is
-	 * "{$name}_data" ('payjp_paypay_data'), not the raw name itself.
+	 * Payment method name. Matches the gateway ID.
+	 * The JS getSetting() key is "{$name}_data" ('payjp_paypay_data').
 	 *
 	 * @var string
 	 */
@@ -35,5 +35,20 @@ class Payjp_Blocks_Integration_Paypay extends Payjp_Blocks_Integration {
 	 */
 	public function get_name(): string {
 		return $this->name;
+	}
+
+	/**
+	 * Data passed to the payment method JS component via getSetting().
+	 * Extends the base data with the checkout icon URL for Block Checkout display.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function get_payment_method_data(): array {
+		return array_merge(
+			parent::get_payment_method_data(),
+			[
+				'icon' => PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg',
+			]
+		);
 	}
 }

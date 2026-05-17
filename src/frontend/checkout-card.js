@@ -6,6 +6,9 @@
  * Mounts the payments.js widget and calls confirmPayment() when the
  * customer clicks "Pay now". PAY.JP handles 3-D Secure (if required)
  * and redirects to the return URL provided by PHP.
+ *
+ * Billing details entered at checkout (name, email, phone) are passed
+ * to the widget as defaultValues so the customer does not need to re-enter them.
  */
 ( function () {
 	'use strict';
@@ -16,7 +19,8 @@
 		return;
 	}
 
-	const { publicKey, clientSecret, returnUrl, i18n } = payjpCardData;
+	const { publicKey, clientSecret, returnUrl, billingDetails = {}, i18n } =
+		payjpCardData;
 
 	const payments = PayjpPayments( publicKey );
 	const widgets = payments.widgets( { clientSecret } );
@@ -24,6 +28,13 @@
 	const form = widgets.createForm( 'payment', {
 		layout: 'accordion',
 		paymentMethodOrder: [ 'card' ],
+		defaultValues: {
+			billingDetails: {
+				name: billingDetails.name || '',
+				email: billingDetails.email || '',
+				phone: billingDetails.phone || '',
+			},
+		},
 	} );
 
 	form.mount( '#payjp-card-receipt-form' );
@@ -43,6 +54,13 @@
 		try {
 			const result = await widgets.confirmPayment( {
 				return_url: returnUrl,
+				payment_method_data: {
+					billing_details: {
+						name: billingDetails.name || '',
+						email: billingDetails.email || '',
+						phone: billingDetails.phone || '',
+					},
+				},
 			} );
 
 			if ( result.error ) {

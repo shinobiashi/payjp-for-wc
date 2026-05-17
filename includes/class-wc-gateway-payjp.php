@@ -227,10 +227,15 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				$script_handle,
 				$this->get_script_localize_var(),
 				[
-					'publicKey'    => Payjp_Settings::get_public_key(),
-					'clientSecret' => $client_secret,
-					'returnUrl'    => $this->build_return_url( $order ),
-					'i18n'         => $this->get_script_i18n(),
+					'publicKey'      => Payjp_Settings::get_public_key(),
+					'clientSecret'   => $client_secret,
+					'returnUrl'      => $this->build_return_url( $order ),
+					'billingDetails' => [
+						'name'  => trim( $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() ),
+						'email' => $order->get_billing_email(),
+						'phone' => $order->get_billing_phone(),
+					],
+					'i18n'           => $this->get_script_i18n(),
 				]
 			);
 			return;

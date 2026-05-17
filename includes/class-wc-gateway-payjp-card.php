@@ -43,6 +43,25 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$this->method_description = __( 'Accept credit card payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
 		$this->supports           = [ 'products', 'refunds', 'tokenization', 'add_payment_method' ];
 
+		// Extend supports when WooCommerce Subscriptions is active.
+		if ( class_exists( 'WC_Subscriptions' ) ) {
+			$this->supports = array_merge(
+				$this->supports,
+				[
+					'subscriptions',
+					'subscription_cancellation',
+					'subscription_suspension',
+					'subscription_reactivation',
+					'subscription_amount_changes',
+					'subscription_date_changes',
+					'subscription_payment_method_change',
+					'subscription_payment_method_change_customer',
+					'subscription_payment_method_change_admin',
+					'multiple_subscriptions',
+				]
+			);
+		}
+
 		$this->setup();
 
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
@@ -337,6 +356,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	 */
 	protected function after_payment_complete( WC_Order $order, array $flow ): void {
 		Payjp_Token_Manager::maybe_save_card_after_payment( $order, $flow, $this->get_api() );
+		Payjp_Subscriptions::store_payment_method_on_subscriptions( $order, $flow );
 	}
 
 	/**

@@ -84,6 +84,7 @@ class Payjp_Loader {
 
 		Payjp_Webhook_Handler::init();
 		Payjp_Token_Manager::init();
+		Payjp_Subscriptions::init();
 	}
 
 	/**

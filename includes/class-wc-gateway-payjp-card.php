@@ -72,6 +72,17 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	// ── Template-method implementations ──────────────────────────────────────
 
 	/**
+	 * Initialize form fields, overriding the description default for card payments.
+	 */
+	public function init_form_fields(): void {
+		parent::init_form_fields();
+		$this->form_fields['description']['default'] = __(
+			'After clicking "Place order", you will be taken to a secure page to enter your card details.',
+			'payjp-for-wc'
+		);
+	}
+
+	/**
 	 * Returns the script handle for the card checkout widget.
 	 *
 	 * @return string

@@ -109,7 +109,8 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			'description' => [
 				'title'       => __( 'Description', 'payjp-for-wc' ),
 				'type'        => 'textarea',
-				'description' => __( 'Payment method description shown to the customer at checkout.', 'payjp-for-wc' ),
+				/* translators: Admin tooltip for payment method description field. */
+				'description' => __( 'Payment method description shown to the customer at checkout. Basic HTML tags are supported (e.g. &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;).', 'payjp-for-wc' ),
 				'default'     => '',
 				'desc_tip'    => true,
 			],

@@ -24,6 +24,11 @@ if ( class_exists( 'WC_Gateway_Payjp_Card' ) ) {
  *   4. PAY.JP handles 3-D Secure (if required) and redirects to the return URL.
  *   5. handle_return() (base class, template_redirect) verifies the Payment Flow
  *      server-side and calls $order->payment_complete().
+ *
+ * Saved card flow:
+ *   - Logged-in customers may save cards via PAY.JP Setup Flow (add-payment-method page).
+ *   - At checkout, saved tokens are listed; selecting one creates a Payment Flow
+ *     with payment_method + confirm:true, succeeding immediately or falling back to 3DS.
  */
 class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
@@ -36,12 +41,13 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$this->has_fields         = true;
 		$this->method_title       = __( 'PAY.JP Credit Card', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept credit card payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
-		$this->supports           = [ 'products', 'refunds' ];
+		$this->supports           = [ 'products', 'refunds', 'tokenization', 'add_payment_method' ];
 
 		$this->setup();
 
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
 		add_action( 'woocommerce_receipt_' . $this->id, [ $this, 'receipt_page' ] );
+		add_action( 'wp_enqueue_scripts', [ $this, 'setup_card_scripts' ] );
 	}
 
 	// ── Template-method implementations ──────────────────────────────────────
@@ -88,13 +94,76 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	// ── Gateway-specific methods ──────────────────────────────────────────────
 
 	/**
+	 * Enqueue setup-card.js and localise it on the My Account add-payment-method page.
+	 */
+	public function setup_card_scripts(): void {
+		if ( ! is_wc_endpoint_url( 'add-payment-method' ) ) {
+			return;
+		}
+		if ( ! $this->is_available() ) {
+			return;
+		}
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
+		$return_url = add_query_arg(
+			'payjp-setup-return',
+			'1',
+			wc_get_account_endpoint_url( 'payment-methods' )
+		);
+
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- external CDN; versioned by PAY.JP.
+		wp_enqueue_script( 'payjp-payments-js', 'https://js.pay.jp/payments.js', [], null, true );
+		wp_enqueue_script(
+			'payjp-setup-card',
+			PAYJP_FOR_WC_URL . 'build/frontend/setup-card.js',
+			[ 'payjp-payments-js' ],
+			PAYJP_FOR_WC_VERSION,
+			true
+		);
+		wp_localize_script(
+			'payjp-setup-card',
+			'payjpSetupData',
+			[
+				'publicKey' => Payjp_Settings::get_public_key(),
+				'returnUrl' => $return_url,
+				'restUrl'   => rest_url( 'payjp/v1/setup-flow' ),
+				'nonce'     => wp_create_nonce( 'wp_rest' ),
+				'i18n'      => [
+					'addCard'      => __( 'Add card', 'payjp-for-wc' ),
+					'processing'   => __( 'Processing…', 'payjp-for-wc' ),
+					'errorGeneric' => __( 'An error occurred. Please try again.', 'payjp-for-wc' ),
+				],
+			]
+		);
+	}
+
+	/**
 	 * Render the payment form placeholder shown at WooCommerce checkout.
-	 * The actual widget mounts on the order-pay page via receipt_page().
+	 *
+	 * On the checkout page, shows saved tokens and a "save for later" checkbox
+	 * when the customer is logged in. The actual widget mounts on the order-pay
+	 * page via receipt_page(). On the add-payment-method page, renders the
+	 * setup widget mount point for setup-card.js.
 	 */
 	public function payment_fields(): void {
+		if ( is_wc_endpoint_url( 'add-payment-method' ) ) {
+			echo '<div id="payjp-setup-form"></div>';
+			echo '<div id="payjp-setup-errors" role="alert" aria-live="polite"></div>';
+			return;
+		}
+
 		if ( $this->description ) {
 			echo wp_kses_post( wpautop( $this->description ) );
 		}
+
+		if ( is_user_logged_in() && $this->supports( 'tokenization' ) ) {
+			$this->tokenization_script();
+			$this->saved_payment_methods();
+			$this->save_payment_method_checkbox();
+		}
+
 		echo '<div id="payjp-card-form"></div>';
 		echo '<div id="payjp-card-errors" role="alert" aria-live="polite"></div>';
 	}
@@ -102,6 +171,9 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	/**
 	 * Create a PAY.JP Payment Flow for the order and redirect to the order-pay
 	 * page where the payments.js widget will be rendered.
+	 *
+	 * When a saved token is selected, creates a Payment Flow with confirm:true
+	 * for an immediate charge (or 3DS fallback via order-pay page).
 	 *
 	 * @param int $order_id WooCommerce order ID.
 	 * @return array{result: string, redirect?: string}
@@ -112,6 +184,26 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			wc_add_notice( esc_html__( 'Unable to load the order for payment.', 'payjp-for-wc' ), 'error' );
 			return [ 'result' => 'failure' ];
 		}
+
+		// WC checkout verifies nonce before calling process_payment; no further nonce check needed here.
+		// phpcs:disable WordPress.Security.NonceVerification.Missing
+		$raw_token_id = isset( $_POST['wc-payjp_card-payment-token'] ) && is_string( $_POST['wc-payjp_card-payment-token'] )
+			? sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-payment-token'] ) )
+			: '';
+
+		// Flag the order for card saving if the customer checked the checkbox.
+		$save_card = isset( $_POST['wc-payjp_card-new-payment-method'] )
+			&& 'true' === sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-new-payment-method'] ) );
+		// phpcs:enable WordPress.Security.NonceVerification.Missing
+
+		if ( $raw_token_id && 'new' !== $raw_token_id ) {
+			return $this->process_payment_with_token( $order, absint( $raw_token_id ) );
+		}
+
+		if ( $save_card && is_user_logged_in() ) {
+			$order->update_meta_data( '_payjp_save_card', '1' );
+		}
+
 		$amount = (int) round( $order->get_total() );
 
 		try {
@@ -147,6 +239,114 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
 			return [ 'result' => 'failure' ];
 		}
+	}
+
+	/**
+	 * Charge a previously saved payment token.
+	 *
+	 * Creates a Payment Flow with the stored PaymentMethod ID and confirm:true.
+	 * If the charge succeeds without 3DS, the order is completed immediately.
+	 * If 3DS is required (requires_action), falls back to the order-pay widget flow.
+	 *
+	 * @param WC_Order $order    WooCommerce order.
+	 * @param int      $token_id WooCommerce Payment Token ID.
+	 * @return array{result: string, redirect?: string}
+	 */
+	private function process_payment_with_token( WC_Order $order, int $token_id ): array {
+		$token = WC_Payment_Tokens::get( $token_id );
+
+		if ( ! $token
+			|| $token->get_user_id() !== get_current_user_id()
+			|| 'payjp_card' !== $token->get_gateway_id()
+		) {
+			wc_add_notice( esc_html__( 'Invalid payment token. Please try again.', 'payjp-for-wc' ), 'error' );
+			return [ 'result' => 'failure' ];
+		}
+
+		$pm_id       = $token->get_token();
+		$amount      = (int) round( $order->get_total() );
+		$customer_id = Payjp_Token_Manager::get_customer_id( (int) $order->get_customer_id() );
+
+		$payload = [
+			'amount'               => $amount,
+			'currency'             => 'jpy',
+			'payment_method_types' => [ 'card' ],
+			'payment_method'       => $pm_id,
+			'confirm'              => true,
+			'return_url'           => $this->build_return_url( $order ),
+			'capture_method'       => 'automatic',
+		];
+
+		if ( $customer_id ) {
+			$payload['customer'] = $customer_id;
+		}
+
+		try {
+			$flow = $this->get_api()->post( '/payment_flows', $payload );
+		} catch ( RuntimeException $e ) {
+			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
+			return [ 'result' => 'failure' ];
+		}
+
+		$flow_id       = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
+		$status        = isset( $flow['status'] ) && is_string( $flow['status'] ) ? $flow['status'] : '';
+		$client_secret = isset( $flow['client_secret'] ) && is_string( $flow['client_secret'] ) ? $flow['client_secret'] : '';
+
+		if ( ! $flow_id ) {
+			wc_add_notice( esc_html__( 'PAY.JP returned an incomplete payment session. Please try again.', 'payjp-for-wc' ), 'error' );
+			return [ 'result' => 'failure' ];
+		}
+
+		$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
+		$order->update_meta_data( '_payjp_payment_method', 'card' );
+		$order->update_meta_data( '_payjp_capture_method', 'automatic' );
+
+		if ( 'succeeded' === $status ) {
+			$order->save();
+			$order->payment_complete( $flow_id );
+			$this->after_payment_complete( $order, $flow );
+			return [
+				'result'   => 'success',
+				'redirect' => $order->get_checkout_order_received_url(),
+			];
+		}
+
+		// 3DS or other action required — redirect to order-pay page for widget handling.
+		if ( $client_secret ) {
+			$order->update_meta_data( '_payjp_client_secret', $client_secret );
+		}
+		$order->save();
+
+		return [
+			'result'   => 'success',
+			'redirect' => $order->get_checkout_payment_url( true ),
+		];
+	}
+
+	/**
+	 * After a successful payment, save the card if the customer opted in.
+	 *
+	 * @param WC_Order             $order WooCommerce order.
+	 * @param array<string, mixed> $flow  PAY.JP Payment Flow object.
+	 */
+	protected function after_payment_complete( WC_Order $order, array $flow ): void {
+		Payjp_Token_Manager::maybe_save_card_after_payment( $order, $flow, $this->get_api() );
+	}
+
+	/**
+	 * Handle "Add payment method" from My Account.
+	 *
+	 * The setup-card.js script intercepts the form submit, creates the Setup Flow
+	 * via REST, and redirects to handle_setup_return(). This method is only reached
+	 * if JS is unavailable; redirect back to the same page to avoid a silent failure.
+	 *
+	 * @return array{result: string, redirect: string}
+	 */
+	public function add_payment_method(): array {
+		return [
+			'result'   => 'success',
+			'redirect' => wc_get_account_endpoint_url( 'add-payment-method' ),
+		];
 	}
 
 	/**

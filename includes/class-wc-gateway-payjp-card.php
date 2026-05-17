@@ -192,6 +192,10 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			);
 		}
 
+		// Seed the idempotency marker so the refund.created webhook skips adding a duplicate note.
+		$order->update_meta_data( '_payjp_refund_processed_' . $refund_id, '1' );
+		$order->save();
+
 		$order->add_order_note(
 			sprintf(
 				/* translators: PAY.JP refund confirmation shown in WooCommerce order notes. %s: PAY.JP refund ID. */

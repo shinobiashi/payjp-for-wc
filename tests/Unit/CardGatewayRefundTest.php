@@ -116,6 +116,8 @@ class CardGatewayRefundTest extends TestCase {
 	public function full_refund_omits_amount_from_api_request(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_full', '1' )->once();
+		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
@@ -133,6 +135,8 @@ class CardGatewayRefundTest extends TestCase {
 	public function partial_refund_sends_amount_to_api(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_partial', '1' )->once();
+		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
@@ -147,9 +151,27 @@ class CardGatewayRefundTest extends TestCase {
 	}
 
 	#[Test]
+	public function successful_refund_writes_idempotency_marker_before_note(): void {
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_idem', '1' )->once();
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'add_order_note' )->once();
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_idem' ] );
+
+		$result = $this->gateway->process_refund( 1 );
+
+		$this->assertTrue( $result );
+	}
+
+	#[Test]
 	public function successful_refund_adds_order_note_with_refund_id(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_note_test', '1' )->once();
+		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )
 			->once()
 			->with( Mockery::on( fn( $note ) => str_contains( $note, 'pyr_note_test' ) ) );

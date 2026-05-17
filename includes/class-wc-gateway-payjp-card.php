@@ -208,8 +208,10 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			$this->save_payment_method_checkbox();
 		}
 
+		echo '<div class="wc-payment-form">';
 		echo '<div id="payjp-card-form"></div>';
 		echo '<div id="payjp-card-errors" role="alert" aria-live="polite"></div>';
+		echo '</div>';
 	}
 
 	/**
@@ -236,8 +238,12 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			: '';
 
 		// Flag the order for card saving if the customer checked the checkbox.
-		$save_card = isset( $_POST['wc-payjp_card-new-payment-method'] )
-			&& 'true' === sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-new-payment-method'] ) );
+		// Classic checkout sends the string 'true'; Block checkout (WC Blocks Store API)
+		// serialises the JS boolean as '1', so both values must be accepted.
+		$save_card_raw = isset( $_POST['wc-payjp_card-new-payment-method'] ) && is_string( $_POST['wc-payjp_card-new-payment-method'] )
+			? sanitize_text_field( wp_unslash( $_POST['wc-payjp_card-new-payment-method'] ) )
+			: '';
+		$save_card     = 'true' === $save_card_raw || '1' === $save_card_raw;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		if ( $raw_token_id && 'new' !== $raw_token_id ) {
@@ -320,17 +326,16 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$customer_id = Payjp_Token_Manager::get_customer_id( (int) $order->get_customer_id() );
 
 		$payload = [
-			'amount'               => $amount,
-			'currency'             => 'jpy',
-			'payment_method_types' => [ 'card' ],
-			'payment_method'       => $pm_id,
-			'confirm'              => true,
-			'return_url'           => $this->build_return_url( $order ),
-			'capture_method'       => 'automatic',
+			'amount'            => $amount,
+			'currency'          => 'jpy',
+			'payment_method_id' => $pm_id,
+			'confirm'           => true,
+			'return_url'        => $this->build_return_url( $order ),
+			'capture_method'    => 'automatic',
 		];
 
 		if ( $customer_id ) {
-			$payload['customer'] = $customer_id;
+			$payload['customer_id'] = $customer_id;
 		}
 
 		try {

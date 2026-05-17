@@ -308,7 +308,7 @@ class Payjp_Token_Manager {
 			if ( $customer_id ) {
 				$api->post(
 					'/payment_methods/' . rawurlencode( $pm_id ) . '/attach',
-					[ 'customer' => $customer_id ]
+					[ 'customer_id' => $customer_id ]
 				);
 			}
 

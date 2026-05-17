@@ -19,8 +19,13 @@
 		return;
 	}
 
-	const { publicKey, clientSecret, returnUrl, billingDetails = {}, i18n } =
-		payjpCardData;
+	const {
+		publicKey,
+		clientSecret,
+		returnUrl,
+		billingDetails = {},
+		i18n,
+	} = payjpCardData;
 
 	const payments = PayjpPayments( publicKey );
 	const widgets = payments.widgets( { clientSecret } );

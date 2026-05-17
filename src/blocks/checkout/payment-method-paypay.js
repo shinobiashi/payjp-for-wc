@@ -24,7 +24,11 @@ const Label = () => (
 			<img
 				src={ settings.icon }
 				alt=""
-				style={ { height: '2em', width: 'auto', verticalAlign: 'middle' } }
+				style={ {
+					height: '2em',
+					width: 'auto',
+					verticalAlign: 'middle',
+				} }
 			/>
 		) }
 		{ label }

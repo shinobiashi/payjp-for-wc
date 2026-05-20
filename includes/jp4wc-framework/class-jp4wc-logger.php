@@ -299,17 +299,21 @@ class JP4WC_Logger {
 	/**
 	 * Recursively replace values whose keys contain a sensitive keyword with '***'.
 	 *
-	 * @param array<string, mixed> $data Input data.
-	 * @return array<string, mixed>
+	 * @param array<array-key, mixed> $data Input data.
+	 * @return array<array-key, mixed>
 	 */
 	private function mask_sensitive( array $data ): array {
 		foreach ( $data as $key => $value ) {
-			// Check key sensitivity before recursing: a sensitive key whose value is an
-			// array must be fully masked rather than recursed into.
-			foreach ( self::SENSITIVE_KEYS as $fragment ) {
-				if ( false !== stripos( $key, $fragment ) ) {
-					$data[ $key ] = '***';
-					continue 2;
+			// Numeric keys (e.g. list arrays) cannot match a sensitive-key fragment;
+			// skip the sensitivity check but still recurse into array values.
+			if ( is_string( $key ) ) {
+				// Check key sensitivity before recursing: a sensitive key whose value is an
+				// array must be fully masked rather than recursed into.
+				foreach ( self::SENSITIVE_KEYS as $fragment ) {
+					if ( false !== stripos( $key, $fragment ) ) {
+						$data[ $key ] = '***';
+						continue 2;
+					}
 				}
 			}
 			if ( is_array( $value ) ) {

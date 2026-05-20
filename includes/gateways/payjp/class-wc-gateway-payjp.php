@@ -320,7 +320,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		try {
 			$flow = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
 		} catch ( RuntimeException $e ) {
-			$logger->log_error( $e->getMessage(), $order_id, $e );
+			// Payjp_API already logged this exception before rethrowing; no duplicate log here.
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
 			wp_safe_redirect( wc_get_checkout_url() );
 			exit;

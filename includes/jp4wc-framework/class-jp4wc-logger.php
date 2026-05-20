@@ -42,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-if ( class_exists( __NAMESPACE__ . '\\JP4WC_Logger' ) ) {
+if ( class_exists( __NAMESPACE__ . '\\JP4WC_Logger', false ) ) {
 	return;
 }
 
@@ -73,6 +73,7 @@ class JP4WC_Logger {
 	private const SENSITIVE_KEYS = array(
 		'secret_key',
 		'api_key',
+		'client_secret',
 		'password',
 		'token',
 		'card_number',
@@ -188,7 +189,7 @@ class JP4WC_Logger {
 			return;
 		}
 		$label   = '[RESPONSE] ' . $endpoint . $this->order_tag( $order_id ) . ' | ' . number_format( $elapsed_ms, 1 ) . 'ms';
-		$message = $label . "\n" . $this->encode( $data );
+		$message = $label . "\n" . $this->encode( $this->mask_sensitive( $data ) );
 		$this->logger()->info( $message, $this->context() );
 	}
 
@@ -221,7 +222,7 @@ class JP4WC_Logger {
 			return;
 		}
 		$label   = '[WEBHOOK] ' . $event_type . $this->order_tag( $order_id );
-		$message = $label . "\n" . $this->encode( $payload );
+		$message = $label . "\n" . $this->encode( $this->mask_sensitive( $payload ) );
 		$this->logger()->info( $message, $this->context() );
 	}
 
@@ -286,6 +287,9 @@ class JP4WC_Logger {
 		}
 		$parts = array();
 		foreach ( $context as $k => $v ) {
+			if ( is_array( $v ) || is_object( $v ) ) {
+				$v = wp_json_encode( $v );
+			}
 			$parts[] = $k . '=' . $v;
 		}
 		return ' | ' . implode( ' | ', $parts );

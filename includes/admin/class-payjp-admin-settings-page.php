@@ -154,7 +154,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'       => 'payjp_debug_log',
 					'default'  => 'no',
 					'label'    => __( 'ロギングを有効にする', 'payjp-for-wc' ),
-					'desc_tip' => true,
+					'desc_tip' => false,
 					'desc'     => sprintf(
 						/* translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag */
 						__( 'PAY.JP API へのリクエスト・レスポンス・決済イベント・Webhook の受信内容をログファイルに記録します。問題の調査やデバッグ時のみ有効にし、本番環境では通常はオフにしてください。ログは %1$sWooCommerce &gt; ステータス &gt; ログ%2$s で確認できます。', 'payjp-for-wc' ),

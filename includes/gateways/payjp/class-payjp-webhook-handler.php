@@ -73,7 +73,8 @@ class Payjp_Webhook_Handler {
 	 */
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
 		if ( ! self::verify_token( $request ) ) {
-			self::logger()->log_error( 'Webhook signature verification failed.' );
+			// Use log_event (debug-gated) to avoid disk-filling noise from public endpoint probing.
+			self::logger()->log_event( 'webhook_auth_failed' );
 			return new WP_REST_Response( array( 'error' => 'Unauthorized' ), 401 );
 		}
 

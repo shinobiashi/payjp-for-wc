@@ -206,7 +206,7 @@ class JP4WC_Logger {
 		if ( ! $this->is_enabled() ) {
 			return;
 		}
-		$line = '[EVENT] ' . $event . $this->order_tag( $order_id ) . $this->format_context( $context );
+		$line = '[EVENT] ' . $event . $this->order_tag( $order_id ) . $this->format_context( $this->mask_sensitive( $context ) );
 		$this->logger()->info( $line, $this->context() );
 	}
 
@@ -290,7 +290,8 @@ class JP4WC_Logger {
 			if ( is_array( $v ) || is_object( $v ) ) {
 				$v = wp_json_encode( $v );
 			}
-			$parts[] = $k . '=' . $v;
+			// Strip newlines to prevent log-injection via multi-line values.
+			$parts[] = $k . '=' . str_replace( array( "\r", "\n" ), ' ', (string) $v );
 		}
 		return ' | ' . implode( ' | ', $parts );
 	}
@@ -303,15 +304,16 @@ class JP4WC_Logger {
 	 */
 	private function mask_sensitive( array $data ): array {
 		foreach ( $data as $key => $value ) {
+			// Check key sensitivity before recursing: a sensitive key whose value is an
+			// array must be fully masked rather than recursed into.
+			foreach ( self::SENSITIVE_KEYS as $fragment ) {
+				if ( false !== stripos( $key, $fragment ) ) {
+					$data[ $key ] = '***';
+					continue 2;
+				}
+			}
 			if ( is_array( $value ) ) {
 				$data[ $key ] = $this->mask_sensitive( $value );
-			} elseif ( is_string( $key ) ) { // integer keys (numeric arrays) are not field names; skip.
-				foreach ( self::SENSITIVE_KEYS as $fragment ) {
-					if ( false !== stripos( $key, $fragment ) ) {
-						$data[ $key ] = '***';
-						break;
-					}
-				}
 			}
 		}
 		return $data;

@@ -240,6 +240,16 @@ class Payjp_Webhook_Handler {
 				number_format( $amount )
 			)
 		);
+
+		self::logger()->log_event(
+			'refunded',
+			$order->get_id(),
+			array(
+				'refund_id' => $refund_id,
+				'amount'    => $amount,
+				'source'    => 'webhook',
+			)
+		);
 	}
 
 	/**

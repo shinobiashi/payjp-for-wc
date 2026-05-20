@@ -285,11 +285,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$order_id  = absint( $_GET['order_id'] ?? 0 );
-		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
+		$url_order_id = absint( $_GET['order_id'] ?? 0 );
+		$order_key    = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$order = $order_id ? wc_get_order( $order_id ) : false;
+		$order = $url_order_id ? wc_get_order( $url_order_id ) : false;
 
 		if ( ! $order || $order->get_order_key() !== $order_key ) {
 			wp_safe_redirect( wc_get_checkout_url() );
@@ -314,7 +314,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			exit;
 		}
 
-		$order_id = $order->get_id();
+		$order_id = $order->get_id();  // verified against $url_order_id; use typed int from WC_Order.
 		$logger   = $this->get_logger();
 
 		try {

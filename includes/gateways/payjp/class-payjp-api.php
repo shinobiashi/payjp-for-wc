@@ -67,7 +67,12 @@ class Payjp_API {
 			)
 		);
 
-		$data = $this->parse_response( $response );
+		try {
+			$data = $this->parse_response( $response );
+		} catch ( RuntimeException $e ) {
+			$this->logger?->log_error( $e->getMessage(), $order_id, $e );
+			throw $e;
+		}
 		$this->logger?->log_response( $endpoint, $data, ( hrtime( true ) - $start ) / 1e6, $order_id );
 		return $data;
 	}
@@ -92,7 +97,12 @@ class Payjp_API {
 			)
 		);
 
-		$data = $this->parse_response( $response );
+		try {
+			$data = $this->parse_response( $response );
+		} catch ( RuntimeException $e ) {
+			$this->logger?->log_error( $e->getMessage(), $order_id, $e );
+			throw $e;
+		}
 		$this->logger?->log_response( $endpoint, $data, ( hrtime( true ) - $start ) / 1e6, $order_id );
 		return $data;
 	}

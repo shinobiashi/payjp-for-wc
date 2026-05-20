@@ -6,6 +6,8 @@
  * Framework Version: 1.0.0
  * Author:            Artisan Workshop
  * Author URI:        https://wc.artws.info/
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  *
  * Drop this file into your plugin's includes/jp4wc-framework/ directory.
  * Each plugin that bundles a copy uses the same versioned namespace, so
@@ -299,7 +301,7 @@ class JP4WC_Logger {
 		foreach ( $data as $key => $value ) {
 			if ( is_array( $value ) ) {
 				$data[ $key ] = $this->mask_sensitive( $value );
-			} elseif ( is_string( $key ) ) {
+			} elseif ( is_string( $key ) ) { // integer keys (numeric arrays) are not field names; skip.
 				foreach ( self::SENSITIVE_KEYS as $fragment ) {
 					if ( false !== stripos( $key, $fragment ) ) {
 						$data[ $key ] = '***';

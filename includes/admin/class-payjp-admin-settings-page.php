@@ -71,11 +71,13 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'    => 'payjp_api_settings',
 				),
 				array(
-					'title'   => __( 'テストモード', 'payjp-for-wc' ),
-					'type'    => 'checkbox',
-					'id'      => 'payjp_test_mode',
-					'default' => 'yes',
-					'label'   => __( 'テスト環境の API キーを使用する', 'payjp-for-wc' ),
+					'title'    => __( 'テストモード', 'payjp-for-wc' ),
+					'type'     => 'checkbox',
+					'id'       => 'payjp_test_mode',
+					'default'  => 'yes',
+					'label'    => __( 'テスト環境の API キーを使用する', 'payjp-for-wc' ),
+					'desc_tip' => true,
+					'desc'     => __( 'チェックを入れると、テスト用 API キーで動作し実際の決済は発生しません。本番運用時はチェックを外して本番用 API キーを使用してください。', 'payjp-for-wc' ),
 				),
 				array(
 					'title'       => __( 'テスト公開鍵', 'payjp-for-wc' ),
@@ -83,8 +85,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'          => 'payjp_test_public_key',
 					'default'     => '',
 					'placeholder' => 'pk_test_',
-					'desc_tip'    => true,
-					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した公開鍵（pk_test_xxx）', 'payjp-for-wc' ),
+					'desc_tip'    => false,
+					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>pk_test_</code> から始まる文字列です。', 'payjp-for-wc' ),
 				),
 				array(
 					'title'       => __( 'テスト秘密鍵', 'payjp-for-wc' ),
@@ -92,8 +94,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'          => 'payjp_test_secret_key',
 					'default'     => '',
 					'placeholder' => 'sk_test_',
-					'desc_tip'    => true,
-					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）から取得した秘密鍵（sk_test_xxx）', 'payjp-for-wc' ),
+					'desc_tip'    => false,
+					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>sk_test_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。', 'payjp-for-wc' ),
 				),
 				array(
 					'title'       => __( '本番公開鍵', 'payjp-for-wc' ),
@@ -101,8 +103,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'          => 'payjp_live_public_key',
 					'default'     => '',
 					'placeholder' => 'pk_live_',
-					'desc_tip'    => true,
-					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した公開鍵（pk_live_xxx）', 'payjp-for-wc' ),
+					'desc_tip'    => false,
+					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>pk_live_</code> から始まる文字列です。', 'payjp-for-wc' ),
 				),
 				array(
 					'title'       => __( '本番秘密鍵', 'payjp-for-wc' ),
@@ -110,16 +112,16 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'          => 'payjp_live_secret_key',
 					'default'     => '',
 					'placeholder' => 'sk_live_',
-					'desc_tip'    => true,
-					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）から取得した秘密鍵（sk_live_xxx）', 'payjp-for-wc' ),
+					'desc_tip'    => false,
+					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>sk_live_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。', 'payjp-for-wc' ),
 				),
 				array(
 					'title'    => __( 'Webhook シークレット', 'payjp-for-wc' ),
 					'type'     => 'password',
 					'id'       => 'payjp_webhook_secret',
 					'default'  => '',
-					'desc_tip' => true,
-					'desc'     => __( 'PAY.JP の Webhook 認証トークン（X-Payjp-Webhook-Token ヘッダーの値）', 'payjp-for-wc' ),
+					'desc_tip' => false,
+					'desc'     => __( 'PAY.JP ダッシュボード > Webhook で設定した認証トークンです。決済完了・返金などのイベントをサーバーへ通知するために必要です。設定しない場合、Webhook によるオーダーステータスの自動更新が機能しません。', 'payjp-for-wc' ),
 				),
 				array(
 					'type' => 'sectionend',
@@ -138,6 +140,31 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 				array(
 					'type' => 'sectionend',
 					'id'   => 'payjp_methods_settings',
+				),
+				// ── Debug ─────────────────────────────────────────────────────
+				array(
+					'title' => __( 'デバッグ', 'payjp-for-wc' ),
+					'type'  => 'title',
+					'id'    => 'payjp_debug_settings',
+					'desc'  => __( '決済処理の問題調査や開発時に役立つオプションです。本番環境での常時有効化は避けてください。', 'payjp-for-wc' ),
+				),
+				array(
+					'title'    => __( 'デバッグログ', 'payjp-for-wc' ),
+					'type'     => 'checkbox',
+					'id'       => 'payjp_debug_log',
+					'default'  => 'no',
+					'label'    => __( 'ロギングを有効にする', 'payjp-for-wc' ),
+					'desc_tip' => true,
+					'desc'     => sprintf(
+						/* translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag */
+						__( 'PAY.JP API へのリクエスト・レスポンス・決済イベント・Webhook の受信内容をログファイルに記録します。問題の調査やデバッグ時のみ有効にし、本番環境では通常はオフにしてください。ログは %1$sWooCommerce &gt; ステータス &gt; ログ%2$s で確認できます。', 'payjp-for-wc' ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&source=payjp-for-wc' ) ) . '">',
+						'</a>'
+					),
+				),
+				array(
+					'type' => 'sectionend',
+					'id'   => 'payjp_debug_settings',
 				),
 			),
 			$current_section
@@ -162,6 +189,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'payjp_live_public_key' => (string) ( $current['live_public_key'] ?? '' ),
 			'payjp_live_secret_key' => (string) ( $current['live_secret_key'] ?? '' ),
 			'payjp_webhook_secret'  => (string) ( $current['webhook_secret'] ?? '' ),
+			'payjp_debug_log'       => ! empty( $current['debug_log'] ) ? 'yes' : 'no',
 		);
 
 		$closures = array();
@@ -212,6 +240,9 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 						<?php echo esc_html( $label ); ?>
 					</label><br />
 					<?php endforeach; ?>
+					<p class="description">
+						<?php esc_html_e( 'チェックを入れた決済手段がチェックアウト画面に表示されます。表示するには API キーの設定も必要です。', 'payjp-for-wc' ); ?>
+					</p>
 				</fieldset>
 			</td>
 		</tr>
@@ -239,6 +270,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'live_public_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_live_public_key'] ?? '' ) ? $_POST['payjp_live_public_key'] : '' ) ),
 			'live_secret_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_live_secret_key'] ?? '' ) ? $_POST['payjp_live_secret_key'] : '' ) ),
 			'webhook_secret'  => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_webhook_secret'] ?? '' ) ? $_POST['payjp_webhook_secret'] : '' ) ),
+			'debug_log'       => ! empty( $_POST['payjp_debug_log'] ) && is_scalar( $_POST['payjp_debug_log'] ),
 			'enabled_methods' => array_values(
 				array_intersect(
 					array_map(

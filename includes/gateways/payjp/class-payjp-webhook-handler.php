@@ -9,6 +9,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'Payjp_Webhook_Handler' ) ) {
 	return;
 }
@@ -71,6 +73,7 @@ class Payjp_Webhook_Handler {
 	 */
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
 		if ( ! self::verify_token( $request ) ) {
+			self::logger()->log_error( 'Webhook signature verification failed.' );
 			return new WP_REST_Response( array( 'error' => 'Unauthorized' ), 401 );
 		}
 
@@ -87,6 +90,8 @@ class Payjp_Webhook_Handler {
 			? $event['data']['object']
 			: array();
 
+		self::logger()->log_webhook( $type, $event );
+
 		switch ( $type ) {
 			case 'payment_flow.succeeded':
 				self::handle_payment_succeeded( $object );
@@ -102,6 +107,18 @@ class Payjp_Webhook_Handler {
 		}
 
 		return new WP_REST_Response( array( 'received' => true ) );
+	}
+
+	/**
+	 * Get the shared JP4WC_Logger instance.
+	 *
+	 * @return JP4WC_Logger
+	 */
+	private static function logger(): JP4WC_Logger {
+		return JP4WC_Logger::get_instance(
+			'payjp-for-wc',
+			static fn() => (bool) Payjp_Settings::get( 'debug_log' )
+		);
 	}
 
 	/**
@@ -145,6 +162,14 @@ class Payjp_Webhook_Handler {
 		}
 
 		$order->payment_complete( $flow_id );
+		self::logger()->log_event(
+			'succeeded',
+			$order->get_id(),
+			array(
+				'flow_id' => $flow_id,
+				'source'  => 'webhook',
+			)
+		);
 	}
 
 	/**
@@ -169,6 +194,14 @@ class Payjp_Webhook_Handler {
 
 		/* translators: PAY.JP failed payment note shown in WooCommerce admin */
 		$order->update_status( 'failed', __( 'PAY.JP payment failed (webhook).', 'payjp-for-wc' ) );
+		self::logger()->log_event(
+			'failed',
+			$order->get_id(),
+			array(
+				'flow_id' => $flow_id,
+				'source'  => 'webhook',
+			)
+		);
 	}
 
 	/**

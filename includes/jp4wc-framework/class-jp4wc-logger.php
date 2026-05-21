@@ -80,6 +80,8 @@ class JP4WC_Logger {
 		'cvv',
 		'cvc',
 		'authorization',
+		'email',
+		'phone',
 	);
 
 	/**
@@ -298,6 +300,10 @@ class JP4WC_Logger {
 
 	/**
 	 * Recursively replace values whose keys contain a sensitive keyword with '***'.
+	 *
+	 * Accepts mixed keys (string|int) because nested arrays may have numeric indexes.
+	 * Integer keys are never field names, so they are skipped for masking but still
+	 * recursed into when their value is itself an array.
 	 *
 	 * @param array<array-key, mixed> $data Input data.
 	 * @return array<array-key, mixed>

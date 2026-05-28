@@ -246,6 +246,15 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$save_card     = 'true' === $save_card_raw || '1' === $save_card_raw;
 		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
+		// WCS subscription payment method change: $0 order linked to a subscription.
+		// PAY.JP charges cannot be zero; bypass the payment flow and just validate the token.
+		if ( 0 === (int) round( $order->get_total() )
+			&& function_exists( 'wcs_order_contains_subscription' )
+			&& wcs_order_contains_subscription( $order )
+		) {
+			return $this->process_subscription_method_change( $order, $raw_token_id );
+		}
+
 		if ( $raw_token_id && 'new' !== $raw_token_id ) {
 			return $this->process_payment_with_token( $order, absint( $raw_token_id ) );
 		}
@@ -470,6 +479,43 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		);
 
 		return true;
+	}
+
+	/**
+	 * Handle a WCS subscription payment method change ($0 order).
+	 *
+	 * WooCommerce Subscriptions creates a $0 order when the customer or admin changes
+	 * the payment method on a subscription. No API charge is needed; validate the
+	 * selected saved token and mark the order paid so WCS updates the subscription.
+	 *
+	 * @param WC_Order $order        Zero-value change-payment-method order from WCS.
+	 * @param string   $raw_token_id Selected WC payment token ID, or empty/'new' if none chosen.
+	 * @return array{result: string, redirect?: string}
+	 */
+	private function process_subscription_method_change( WC_Order $order, string $raw_token_id ): array {
+		if ( ! $raw_token_id || 'new' === $raw_token_id ) {
+			wc_add_notice(
+				__( 'Please select a saved card to update your subscription payment method.', 'payjp-for-wc' ),
+				'error'
+			);
+			return array( 'result' => 'failure' );
+		}
+
+		$token = WC_Payment_Tokens::get( absint( $raw_token_id ) );
+		if (
+			! $token
+			|| (int) $token->get_user_id() !== get_current_user_id()
+			|| 'payjp_card' !== $token->get_gateway_id()
+		) {
+			wc_add_notice( esc_html__( 'Invalid payment token. Please try again.', 'payjp-for-wc' ), 'error' );
+			return array( 'result' => 'failure' );
+		}
+
+		$order->payment_complete();
+		return array(
+			'result'   => 'success',
+			'redirect' => $order->get_checkout_order_received_url(),
+		);
 	}
 
 	/**

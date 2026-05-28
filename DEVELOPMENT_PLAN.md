@@ -14,7 +14,7 @@
 | Phase 6 | 返金処理 | ✅ 完了 | — | 2026-05-17 |
 | Phase 7 | Block Checkout 統合 | ✅ 完了 | — | 2026-05-17 |
 | Phase 8 | カードトークン保存 | ✅ 完了 | #10 | 2026-05-17 |
-| Phase 9 | WooCommerce Subscriptions 対応 | ⬜ 未着手 | — | — |
+| Phase 9 | WooCommerce Subscriptions 対応 | ✅ 完了 | — | 2026-05-28 |
 | Phase 10 | 品質・テスト | ⬜ 未着手 | — | — |
 
 ---

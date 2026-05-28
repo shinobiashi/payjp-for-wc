@@ -43,5 +43,9 @@ wp-content/upgrade/
 # PHPUnit
 .phpunit.cache/
 
+# Playwright
+/test-results/
+/playwright-report/
+
 # Release artifacts
 /*.zip

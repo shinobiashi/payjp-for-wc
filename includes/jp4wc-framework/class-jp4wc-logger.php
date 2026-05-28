@@ -200,9 +200,9 @@ class JP4WC_Logger {
 	 *
 	 * Suggested event names: 'authorized', 'captured', 'refunded', 'failed', 'cancelled'.
 	 *
-	 * @param string               $event    Short event name.
-	 * @param int|null             $order_id WooCommerce order ID.
-	 * @param array<string, mixed> $context  Additional key=value pairs appended to the log line.
+	 * @param string                  $event    Short event name.
+	 * @param int|null                $order_id WooCommerce order ID.
+	 * @param array<array-key, mixed> $context  Additional key=value pairs appended to the log line.
 	 */
 	public function log_event( string $event, ?int $order_id = null, array $context = array() ): void {
 		if ( ! $this->is_enabled() ) {
@@ -282,7 +282,7 @@ class JP4WC_Logger {
 	/**
 	 * Serialise a context array as ' | key=value' segments.
 	 *
-	 * @param array<string, mixed> $context Key-value pairs.
+	 * @param array<array-key, mixed> $context Key-value pairs.
 	 * @return string e.g. ' | flow_id=pflw_xxx | amount=3000', or ''.
 	 */
 	private function format_context( array $context ): string {
@@ -334,7 +334,7 @@ class JP4WC_Logger {
 	/**
 	 * JSON-encode data for log output (pretty-printed, Unicode preserved).
 	 *
-	 * @param array<string, mixed> $data Data to encode.
+	 * @param array<array-key, mixed> $data Data to encode.
 	 * @return string Pretty-printed JSON, or '(encode error)' on failure.
 	 */
 	private function encode( array $data ): string {

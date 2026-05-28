@@ -14,7 +14,7 @@
 | Phase 6 | 返金処理 | ✅ 完了 | — | 2026-05-17 |
 | Phase 7 | Block Checkout 統合 | ✅ 完了 | — | 2026-05-17 |
 | Phase 8 | カードトークン保存 | ✅ 完了 | #10 | 2026-05-17 |
-| Phase 9 | WooCommerce Subscriptions 対応 | ⬜ 未着手 | — | — |
+| Phase 9 | WooCommerce Subscriptions 対応 | ✅ 完了 | — | 2026-05-28 |
 | Phase 10 | 品質・テスト | ⬜ 未着手 | — | — |
 
 ---
@@ -303,15 +303,17 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** テスト環境でカード決済が完了し、注文ステータスが「処理中」になる。
 
-- [ ] `Payjp_API` クラス完全実装
-- [ ] `payment_fields()`: Payment Flow 作成 → `wp_add_inline_script()` で client_secret を渡す
-- [ ] payments.js を CDN からエンキュー（`wp_enqueue_script`）
-- [ ] `checkout.js`: payments.js ウィジェットマウント・confirmPayment
-- [ ] `template_redirect` フック: return_url ハンドラ実装
-- [ ] API で Payment Flow を検証 → `payment_complete()` 呼び出し
-- [ ] `_payjp_payment_flow_id` をオーダーメタに保存
+- [x] `Payjp_API` クラス完全実装
+- [x] `payment_fields()`: Payment Flow 作成 → `wp_add_inline_script()` で client_secret を渡す
+- [x] payments.js を CDN からエンキュー（`wp_enqueue_script`）
+- [x] `checkout.js`: payments.js ウィジェットマウント・confirmPayment
+- [x] `template_redirect` フック: return_url ハンドラ実装
+- [x] API で Payment Flow を検証 → `payment_complete()` 呼び出し
+- [x] `_payjp_payment_flow_id` をオーダーメタに保存
 
 **完了条件:** テストカードで決済完了 → 注文ステータス「処理中」。
+
+> ✅ 2026-05-16 完了 — PR #5 mainマージ済み
 
 ---
 
@@ -319,11 +321,13 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** テスト PayPay アカウントで決済が完了し、注文ステータスが「処理中」になる。
 
-- [ ] `payment_fields()`: Payment Flow 作成（`payment_method_types: ['paypay']`）
-- [ ] `payment-method-paypay.js`: PayPay フォームマウント・confirmPayment
-- [ ] return_url ハンドラをカードと共通化
+- [x] `payment_fields()`: Payment Flow 作成（`payment_method_types: ['paypay']`）
+- [x] `payment-method-paypay.js`: PayPay フォームマウント・confirmPayment
+- [x] return_url ハンドラをカードと共通化
 
 **完了条件:** PayPay テストアカウントで決済完了 → 注文ステータス「処理中」。
+
+> ✅ 2026-05-16 完了 — PR #6 mainマージ済み
 
 ---
 
@@ -331,13 +335,15 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** PAY.JP からの Webhook を受信し、注文ステータスを権威ソースで更新する。
 
-- [ ] REST エンドポイント: `POST /wp-json/payjp/v1/webhook`
-- [ ] `hash_equals()` でトークン検証
-- [ ] `payment_flow.succeeded` → `payment_complete()`（冪等）
-- [ ] `payment_flow.payment_failed` → `update_status('failed')`
-- [ ] `refund.created` → `wc_create_refund()`
+- [x] REST エンドポイント: `POST /wp-json/payjp/v1/webhook`
+- [x] `hash_equals()` でトークン検証
+- [x] `payment_flow.succeeded` → `payment_complete()`（冪等）
+- [x] `payment_flow.payment_failed` → `update_status('failed')`
+- [x] `refund.created` → 注文ノートに記録（`wc_create_refund()` は `process_refund()` 側で実施）
 
 **完了条件:** PAY.JP ダッシュボードのテスト送信で注文ステータスが更新される。
+
+> ✅ 2026-05-16 完了 — PR #6 mainマージ済み
 
 ---
 
@@ -378,20 +384,22 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** ログイン済み顧客がカードを保存し、次回購入時にカード入力なしで決済できる。
 
-- [ ] `Payjp_Token_Manager` クラス実装
+- [x] `Payjp_Token_Manager` クラス実装
   - PAY.JP Customer 作成 (`POST /v2/customers`)
   - Setup Flow 作成 (`POST /v2/setup_flows`) → payments.js でカード登録（決済なし）
   - PaymentMethod を Customer に紐付け (`POST /v2/payment_methods/{id}/attach`)
   - `WC_Payment_Token_CC` を使った WooCommerce Token API 統合
   - `_payjp_customer_id` / `_payjp_payment_method_id` をユーザーメタ + オーダーメタに保存
-- [ ] `WC_Gateway_Payjp_Card` の `supports` に `'tokenization'`・`'add_payment_method'` を追加
-- [ ] `payment_fields()` に保存済みカード選択 UI を追加（WC 標準の `saved_payment_methods()` 利用）
-- [ ] 「このカードを保存する」チェックボックスの表示・処理
-- [ ] 保存カード選択時: `customer_id` + `confirm: true` で Payment Flow を即時作成・確定
-- [ ] マイアカウント > 支払い方法 からのカード追加（Setup Flow）・削除
-- [ ] `uninstall.php` にトークンデータのクリーンアップを追加
+- [x] `WC_Gateway_Payjp_Card` の `supports` に `'tokenization'`・`'add_payment_method'` を追加
+- [x] `payment_fields()` に保存済みカード選択 UI を追加（WC 標準の `saved_payment_methods()` 利用）
+- [x] 「このカードを保存する」チェックボックスの表示・処理
+- [x] 保存カード選択時: `customer_id` + `confirm: true` で Payment Flow を即時作成・確定
+- [x] マイアカウント > 支払い方法 からのカード追加（Setup Flow）・削除
+- [x] `uninstall.php` にトークンデータのクリーンアップを追加
 
 **完了条件:** ログイン済みユーザーがカードを保存し、次回購入時に選択して決済できる。マイアカウントでカード管理ができる。
+
+> ✅ 2026-05-17 完了 — PR #10 mainマージ済み
 
 ---
 
@@ -401,28 +409,18 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **前提:** Phase 8（カードトークン保存）が完了していること。WooCommerce Subscriptions プラグインがインストール済みであること。
 
-- [ ] `Payjp_Subscriptions` クラス実装
+- [x] `Payjp_Subscriptions` クラス実装
   - `class_exists( 'WC_Subscriptions' )` で存在チェック → 未インストール時は機能を無効化
   - `woocommerce_scheduled_subscription_payment_payjp_card` フックで定期支払い処理
   - サブスクリプション親注文の `_payjp_customer_id` を取得 → `customer_id` + `confirm: true` で自動課金
-  - 失敗時に `WCS_Retry_Manager` と連携した再試行ロジック
-- [ ] `WC_Gateway_Payjp_Card` の `supports` に以下を追加:
-  ```php
-  'subscriptions',
-  'subscription_cancellation',
-  'subscription_suspension',
-  'subscription_reactivation',
-  'subscription_amount_changes',
-  'subscription_date_changes',
-  'subscription_payment_method_change',
-  'subscription_payment_method_change_customer',
-  'subscription_payment_method_change_admin',
-  'multiple_subscriptions',
-  ```
-- [ ] 支払い方法変更: 新カードを Setup Flow で登録 → サブスクリプションの `_payjp_customer_id` を更新
-- [ ] Webhook `payment_flow.succeeded` / `payment_flow.payment_failed` でサブスクリプションのステータスを更新
+  - 失敗時は `update_status('failed')` → WCS_Retry_Manager が自動的にリトライをスケジュール
+- [x] `WC_Gateway_Payjp_Card` の `supports` に全サブスクリプションケイパビリティを追加
+- [x] 支払い方法変更: 保存カード選択 → `process_subscription_method_change()` で $0 注文を処理 → `on_payment_method_updated()` で PM ID を更新
+- [x] Webhook `payment_flow.succeeded` / `payment_flow.payment_failed` → WCS が `payment_complete()` / `update_status('failed')` に自動フックしてサブスクリプションステータスを更新
 
 **完了条件:** 定期購入商品の初回購入・自動更新課金・支払い方法変更が正常に動作する。
+
+> ✅ 2026-05-28 完了
 
 ---
 

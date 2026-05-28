@@ -84,7 +84,11 @@ class Payjp_Webhook_Handler {
 			return new WP_REST_Response( array( 'error' => 'Unsupported Media Type' ), 415 );
 		}
 
-		$event = $request->get_json_params();
+		$event = json_decode( $request->get_body(), true );
+
+		if ( ! is_array( $event ) ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid JSON payload' ), 400 );
+		}
 
 		$type   = isset( $event['type'] ) && is_string( $event['type'] ) ? $event['type'] : '';
 		$object = isset( $event['data']['object'] ) && is_array( $event['data']['object'] )

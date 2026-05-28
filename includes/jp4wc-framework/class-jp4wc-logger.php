@@ -231,15 +231,17 @@ class JP4WC_Logger {
 	/**
 	 * Log an error. Always written regardless of the enabled callback.
 	 *
+	 * Stack traces are intentionally omitted: they can expose API tokens or
+	 * payment payloads via argument values when zend.exception_ignore_args is off.
+	 *
 	 * @param string          $message  Human-readable description of what went wrong.
 	 * @param int|null        $order_id WooCommerce order ID.
-	 * @param \Throwable|null $e        Exception/error to append (message + stack trace).
+	 * @param \Throwable|null $e        Exception/error to append (class + message only).
 	 */
 	public function log_error( string $message, ?int $order_id = null, ?\Throwable $e = null ): void {
 		$line = '[ERROR] ' . $message . $this->order_tag( $order_id );
 		if ( null !== $e ) {
-			$line .= "\n" . get_class( $e ) . ': ' . $e->getMessage()
-				. "\n" . $e->getTraceAsString();
+			$line .= "\n" . get_class( $e ) . ': ' . $e->getMessage();
 		}
 		$this->logger()->error( $line, $this->context() );
 	}

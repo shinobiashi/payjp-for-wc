@@ -70,7 +70,7 @@ class Payjp_API {
 		try {
 			$data = $this->parse_response( $response );
 		} catch ( RuntimeException $e ) {
-			// Pass endpoint context as the message; log_error() appends exception class + message + trace.
+			// Pass endpoint context as the message; log_error() appends exception class + message.
 			$this->logger?->log_error( 'POST ' . $endpoint . ' failed', $order_id, $e );
 			throw $e;
 		}
@@ -101,7 +101,7 @@ class Payjp_API {
 		try {
 			$data = $this->parse_response( $response );
 		} catch ( RuntimeException $e ) {
-			// Pass endpoint context as the message; log_error() appends exception class + message + trace.
+			// Pass endpoint context as the message; log_error() appends exception class + message.
 			$this->logger?->log_error( 'GET ' . $endpoint . ' failed', $order_id, $e );
 			throw $e;
 		}

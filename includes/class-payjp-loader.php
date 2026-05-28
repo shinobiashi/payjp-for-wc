@@ -29,8 +29,10 @@ class Payjp_Loader {
 	 * Require all plugin class files.
 	 */
 	private static function load_classes(): void {
-		$dir = PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/';
+		$fw_dir = PAYJP_FOR_WC_DIR . 'includes/jp4wc-framework/';
+		$dir    = PAYJP_FOR_WC_DIR . 'includes/gateways/payjp/';
 
+		require_once $fw_dir . 'class-jp4wc-logger.php';
 		require_once $dir . 'class-payjp-settings.php';
 		require_once $dir . 'class-payjp-api.php';
 		require_once $dir . 'class-wc-gateway-payjp.php';

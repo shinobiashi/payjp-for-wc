@@ -9,6 +9,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'Payjp_Webhook_Handler' ) ) {
 	return;
 }
@@ -71,6 +73,8 @@ class Payjp_Webhook_Handler {
 	 */
 	public static function handle_request( WP_REST_Request $request ): WP_REST_Response {
 		if ( ! self::verify_token( $request ) ) {
+			// Use log_event (debug-gated) to avoid disk-filling noise from public endpoint probing.
+			self::logger()->log_event( 'webhook_auth_failed' );
 			return new WP_REST_Response( array( 'error' => 'Unauthorized' ), 401 );
 		}
 
@@ -80,12 +84,18 @@ class Payjp_Webhook_Handler {
 			return new WP_REST_Response( array( 'error' => 'Unsupported Media Type' ), 415 );
 		}
 
-		$event = $request->get_json_params();
+		$event = json_decode( $request->get_body(), true );
+
+		if ( ! is_array( $event ) ) {
+			return new WP_REST_Response( array( 'error' => 'Invalid JSON payload' ), 400 );
+		}
 
 		$type   = isset( $event['type'] ) && is_string( $event['type'] ) ? $event['type'] : '';
 		$object = isset( $event['data']['object'] ) && is_array( $event['data']['object'] )
 			? $event['data']['object']
 			: array();
+
+		self::logger()->log_webhook( $type, $event );
 
 		switch ( $type ) {
 			case 'payment_flow.succeeded':
@@ -102,6 +112,18 @@ class Payjp_Webhook_Handler {
 		}
 
 		return new WP_REST_Response( array( 'received' => true ) );
+	}
+
+	/**
+	 * Get the shared JP4WC_Logger instance.
+	 *
+	 * @return JP4WC_Logger
+	 */
+	private static function logger(): JP4WC_Logger {
+		return JP4WC_Logger::get_instance(
+			'payjp-for-wc',
+			static fn() => (bool) Payjp_Settings::get( 'debug_log' )
+		);
 	}
 
 	/**
@@ -145,6 +167,14 @@ class Payjp_Webhook_Handler {
 		}
 
 		$order->payment_complete( $flow_id );
+		self::logger()->log_event(
+			'succeeded',
+			$order->get_id(),
+			array(
+				'flow_id' => $flow_id,
+				'source'  => 'webhook',
+			)
+		);
 	}
 
 	/**
@@ -169,6 +199,14 @@ class Payjp_Webhook_Handler {
 
 		/* translators: PAY.JP failed payment note shown in WooCommerce admin */
 		$order->update_status( 'failed', __( 'PAY.JP payment failed (webhook).', 'payjp-for-wc' ) );
+		self::logger()->log_event(
+			'failed',
+			$order->get_id(),
+			array(
+				'flow_id' => $flow_id,
+				'source'  => 'webhook',
+			)
+		);
 	}
 
 	/**
@@ -205,6 +243,16 @@ class Payjp_Webhook_Handler {
 				__( 'PAY.JP refund created (webhook). Refund ID: %1$s. Amount: ¥%2$s.', 'payjp-for-wc' ),
 				esc_html( $refund_id ),
 				number_format( $amount )
+			)
+		);
+
+		self::logger()->log_event(
+			'refunded',
+			$order->get_id(),
+			array(
+				'refund_id' => $refund_id,
+				'amount'    => $amount,
+				'source'    => 'webhook',
 			)
 		);
 	}

@@ -7,6 +7,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'Payjp_API' ) ) {
 	return;
 }
@@ -26,23 +28,36 @@ class Payjp_API {
 	private string $secret_key;
 
 	/**
+	 * Optional logger. When null, all logging is silently skipped.
+	 *
+	 * @var JP4WC_Logger|null
+	 */
+	private ?JP4WC_Logger $logger;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param string $secret_key PAY.JP secret key (sk_test_xxx or sk_live_xxx).
+	 * @param string            $secret_key PAY.JP secret key (sk_test_xxx or sk_live_xxx).
+	 * @param JP4WC_Logger|null $logger     Optional logger instance.
 	 */
-	public function __construct( string $secret_key ) {
+	public function __construct( string $secret_key, ?JP4WC_Logger $logger = null ) {
 		$this->secret_key = $secret_key;
+		$this->logger     = $logger;
 	}
 
 	/**
 	 * POST to a PAY.JP v2 endpoint.
 	 *
-	 * @param string               $endpoint Relative endpoint, e.g. '/payment_flows'.
-	 * @param array<string, mixed> $body     Request body (will be JSON-encoded).
+	 * @param string               $endpoint  Relative endpoint, e.g. '/payment_flows'.
+	 * @param array<string, mixed> $body      Request body (will be JSON-encoded).
+	 * @param int|null             $order_id  WooCommerce order ID for log correlation.
 	 * @return array<string, mixed> Decoded response body.
 	 * @throws RuntimeException On HTTP error or PAY.JP API error.
 	 */
-	public function post( string $endpoint, array $body ): array {
+	public function post( string $endpoint, array $body, ?int $order_id = null ): array {
+		$start = hrtime( true );
+		$this->logger?->log_request( 'POST', $endpoint, $body, $order_id );
+
 		$response = wp_remote_post(
 			PAYJP_API_BASE . $endpoint,
 			array(
@@ -52,17 +67,29 @@ class Payjp_API {
 			)
 		);
 
-		return $this->parse_response( $response );
+		try {
+			$data = $this->parse_response( $response );
+		} catch ( RuntimeException $e ) {
+			// Pass endpoint context as the message; log_error() appends exception class + message + trace.
+			$this->logger?->log_error( 'POST ' . $endpoint . ' failed', $order_id, $e );
+			throw $e;
+		}
+		$this->logger?->log_response( $endpoint, $data, ( hrtime( true ) - $start ) / 1e6, $order_id );
+		return $data;
 	}
 
 	/**
 	 * GET from a PAY.JP v2 endpoint.
 	 *
-	 * @param string $endpoint Relative endpoint, e.g. '/payment_flows/pflw_xxx'.
+	 * @param string   $endpoint  Relative endpoint, e.g. '/payment_flows/pflw_xxx'.
+	 * @param int|null $order_id  WooCommerce order ID for log correlation.
 	 * @return array<string, mixed> Decoded response body.
 	 * @throws RuntimeException On HTTP error or PAY.JP API error.
 	 */
-	public function get( string $endpoint ): array {
+	public function get( string $endpoint, ?int $order_id = null ): array {
+		$start = hrtime( true );
+		$this->logger?->log_request( 'GET', $endpoint, array(), $order_id );
+
 		$response = wp_remote_get(
 			PAYJP_API_BASE . $endpoint,
 			array(
@@ -71,7 +98,15 @@ class Payjp_API {
 			)
 		);
 
-		return $this->parse_response( $response );
+		try {
+			$data = $this->parse_response( $response );
+		} catch ( RuntimeException $e ) {
+			// Pass endpoint context as the message; log_error() appends exception class + message + trace.
+			$this->logger?->log_error( 'GET ' . $endpoint . ' failed', $order_id, $e );
+			throw $e;
+		}
+		$this->logger?->log_response( $endpoint, $data, ( hrtime( true ) - $start ) / 1e6, $order_id );
+		return $data;
 	}
 
 	/**

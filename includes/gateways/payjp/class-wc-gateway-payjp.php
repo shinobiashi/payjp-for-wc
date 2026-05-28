@@ -7,6 +7,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'WC_Gateway_Payjp' ) ) {
 	return;
 }
@@ -139,10 +141,20 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	}
 
 	/**
-	 * Get a Payjp_API instance initialized with the currently active secret key.
+	 * Get a Payjp_API instance initialized with the currently active secret key and logger.
 	 */
 	protected function get_api(): Payjp_API {
-		return new Payjp_API( Payjp_Settings::get_secret_key() );
+		return new Payjp_API( Payjp_Settings::get_secret_key(), $this->get_logger() );
+	}
+
+	/**
+	 * Get the shared JP4WC_Logger instance for this plugin.
+	 */
+	protected function get_logger(): JP4WC_Logger {
+		return JP4WC_Logger::get_instance(
+			'payjp-for-wc',
+			static fn() => (bool) Payjp_Settings::get( 'debug_log' )
+		);
 	}
 
 	// ── Template-method hooks for payment_scripts() ───────────────────────────
@@ -273,11 +285,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended
-		$order_id  = absint( $_GET['order_id'] ?? 0 );
-		$order_key = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
+		$url_order_id = absint( $_GET['order_id'] ?? 0 );
+		$order_key    = isset( $_GET['key'] ) && is_string( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$order = $order_id ? wc_get_order( $order_id ) : false;
+		$order = $url_order_id ? wc_get_order( $url_order_id ) : false;
 
 		if ( ! $order || $order->get_order_key() !== $order_key ) {
 			wp_safe_redirect( wc_get_checkout_url() );
@@ -302,9 +314,13 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			exit;
 		}
 
+		$order_id = $order->get_id();  // verified against $url_order_id; use typed int from WC_Order.
+		$logger   = $this->get_logger();
+
 		try {
-			$flow = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ) );
+			$flow = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
 		} catch ( RuntimeException $e ) {
+			// Payjp_API already logged this exception before rethrowing; no duplicate log here.
 			wc_add_notice( esc_html( $e->getMessage() ), 'error' );
 			wp_safe_redirect( wc_get_checkout_url() );
 			exit;
@@ -314,6 +330,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 
 		if ( 'succeeded' === $status ) {
 			$order->payment_complete( $flow_id );
+			$logger->log_event( 'succeeded', $order_id, array( 'flow_id' => $flow_id ) );
 			$this->after_payment_complete( $order, $flow );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;
@@ -325,10 +342,12 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			$order->set_transaction_id( $flow_id );
 			/* translators: PAY.JP order-hold note shown in WooCommerce admin */
 			$order->update_status( 'on-hold', __( 'PAY.JP authorised. Awaiting manual capture.', 'payjp-for-wc' ) );
+			$logger->log_event( 'authorized', $order_id, array( 'flow_id' => $flow_id ) );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;
 		}
 
+		$logger->log_event( 'payment_incomplete', $order_id, array( 'flow_status' => $status ) );
 		wc_add_notice( __( 'Payment was not completed. Please try again.', 'payjp-for-wc' ), 'error' );
 		wp_safe_redirect( wc_get_checkout_url() );
 		exit;

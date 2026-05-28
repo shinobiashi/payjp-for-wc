@@ -10,6 +10,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'Payjp_Token_Manager' ) ) {
 	return;
 }
@@ -58,7 +60,10 @@ class Payjp_Token_Manager {
 	 */
 	public static function rest_create_setup_flow( WP_REST_Request $request ): WP_REST_Response { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
 		$user_id = get_current_user_id();
-		$api     = new Payjp_API( Payjp_Settings::get_secret_key() );
+		$api     = new Payjp_API(
+			Payjp_Settings::get_secret_key(),
+			JP4WC_Logger::get_instance( 'payjp-for-wc', static fn() => (bool) Payjp_Settings::get( 'debug_log' ) )
+		);
 
 		try {
 			$customer_id = self::get_or_create_customer( $user_id, $api );
@@ -139,7 +144,10 @@ class Payjp_Token_Manager {
 		}
 
 		$user_id = get_current_user_id();
-		$api     = new Payjp_API( Payjp_Settings::get_secret_key() );
+		$api     = new Payjp_API(
+			Payjp_Settings::get_secret_key(),
+			JP4WC_Logger::get_instance( 'payjp-for-wc', static fn() => (bool) Payjp_Settings::get( 'debug_log' ) )
+		);
 
 		try {
 			$flow = $api->get( '/setup_flows/' . rawurlencode( $flow_id ) );

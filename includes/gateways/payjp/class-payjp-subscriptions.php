@@ -10,6 +10,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use ArtisanWorkshop\WCLogger\v1_0_0\JP4WC_Logger;
+
 if ( class_exists( 'Payjp_Subscriptions' ) ) {
 	return;
 }
@@ -99,7 +101,10 @@ class Payjp_Subscriptions {
 			return;
 		}
 
-		$api = new Payjp_API( Payjp_Settings::get_secret_key() );
+		$api = new Payjp_API(
+			Payjp_Settings::get_secret_key(),
+			JP4WC_Logger::get_instance( 'payjp-for-wc', static fn() => (bool) Payjp_Settings::get( 'debug_log' ) )
+		);
 
 		try {
 			$flow = $api->post(

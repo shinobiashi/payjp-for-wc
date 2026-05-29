@@ -85,23 +85,51 @@ function ensureCustomer() {
 }
 
 /**
- * Ensure PAY.JP settings include the known test webhook secret.
+ * Extract a JSON object string from wp-env output.
+ * wp-env wraps command output with "ℹ Starting…" / "✔ Ran…" lines;
+ * find the first line that begins with '{' to get the raw JSON.
+ *
+ * @param {string} wpEnvOutput Full stdout returned by wpCli().
+ * @return {string} The JSON line, or '{}' when none is found.
+ */
+function extractJson( wpEnvOutput ) {
+	const jsonLine = wpEnvOutput
+		.split( '\n' )
+		.find( ( line ) => line.trim().startsWith( '{' ) );
+	return jsonLine ? jsonLine.trim() : '{}';
+}
+
+/**
+ * Ensure PAY.JP settings contain test API keys, enabled methods, and the
+ * known test webhook secret. Existing keys in the database are preserved so
+ * the setup is idempotent across multiple runs.
+ *
+ * API keys can also be provided via PAYJP_TEST_PUBLIC_KEY /
+ * PAYJP_TEST_SECRET_KEY environment variables for CI environments that do
+ * not have a pre-seeded database.
  */
 function ensurePayjpSettings() {
-	let raw;
+	let settings = {};
 	try {
-		raw = wpCli( 'option get payjp_settings --format=json' );
+		const raw = wpCli( 'option get payjp_settings --format=json' );
+		// Extract only the JSON line from wp-env wrapper output.
+		settings = JSON.parse( extractJson( raw ) );
 	} catch {
-		raw = '{}';
+		// Option doesn't exist yet — start with empty settings.
 	}
-	const settings = JSON.parse( raw || '{}' );
+
+	// Seed API keys from env vars if not already stored in the database.
+	if ( ! settings.test_public_key ) {
+		settings.test_public_key = process.env.PAYJP_TEST_PUBLIC_KEY || '';
+	}
+	if ( ! settings.test_secret_key ) {
+		settings.test_secret_key = process.env.PAYJP_TEST_SECRET_KEY || '';
+	}
+
 	settings.webhook_secret = TEST_WEBHOOK_SECRET;
-	if ( ! settings.enabled_methods ) {
-		settings.enabled_methods = [ 'card', 'paypay' ];
-	}
-	if ( settings.test_mode === undefined ) {
-		settings.test_mode = true;
-	}
+	settings.enabled_methods = [ 'card', 'paypay' ];
+	settings.test_mode = true;
+
 	wpCli(
 		`option update payjp_settings '${ JSON.stringify(
 			settings

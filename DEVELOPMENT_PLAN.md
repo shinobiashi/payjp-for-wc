@@ -15,7 +15,7 @@
 | Phase 7 | Block Checkout 統合 | ✅ 完了 | — | 2026-05-17 |
 | Phase 8 | カードトークン保存 | ✅ 完了 | #10 | 2026-05-17 |
 | Phase 9 | WooCommerce Subscriptions 対応 | ✅ 完了 | — | 2026-05-28 |
-| Phase 10 | 品質・テスト | ⬜ 未着手 | — | — |
+| Phase 10 | 品質・テスト | 🔄 進行中 | — | — |
 
 ---
 
@@ -426,14 +426,17 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ### Phase 10: 品質・テスト
 
-- [ ] PHPCS: `vendor/bin/phpcs` — 0 エラー・0 警告
-- [ ] PHPStan: level 5 でエラーなし
-- [ ] JS lint: `npm run lint:js` — エラーなし
-- [ ] wp-env でエンドツーエンド手動テスト
-- [ ] HPOS 有効時の動作確認
+- [x] PHPCS: `vendor/bin/phpcs` — 0 エラー・0 警告
+- [x] PHPStan: level 5 でエラーなし
+- [x] JS lint: `npm run lint:js` — エラーなし
+- [x] CSS lint: `npm run lint:css` — エラーなし
+- [x] wp-env + Playwright E2E テスト 15/15 PASS（`tests/e2e/phase10.spec.js`）
+- [x] HPOS 有効時の動作確認（wp-env 環境で HPOS 有効・プラグイン競合なし確認済み）
+- [x] Block Checkout / Classic Checkout の両方で PAY.JP 決済手段の表示確認済み
+- [x] My Account > 支払い方法: カード追加フォーム（Setup Flow マウントポイント）表示確認済み
+- [x] Webhook: 401/415/400/200 各レスポンスコード確認済み
 - [ ] 同梱テスト: Japanized for WooCommerce に組み込んで二重読み込みがないことを確認
-- [ ] Block Checkout / Classic Checkout の両方で動作確認
-- [ ] カードトークン保存: 保存・再利用・削除の動作確認
+- [ ] カードトークン保存: 実際のテストカードで保存・再利用・削除の動作確認
 - [ ] WooCommerce Subscriptions: 定期購入の初回・自動更新・支払い方法変更の動作確認
 
 ---

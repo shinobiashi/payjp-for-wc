@@ -12,7 +12,7 @@ if ( ! fs.existsSync( fixturePath ) ) {
 	);
 }
 const fixtures = JSON.parse( fs.readFileSync( fixturePath, 'utf8' ) );
-const { productId, webhookSecret } = fixtures;
+const { productId, webhookSecret, classicCheckoutPath } = fixtures;
 
 /** Paths to browser storage-state files created by global-setup.js. */
 const ADMIN_AUTH = path.join( __dirname, 'auth/admin.json' );
@@ -67,59 +67,55 @@ test.describe( 'Admin — PAY.JP settings page', () => {
 // ──────────────────────────────────────────────────────────────
 // 2. Classic Checkout — 決済手段の表示確認
 // ──────────────────────────────────────────────────────────────
+// Uses a dedicated page rendered by [woocommerce_checkout] shortcode so the
+// Classic and Block suites cover genuinely distinct rendering paths.
 test.describe( 'Classic Checkout — payment methods visibility', () => {
 	test.beforeEach( async ( { page } ) => {
 		await addProductToCart( page, productId );
 	} );
 
-	test( 'PAY.JP Card option is visible at checkout', async ( { page } ) => {
-		await page.goto( '/checkout/' );
-		// Wait for payment section (Classic: #payment, Block: data-block-name attr).
-		await page
-			.locator(
-				'#payment, .wc-block-checkout__payment-method, [data-block-name="woocommerce/checkout-payment-block"]'
-			)
-			.first()
-			.waitFor( { timeout: 15000 } );
-		const classicCard = page.locator( '#payment_method_payjp_card' );
-		const blockCard = page.locator( 'input[value="payjp_card"]' );
-		const found =
-			( await classicCard.count() ) > 0 ||
-			( await blockCard.count() ) > 0;
-		expect( found ).toBe( true );
+	test( 'PAY.JP Card option is visible at classic checkout', async ( {
+		page,
+	} ) => {
+		await page.goto( classicCheckoutPath );
+		// Classic checkout renders a server-side #payment list — assert that only.
+		await page.locator( '#payment' ).waitFor( { timeout: 15000 } );
+		await expect(
+			page.locator( '#payment_method_payjp_card' )
+		).toBeVisible();
 	} );
 
-	test( 'PAY.JP PayPay option is visible at checkout', async ( { page } ) => {
-		await page.goto( '/checkout/' );
-		await page
-			.locator(
-				'#payment, .wc-block-checkout__payment-method, [data-block-name="woocommerce/checkout-payment-block"]'
-			)
-			.first()
-			.waitFor( { timeout: 15000 } );
-		const classicPaypay = page.locator( '#payment_method_payjp_paypay' );
-		const blockPaypay = page.locator( 'input[value="payjp_paypay"]' );
-		const found =
-			( await classicPaypay.count() ) > 0 ||
-			( await blockPaypay.count() ) > 0;
-		expect( found ).toBe( true );
+	test( 'PAY.JP PayPay option is visible at classic checkout', async ( {
+		page,
+	} ) => {
+		await page.goto( classicCheckoutPath );
+		await page.locator( '#payment' ).waitFor( { timeout: 15000 } );
+		await expect(
+			page.locator( '#payment_method_payjp_paypay' )
+		).toBeVisible();
 	} );
 } );
 
 // ──────────────────────────────────────────────────────────────
 // 3. Block Checkout — 決済手段の表示確認
 // ──────────────────────────────────────────────────────────────
+// Uses the default /checkout/ page (Block Checkout in WooCommerce 8.3+).
+// Selectors are scoped to block-specific elements — the classic #payment
+// element is intentionally excluded to keep this suite block-only.
 test.describe( 'Block Checkout — payment methods', () => {
 	test.beforeEach( async ( { page } ) => {
 		await addProductToCart( page, productId );
 	} );
 
-	test( 'Checkout page loads with a payment section', async ( { page } ) => {
+	test( 'Checkout page loads with a block payment section', async ( {
+		page,
+	} ) => {
 		await page.goto( '/checkout/' );
+		// Block checkout renders payment options inside these containers.
 		await expect(
 			page
 				.locator(
-					'#payment, .wc-block-checkout__payment-method, .wp-block-woocommerce-checkout-payment-block, [data-block-name="woocommerce/checkout-payment-block"]'
+					'.wc-block-checkout__payment-method, .wp-block-woocommerce-checkout-payment-block, [data-block-name="woocommerce/checkout-payment-block"]'
 				)
 				.first()
 		).toBeVisible( { timeout: 15000 } );
@@ -129,12 +125,20 @@ test.describe( 'Block Checkout — payment methods', () => {
 		page,
 	} ) => {
 		await page.goto( '/checkout/' );
-		const payjpLabel = page.locator(
-			'label:has-text("PAY.JP"), input[value="payjp_card"], #payment_method_payjp_card'
-		);
-		await expect( payjpLabel.first() ).toBeVisible( {
-			timeout: 15000,
-		} );
+		// Scope to the block payment container to exclude the classic #payment list.
+		const blockPayment = page
+			.locator(
+				'.wc-block-checkout__payment-method, [data-block-name="woocommerce/checkout-payment-block"]'
+			)
+			.first();
+		await expect( blockPayment ).toBeVisible( { timeout: 15000 } );
+		await expect(
+			blockPayment
+				.locator(
+					'input[value="payjp_card"], label:has-text("PAY.JP")'
+				)
+				.first()
+		).toBeVisible( { timeout: 10000 } );
 	} );
 } );
 

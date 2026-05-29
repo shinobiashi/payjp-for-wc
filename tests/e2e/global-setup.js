@@ -196,6 +196,39 @@ function ensureGatewayEnabled( gatewayId ) {
 }
 
 /**
+ * Ensure a Classic Checkout page exists (rendered via [woocommerce_checkout]
+ * shortcode) and return its relative path. Keeping this page separate from the
+ * default /checkout/ (Block Checkout) lets the two E2E test suites cover
+ * genuinely distinct rendering paths.
+ *
+ * @return {string} Relative URL path, e.g. '/classic-checkout/'.
+ */
+function ensureClassicCheckoutPage() {
+	const existing = wpCli(
+		'post list --post_type=page --name=classic-checkout --field=ID --format=ids'
+	);
+	const existingId = existing
+		.split( /\s+/ )
+		.find( ( s ) => /^\d+$/.test( s ) );
+	if ( existingId ) {
+		return '/classic-checkout/';
+	}
+	// Create a page whose content is the classic WooCommerce checkout shortcode.
+	const output = wpCli(
+		`post create --post_type=page --post_status=publish` +
+			` --post_title='Classic Checkout' --post_name=classic-checkout` +
+			` --post_content='[woocommerce_checkout]' --porcelain`
+	);
+	const newId = output.split( /\s+/ ).find( ( s ) => /^\d+$/.test( s ) );
+	if ( ! newId ) {
+		throw new Error(
+			`Could not create classic checkout page: ${ output }`
+		);
+	}
+	return '/classic-checkout/';
+}
+
+/**
  * Log in to WP Admin using a headless browser and persist the session to
  * AUTH_DIR/admin.json. Specs load this file via test.use({ storageState })
  * instead of repeating the login on every test.
@@ -266,6 +299,10 @@ module.exports = async function globalSetup() {
 	// eslint-disable-next-line no-console
 	console.log( '  ✔ individual gateway options: enabled = yes' );
 
+	const classicCheckoutPath = ensureClassicCheckoutPage();
+	// eslint-disable-next-line no-console
+	console.log( `  ✔ classic checkout page: ${ classicCheckoutPath }` );
+
 	// Flush WP object cache so settings take effect immediately.
 	try {
 		wpCli( 'cache flush' );
@@ -279,6 +316,7 @@ module.exports = async function globalSetup() {
 		customerId,
 		webhookSecret: TEST_WEBHOOK_SECRET,
 		customer: TEST_CUSTOMER,
+		classicCheckoutPath,
 	};
 	const fixturePath = path.join( __dirname, 'fixtures.json' );
 	fs.writeFileSync( fixturePath, JSON.stringify( fixtureData, null, 2 ) );

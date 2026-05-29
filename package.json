@@ -7,7 +7,7 @@
     "scripts": {
         "build": "wp-scripts build",
         "start": "wp-scripts start",
-        "lint:js": "wp-scripts lint-js src/",
+        "lint:js": "wp-scripts lint-js",
         "lint:css": "wp-scripts lint-style --allow-empty-input",
         "format": "wp-scripts format",
         "env:start": "wp-env start",

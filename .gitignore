@@ -46,6 +46,7 @@ wp-content/upgrade/
 # Playwright
 /test-results/
 /playwright-report/
+/tests/e2e/fixtures.json
 
 # Release artifacts
 /*.zip

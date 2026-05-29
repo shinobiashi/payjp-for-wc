@@ -13,6 +13,14 @@ const fs = require( 'fs' );
 /** Known test webhook secret written to payjp_settings. */
 const TEST_WEBHOOK_SECRET = 'payjp_e2e_webhook_secret';
 
+/**
+ * Deterministic placeholder API keys used when PAYJP_TEST_* env vars are absent.
+ * Non-empty values satisfy is_available()'s key-presence check without requiring
+ * real PAY.JP credentials. Tests that make actual API calls should supply real keys.
+ */
+const SMOKE_TEST_PUBLIC_KEY = 'pk_test_e2e_smoke_key_placeholder';
+const SMOKE_TEST_SECRET_KEY = 'sk_test_e2e_smoke_key_placeholder';
+
 /** Known test customer credentials. */
 const TEST_CUSTOMER = {
 	login: 'testcustomer',
@@ -118,12 +126,16 @@ function ensurePayjpSettings() {
 		// Option doesn't exist yet — start with empty settings.
 	}
 
-	// Seed API keys from env vars if not already stored in the database.
+	// Seed API keys from env vars, falling back to deterministic smoke-test
+	// placeholders so is_available() returns true on a fresh wp-env.
+	// Tests that make real PAY.JP API calls should supply PAYJP_TEST_* vars.
 	if ( ! settings.test_public_key ) {
-		settings.test_public_key = process.env.PAYJP_TEST_PUBLIC_KEY || '';
+		settings.test_public_key =
+			process.env.PAYJP_TEST_PUBLIC_KEY || SMOKE_TEST_PUBLIC_KEY;
 	}
 	if ( ! settings.test_secret_key ) {
-		settings.test_secret_key = process.env.PAYJP_TEST_SECRET_KEY || '';
+		settings.test_secret_key =
+			process.env.PAYJP_TEST_SECRET_KEY || SMOKE_TEST_SECRET_KEY;
 	}
 
 	settings.webhook_secret = TEST_WEBHOOK_SECRET;
@@ -133,6 +145,34 @@ function ensurePayjpSettings() {
 	wpCli(
 		`option update payjp_settings '${ JSON.stringify(
 			settings
+		) }' --format=json`
+	);
+}
+
+/**
+ * Set `enabled = yes` in an individual WooCommerce gateway option row.
+ *
+ * WooCommerce's parent::is_available() checks $this->enabled (read from
+ * woocommerce_{gatewayId}_settings.enabled), independently of the shared
+ * payjp_settings.enabled_methods value. Both must be set for the gateway
+ * to appear at checkout.
+ *
+ * @param {string} gatewayId Gateway ID, e.g. 'payjp_card'.
+ */
+function ensureGatewayEnabled( gatewayId ) {
+	let gatewaySettings = {};
+	try {
+		const raw = wpCli(
+			`option get woocommerce_${ gatewayId }_settings --format=json`
+		);
+		gatewaySettings = JSON.parse( extractJson( raw ) );
+	} catch {
+		// Option doesn't exist yet — start fresh.
+	}
+	gatewaySettings.enabled = 'yes';
+	wpCli(
+		`option update woocommerce_${ gatewayId }_settings '${ JSON.stringify(
+			gatewaySettings
 		) }' --format=json`
 	);
 }
@@ -154,6 +194,13 @@ module.exports = async function globalSetup() {
 	ensurePayjpSettings();
 	// eslint-disable-next-line no-console
 	console.log( `  ✔ webhook secret: ${ TEST_WEBHOOK_SECRET }` );
+
+	// Mirror 'enabled: yes' into each individual gateway option so
+	// WC_Payment_Gateway::is_available() passes on a fresh wp-env.
+	ensureGatewayEnabled( 'payjp_card' );
+	ensureGatewayEnabled( 'payjp_paypay' );
+	// eslint-disable-next-line no-console
+	console.log( '  ✔ individual gateway options: enabled = yes' );
 
 	// Flush WP object cache so settings take effect immediately.
 	try {

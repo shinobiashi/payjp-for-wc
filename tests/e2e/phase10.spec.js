@@ -4,47 +4,19 @@ const path = require( 'path' );
 const fs = require( 'fs' );
 
 // Fixture data is written by global-setup.js before any test runs.
-const fixtures = JSON.parse(
-	fs.readFileSync( path.join( __dirname, 'fixtures.json' ), 'utf8' )
-);
-const { productId, webhookSecret, customer } = fixtures;
-
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'password';
-
-/**
- * Log in to WP Admin.
- *
- * @param {import('@playwright/test').Page} page Playwright page object.
- */
-async function loginAdmin( page ) {
-	await page.goto( '/wp-login.php' );
-	await page.fill( '#user_login', ADMIN_USER );
-	await page.fill( '#user_pass', ADMIN_PASS );
-	await page.click( '#wp-submit' );
-	if (
-		await page
-			.locator( 'input[name="upgrade"]' )
-			.isVisible( { timeout: 3000 } )
-			.catch( () => false )
-	) {
-		await page.click( 'input[name="upgrade"]' );
-	}
-	await page.waitForURL( /wp-admin/, { timeout: 10000 } );
+const fixturePath = path.join( __dirname, 'fixtures.json' );
+if ( ! fs.existsSync( fixturePath ) ) {
+	throw new Error(
+		'tests/e2e/fixtures.json not found. Run `npx playwright test` to ' +
+			'trigger globalSetup, which seeds wp-env and writes this file.'
+	);
 }
+const fixtures = JSON.parse( fs.readFileSync( fixturePath, 'utf8' ) );
+const { productId, webhookSecret } = fixtures;
 
-/**
- * Log in as the seeded test customer via My Account.
- *
- * @param {import('@playwright/test').Page} page Playwright page object.
- */
-async function loginCustomer( page ) {
-	await page.goto( '/my-account/' );
-	await page.fill( '#username', customer.login );
-	await page.fill( '#password', customer.password );
-	await page.click( 'button[name="login"]' );
-	await page.waitForURL( /my-account/, { timeout: 10000 } );
-}
+/** Paths to browser storage-state files created by global-setup.js. */
+const ADMIN_AUTH = path.join( __dirname, 'auth/admin.json' );
+const CUSTOMER_AUTH = path.join( __dirname, 'auth/customer.json' );
 
 /**
  * Add the fixture product to the cart via the add-to-cart query param.
@@ -54,15 +26,16 @@ async function loginCustomer( page ) {
  */
 async function addProductToCart( page, pId ) {
 	await page.goto( `/?add-to-cart=${ pId }` );
-	await page.waitForTimeout( 1000 );
+	await page.waitForLoadState( 'networkidle' );
 }
 
 // ──────────────────────────────────────────────────────────────
 // 1. Admin: PAY.JP 設定ページ
 // ──────────────────────────────────────────────────────────────
 test.describe( 'Admin — PAY.JP settings page', () => {
+	test.use( { storageState: ADMIN_AUTH } );
+
 	test( 'PAY.JP tab loads and shows API key fields', async ( { page } ) => {
-		await loginAdmin( page );
 		await page.goto( '/wp-admin/admin.php?page=wc-settings&tab=payjp' );
 		await expect( page.locator( '#mainform' ) ).toBeVisible( {
 			timeout: 10000,
@@ -73,7 +46,6 @@ test.describe( 'Admin — PAY.JP settings page', () => {
 	} );
 
 	test( 'payjp_card gateway settings page loads', async ( { page } ) => {
-		await loginAdmin( page );
 		await page.goto(
 			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payjp_card'
 		);
@@ -83,7 +55,6 @@ test.describe( 'Admin — PAY.JP settings page', () => {
 	} );
 
 	test( 'payjp_paypay gateway settings page loads', async ( { page } ) => {
-		await loginAdmin( page );
 		await page.goto(
 			'/wp-admin/admin.php?page=wc-settings&tab=checkout&section=payjp_paypay'
 		);
@@ -103,10 +74,13 @@ test.describe( 'Classic Checkout — payment methods visibility', () => {
 
 	test( 'PAY.JP Card option is visible at checkout', async ( { page } ) => {
 		await page.goto( '/checkout/' );
-		await page.evaluate( () =>
-			window.scrollTo( 0, document.body.scrollHeight )
-		);
-		await page.waitForTimeout( 2000 );
+		// Wait for payment section (Classic: #payment, Block: data-block-name attr).
+		await page
+			.locator(
+				'#payment, .wc-block-checkout__payment-method, [data-block-name="woocommerce/checkout-payment-block"]'
+			)
+			.first()
+			.waitFor( { timeout: 15000 } );
 		const classicCard = page.locator( '#payment_method_payjp_card' );
 		const blockCard = page.locator( 'input[value="payjp_card"]' );
 		const found =
@@ -117,10 +91,12 @@ test.describe( 'Classic Checkout — payment methods visibility', () => {
 
 	test( 'PAY.JP PayPay option is visible at checkout', async ( { page } ) => {
 		await page.goto( '/checkout/' );
-		await page.evaluate( () =>
-			window.scrollTo( 0, document.body.scrollHeight )
-		);
-		await page.waitForTimeout( 2000 );
+		await page
+			.locator(
+				'#payment, .wc-block-checkout__payment-method, [data-block-name="woocommerce/checkout-payment-block"]'
+			)
+			.first()
+			.waitFor( { timeout: 15000 } );
 		const classicPaypay = page.locator( '#payment_method_payjp_paypay' );
 		const blockPaypay = page.locator( 'input[value="payjp_paypay"]' );
 		const found =
@@ -140,31 +116,24 @@ test.describe( 'Block Checkout — payment methods', () => {
 
 	test( 'Checkout page loads with a payment section', async ( { page } ) => {
 		await page.goto( '/checkout/' );
-		await page.evaluate( () =>
-			window.scrollTo( 0, document.body.scrollHeight )
-		);
-		await page.waitForTimeout( 2000 );
-		const hasPayment = await page
-			.locator(
-				'#payment, .wc-block-checkout__payment-method, .wp-block-woocommerce-checkout-payment-block, [data-block-name="woocommerce/checkout-payment-block"]'
-			)
-			.count();
-		expect( hasPayment ).toBeGreaterThan( 0 );
+		await expect(
+			page
+				.locator(
+					'#payment, .wc-block-checkout__payment-method, .wp-block-woocommerce-checkout-payment-block, [data-block-name="woocommerce/checkout-payment-block"]'
+				)
+				.first()
+		).toBeVisible( { timeout: 15000 } );
 	} );
 
 	test( 'PAY.JP Card payment method is available in Block checkout', async ( {
 		page,
 	} ) => {
 		await page.goto( '/checkout/' );
-		await page.evaluate( () =>
-			window.scrollTo( 0, document.body.scrollHeight )
-		);
-		await page.waitForTimeout( 2000 );
 		const payjpLabel = page.locator(
 			'label:has-text("PAY.JP"), input[value="payjp_card"], #payment_method_payjp_card'
 		);
 		await expect( payjpLabel.first() ).toBeVisible( {
-			timeout: 10000,
+			timeout: 15000,
 		} );
 	} );
 } );
@@ -173,10 +142,11 @@ test.describe( 'Block Checkout — payment methods', () => {
 // 4. My Account — 支払い方法（カードトークン保存 UI）
 // ──────────────────────────────────────────────────────────────
 test.describe( 'My Account — payment methods', () => {
+	test.use( { storageState: CUSTOMER_AUTH } );
+
 	test( 'payment methods page loads for logged-in customer', async ( {
 		page,
 	} ) => {
-		await loginCustomer( page );
 		await page.goto( '/my-account/payment-methods/' );
 		await expect( page.locator( 'h2, .entry-title' ).first() ).toBeVisible(
 			{ timeout: 10000 }
@@ -189,7 +159,6 @@ test.describe( 'My Account — payment methods', () => {
 	test( 'add-payment-method page shows PAY.JP setup form mount point', async ( {
 		page,
 	} ) => {
-		await loginCustomer( page );
 		await page.goto( '/my-account/add-payment-method/' );
 		await expect( page.locator( '#payjp-setup-form' ) ).toBeVisible( {
 			timeout: 15000,
@@ -201,10 +170,11 @@ test.describe( 'My Account — payment methods', () => {
 // 5. HPOS — 互換性確認
 // ──────────────────────────────────────────────────────────────
 test.describe( 'HPOS compatibility', () => {
+	test.use( { storageState: ADMIN_AUTH } );
+
 	test( 'WooCommerce status page shows no payjp conflicts', async ( {
 		page,
 	} ) => {
-		await loginAdmin( page );
 		await page.goto( '/wp-admin/admin.php?page=wc-status' );
 		await expect( page.locator( '#status' ).first() ).toBeVisible( {
 			timeout: 10000,

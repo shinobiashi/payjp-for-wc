@@ -7,8 +7,15 @@
  */
 
 const { execSync } = require( 'child_process' );
+const { chromium } = require( '@playwright/test' );
 const path = require( 'path' );
 const fs = require( 'fs' );
+
+/** Base URL of the wp-env test environment. */
+const BASE_URL = 'http://localhost:8888';
+
+/** Directory where browser storage-state (auth) files are saved. */
+const AUTH_DIR = path.join( __dirname, 'auth' );
 
 /** Known test webhook secret written to payjp_settings. */
 const TEST_WEBHOOK_SECRET = 'payjp_e2e_webhook_secret';
@@ -39,6 +46,17 @@ function wpCli( cmd ) {
 		cwd: path.resolve( __dirname, '../..' ),
 		encoding: 'utf8',
 	} ).trim();
+}
+
+/**
+ * Wrap a string in POSIX single quotes, escaping any embedded single quotes.
+ * Prevents shell breakage when interpolating JSON values into wpCli commands.
+ *
+ * @param {string} str Raw string to escape.
+ * @return {string} Shell-safe single-quoted string.
+ */
+function shellescape( str ) {
+	return "'" + str.replace( /'/g, "'\\''" ) + "'";
 }
 
 /**
@@ -143,9 +161,9 @@ function ensurePayjpSettings() {
 	settings.test_mode = true;
 
 	wpCli(
-		`option update payjp_settings '${ JSON.stringify(
-			settings
-		) }' --format=json`
+		`option update payjp_settings ${ shellescape(
+			JSON.stringify( settings )
+		) } --format=json`
 	);
 }
 
@@ -171,10 +189,56 @@ function ensureGatewayEnabled( gatewayId ) {
 	}
 	gatewaySettings.enabled = 'yes';
 	wpCli(
-		`option update woocommerce_${ gatewayId }_settings '${ JSON.stringify(
-			gatewaySettings
-		) }' --format=json`
+		`option update woocommerce_${ gatewayId }_settings ${ shellescape(
+			JSON.stringify( gatewaySettings )
+		) } --format=json`
 	);
+}
+
+/**
+ * Log in to WP Admin using a headless browser and persist the session to
+ * AUTH_DIR/admin.json. Specs load this file via test.use({ storageState })
+ * instead of repeating the login on every test.
+ */
+async function saveAdminAuthState() {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+	await page.goto( `${ BASE_URL }/wp-login.php` );
+	await page.fill( '#user_login', 'admin' );
+	await page.fill( '#user_pass', 'password' );
+	await page.click( '#wp-submit' );
+	// Handle wp-env DB upgrade prompt if it appears on first boot.
+	if (
+		await page
+			.locator( 'input[name="upgrade"]' )
+			.isVisible( { timeout: 3000 } )
+			.catch( () => false )
+	) {
+		await page.click( 'input[name="upgrade"]' );
+	}
+	await page.waitForURL( /wp-admin/, { timeout: 10000 } );
+	await page
+		.context()
+		.storageState( { path: path.join( AUTH_DIR, 'admin.json' ) } );
+	await browser.close();
+}
+
+/**
+ * Log in as the seeded test customer using a headless browser and persist the
+ * session to AUTH_DIR/customer.json for reuse across My Account specs.
+ */
+async function saveCustomerAuthState() {
+	const browser = await chromium.launch();
+	const page = await browser.newPage();
+	await page.goto( `${ BASE_URL }/my-account/` );
+	await page.fill( '#username', TEST_CUSTOMER.login );
+	await page.fill( '#password', TEST_CUSTOMER.password );
+	await page.click( 'button[name="login"]' );
+	await page.waitForURL( /my-account/, { timeout: 10000 } );
+	await page
+		.context()
+		.storageState( { path: path.join( AUTH_DIR, 'customer.json' ) } );
+	await browser.close();
 }
 
 module.exports = async function globalSetup() {
@@ -219,5 +283,15 @@ module.exports = async function globalSetup() {
 	const fixturePath = path.join( __dirname, 'fixtures.json' );
 	fs.writeFileSync( fixturePath, JSON.stringify( fixtureData, null, 2 ) );
 	// eslint-disable-next-line no-console
-	console.log( `  ✔ fixtures written to ${ fixturePath }\n` );
+	console.log( `  ✔ fixtures written to ${ fixturePath }` );
+
+	// Persist authenticated browser sessions so specs use test.use({ storageState })
+	// instead of logging in at the start of every test.
+	fs.mkdirSync( AUTH_DIR, { recursive: true } );
+	await saveAdminAuthState();
+	// eslint-disable-next-line no-console
+	console.log( '  ✔ admin auth state saved' );
+	await saveCustomerAuthState();
+	// eslint-disable-next-line no-console
+	console.log( '  ✔ customer auth state saved\n' );
 };

@@ -3,6 +3,7 @@
  * Abstract base class shared by all PAY.JP payment gateways.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

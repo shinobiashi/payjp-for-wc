@@ -5,7 +5,7 @@
 ## 進捗サマリー
 
 | フェーズ | 内容 | ステータス | PR | マージ日 |
-|---------|------|-----------|-----|---------|
+| --------- | ------ | ----------- | ----- | --------- |
 | Phase 1 | プラグインスケルトン | ✅ 完了 | #3 | 2026-05-14 |
 | Phase 2 | 統合設定画面 | ✅ 完了 | #4 | 2026-05-15 |
 | Phase 3 | カード決済（埋め込み型） | ✅ 完了 | #5 | 2026-05-16 |
@@ -435,6 +435,13 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 - [x] Block Checkout / Classic Checkout の両方で PAY.JP 決済手段の表示確認済み
 - [x] My Account > 支払い方法: カード追加フォーム（Setup Flow マウントポイント）表示確認済み
 - [x] Webhook: 401/415/400/200 各レスポンスコード確認済み
+- [x] セキュリティ監査: PHPCS/PHPStan + 手動チェック全項目 PASS（入力サニタイズ・出力エスケープ・nonce・capability・hash_equals・HPOS・PCI DSS）
+- [x] `readme.txt` 作成（WordPress.org 必須形式・External Services セクション含む）
+- [x] `README.md` 作成（英語 / 機能・開発環境・コントリビュートガイド・テスト手順）
+- [x] `README-JA.md` 作成（日本語版）
+- [x] `.github/workflows/release.yml` 作成（タグ push → ZIP 生成 → GitHub Release 添付）
+- [x] `.distignore` 作成（開発用ファイルをリリース ZIP から除外）
+- [x] 管理設定画面に Webhook URL 表示と設定手順を追加
 - [ ] 同梱テスト: Japanized for WooCommerce に組み込んで二重読み込みがないことを確認
 - [ ] カードトークン保存: 実際のテストカードで保存・再利用・削除の動作確認
 - [ ] WooCommerce Subscriptions: 定期購入の初回・自動更新・支払い方法変更の動作確認
@@ -489,55 +496,46 @@ readme.txt への開示を必ず行うこと。
 
 #### セキュリティ（必須）
 
-- [ ] すべての `$_GET` / `$_POST` / `$_SERVER` を sanitize してから使用
-  - テキスト: `sanitize_text_field()` / `wp_unslash()` と組み合わせ
-  - URL: `esc_url_raw()`
-  - 整数: `absint()` / `(int)`
-- [ ] すべての出力をエスケープ
-  - HTML: `esc_html()`
-  - URL: `esc_url()`
-  - 属性: `esc_attr()`
-  - JS: `esc_js()`
-  - 直接 HTML 出力: `wp_kses_post()` / `wp_kses()`
-- [ ] フォーム送信に `wp_nonce_field()` + `wp_verify_nonce()`（管理画面のみ）
-- [ ] 権限チェック: `current_user_can( 'manage_woocommerce' )` を管理画面 AJAX で確認
-- [ ] Webhook トークンは `hash_equals()` で検証（タイミング攻撃対策）
-- [ ] `$wpdb` を使う場合は必ず `$wpdb->prepare()`
+- [x] すべての `$_GET` / `$_POST` / `$_SERVER` を sanitize してから使用
+  - テキスト: `sanitize_text_field()` / `wp_unslash()` と組み合わせ ✅
+  - 整数: `absint()` ✅
+- [x] すべての出力をエスケープ（`esc_html()` / `esc_attr()` / `esc_url()` / `wp_kses_post()`）✅
+- [x] フォーム送信に nonce 検証（WooCommerce が `woocommerce-settings` nonce を代行。チェックアウトも WC が検証）✅
+- [x] 権限チェック: `current_user_can( 'manage_woocommerce' )` を管理画面保存処理で確認 ✅
+- [x] Webhook トークンは `hash_equals()` で検証（タイミング攻撃対策）✅
+- [x] `$wpdb` 直接クエリなし（WC / WP API のみ使用）✅
 
 #### ライセンス・コード品質
 
-- [ ] GPL-2.0-or-later ライセンスヘッダーを全 PHP ファイルに記載
-- [ ] 難読化コード禁止（minify は可、mangle 禁止）
-- [ ] ソースコード（`src/`）を同梱すること（minified のみは不可）
-- [ ] WordPress 同梱ライブラリを優先（jQuery は `wp_enqueue_script('jquery')`）
-- [ ] `eval()` / `base64_decode()` をコード実行目的で使用しない
+- [x] GPL-2.0-or-later ライセンスヘッダーを全 PHP ファイルに記載（`@license GPL-2.0-or-later` を全 14 クラスファイルの DocBlock に追加済み）✅
+- [x] 難読化コード禁止（minify は可、mangle 禁止）✅
+- [x] ソースコード（`src/`）を同梱すること（minified のみは不可）✅
+- [x] WordPress 同梱ライブラリを優先（`wp_enqueue_script()` 使用）✅
+- [x] `eval()` / `base64_decode()` をコード実行目的で使用しない ✅
 
 #### i18n（国際化）
 
-- [ ] すべてのユーザー向け文字列を翻訳関数でラップ
-  - `__( 'text', 'payjp-for-wc' )`
-  - `esc_html__( 'text', 'payjp-for-wc' )`
-  - `_e( 'text', 'payjp-for-wc' )` など
-- [ ] テキストドメインは `payjp-for-wc`（プラグインスラッグと一致）
-- [ ] `load_plugin_textdomain()` を `plugins_loaded` フックで呼び出す
-- [ ] 変数を文字列に直接結合しない（`printf()` / `sprintf()` を使用）
+- [x] すべてのユーザー向け文字列を翻訳関数でラップ（`__()` / `esc_html__()` 等）✅
+- [x] テキストドメインは `payjp-for-wc`（プラグインスラッグと一致）✅
+- [x] `load_plugin_textdomain()` を `plugins_loaded` フックで呼び出す ✅（`class-payjp-loader.php`）
+- [x] 変数を文字列に直接結合しない（`sprintf()` / `printf()` を使用）✅
 
 #### プラグイン作法
 
-- [ ] `defined( 'ABSPATH' ) || exit;` を全 PHP ファイルの先頭に記載
-- [ ] `register_activation_hook()` / `register_deactivation_hook()` を必要に応じて設定
-- [ ] `uninstall.php` でオプション削除（注文メタは削除しない）
-- [ ] 過剰な admin notice を出さない
-- [ ] `wp_head` / `wp_footer` を乱用しない
-- [ ] データ保存に専用テーブルを使う場合は `dbDelta()` でマイグレーション
+- [x] `defined( 'ABSPATH' ) || exit;` を全 PHP ファイルの先頭に記載 ✅
+- [x] `register_activation_hook()` / `register_deactivation_hook()` — 有効化時の処理不要につき N/A ✅
+- [x] `uninstall.php` でオプション削除（注文メタは削除しない）✅
+- [x] 過剰な admin notice を出さない ✅
+- [x] `wp_head` / `wp_footer` を乱用しない ✅
+- [x] カスタムテーブルなし → `dbDelta()` 不要 ✅
 
 #### wordpress.org 審査でよく指摘される点
 
-- [ ] `wp_remote_*` の戻り値を `is_wp_error()` で必ずチェック
-- [ ] ハードコードされた URL がないこと（`plugins_url()` / `home_url()` を使用）
-- [ ] 外部 API への接続は必ずユーザーの操作に起因するもの（定期自動送信は禁止）
-- [ ] `readme.txt` の `Tested up to` を最新 WordPress に合わせる
-- [ ] スクリーンショット・バナー・アイコンを `assets/` に準備
+- [x] `wp_remote_*` の戻り値を `is_wp_error()` で必ずチェック ✅（`class-payjp-api.php`）
+- [x] ハードコードされた URL がないこと（`plugins_url()` / `home_url()` / `rest_url()` を使用）✅
+- [x] 外部 API への接続は必ずユーザーの操作に起因するもの（Webhook 受信は外部起点だが受動的な受け口のため問題なし）✅
+- [x] `readme.txt` の `Tested up to` を最新 WordPress に合わせる ✅（7.0）
+- [x] スクリーンショット・バナー・アイコンを `.wordpress-org/` に準備（icon-256x256, icon-128x128, banner-1544x500, banner-772x250, screenshot-1 を PHP GD で生成済み。SVN の `/assets/` にアップロードすること）✅
 
 ---
 
@@ -595,7 +593,7 @@ npm run lint:css                                      # CSS lint
 ### PAY.JP v2 ドキュメント参照先
 
 | リソース | URL |
-|---------|-----|
+| --------- | ----- |
 | ガイド | https://docs.pay.jp/v2/guide |
 | API リファレンス | https://docs.pay.jp/v2/api |
 | LLM 向け全文 | https://docs.pay.jp/v2/llms-full.txt |

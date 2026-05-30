@@ -39,6 +39,9 @@ README.md
 .gitignore
 .gitattributes
 
+# WP.org directory assets (banners/icons go to SVN /assets/, not plugin ZIP)
+.wordpress-org/
+
 # Misc
 messages.mo
 *.DS_Store

@@ -7,6 +7,7 @@
  * as a permanent payment record.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;

@@ -3,6 +3,7 @@
  * Block Checkout integration for PAY.JP PayPay payments.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

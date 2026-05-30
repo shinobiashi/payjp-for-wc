@@ -3,6 +3,7 @@
  * Abstract base class for PAY.JP Block Checkout payment method integrations.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

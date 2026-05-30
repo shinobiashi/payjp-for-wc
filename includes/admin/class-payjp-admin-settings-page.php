@@ -9,6 +9,7 @@
  * instead of relying on WC's default per-field option storage.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -50,6 +51,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		parent::__construct();
 
 		add_action( 'woocommerce_admin_field_payjp_enabled_methods', array( $this, 'output_enabled_methods_field' ) );
+		add_action( 'woocommerce_admin_field_payjp_webhook_info', array( $this, 'output_webhook_info_field' ) );
 	}
 
 	/**
@@ -166,6 +168,20 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'type' => 'sectionend',
 					'id'   => 'payjp_debug_settings',
 				),
+				// ── Webhook URL ───────────────────────────────────────────────
+				array(
+					'title' => __( 'Webhook', 'payjp-for-wc' ),
+					'type'  => 'title',
+					'id'    => 'payjp_webhook_info',
+				),
+				array(
+					'type' => 'payjp_webhook_info',
+					'id'   => 'payjp_webhook_info_field',
+				),
+				array(
+					'type' => 'sectionend',
+					'id'   => 'payjp_webhook_info',
+				),
 			),
 			$current_section
 		);
@@ -244,6 +260,65 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 						<?php esc_html_e( 'Checked payment methods will appear on the checkout page. API keys must also be configured for them to be available.', 'payjp-for-wc' ); ?>
 					</p>
 				</fieldset>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Output the Webhook URL display and configuration instructions.
+	 * Called via the woocommerce_admin_field_payjp_webhook_info action.
+	 *
+	 * @param array<string, mixed> $value Field definition array (unused).
+	 */
+	public function output_webhook_info_field( array $value ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		$webhook_url = rest_url( Payjp_Webhook_Handler::REST_NAMESPACE . Payjp_Webhook_Handler::REST_ROUTE );
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label><?php esc_html_e( 'Webhook URL', 'payjp-for-wc' ); ?></label>
+			</th>
+			<td class="forminp">
+				<input
+					type="text"
+					class="input-text regular-input"
+					value="<?php echo esc_url( $webhook_url ); ?>"
+					readonly="readonly"
+					style="min-width:420px;"
+					onclick="this.select();"
+				/>
+				<p class="description">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: 1: Opening <strong> tag, 2: Closing </strong> tag */
+							__( 'Register the URL above in %1$sPAY.JP Dashboard &gt; Webhooks%2$s.', 'payjp-for-wc' ),
+							'<strong>',
+							'</strong>'
+						),
+						array( 'strong' => array() )
+					);
+					?>
+					<?php esc_html_e( 'Enable the following events:', 'payjp-for-wc' ); ?>
+				</p>
+				<ul style="margin:.4em 0 0 1.4em;list-style:disc;">
+					<li><code>payment_flow.succeeded</code></li>
+					<li><code>payment_flow.payment_failed</code></li>
+					<li><code>refund.created</code></li>
+				</ul>
+				<p class="description" style="margin-top:.6em;">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: 1: Opening <strong> tag, 2: Closing </strong> tag */
+							__( 'Set the %1$sWebhook Secret%2$s from PAY.JP Dashboard into the "Webhook Secret" field above and save.', 'payjp-for-wc' ),
+							'<strong>',
+							'</strong>'
+						),
+						array( 'strong' => array() )
+					);
+					?>
+				</p>
 			</td>
 		</tr>
 		<?php

@@ -3,6 +3,7 @@
  * PAY.JP v2 API wrapper.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

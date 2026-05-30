@@ -5,6 +5,7 @@
  * Registers a REST API endpoint and routes PAY.JP events to order status handlers.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

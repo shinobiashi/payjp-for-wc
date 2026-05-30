@@ -6,6 +6,7 @@
  * with the WooCommerce Payment Token API for saved card functionality.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

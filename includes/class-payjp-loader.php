@@ -3,6 +3,7 @@
  * Plugin loader: requires class files and registers hooks.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

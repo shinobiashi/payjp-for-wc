@@ -3,6 +3,7 @@
  * PayPay payment gateway via PAY.JP v2 Payment Widgets.
  *
  * @package Payjp_For_WooCommerce
+ * @license GPL-2.0-or-later
  */
 
 defined( 'ABSPATH' ) || exit;

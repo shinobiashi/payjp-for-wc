@@ -170,7 +170,7 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.9.0 =
 * Added: Credit card payments via PAY.JP v2 Payment Widgets (embedded, PCI DSS compliant).
 * Added: PayPay payments via PAY.JP v2 Payment Widgets (embedded).
 * Added: Saved cards via PAY.JP Setup Flow and WooCommerce Token API.
@@ -185,5 +185,5 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Upgrade Notice ==
 
-= 1.0.0 =
+= 0.9.0 =
 Initial release.

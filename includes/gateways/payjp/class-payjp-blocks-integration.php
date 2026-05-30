@@ -88,6 +88,11 @@ abstract class Payjp_Blocks_Integration extends \Automattic\WooCommerce\Blocks\P
 				$version,
 				true
 			);
+			wp_set_script_translations(
+				'payjp-blocks-checkout',
+				'payjp-for-wc',
+				PAYJP_FOR_WC_DIR . 'languages'
+			);
 		}
 
 		return array( 'payjp-blocks-checkout' );

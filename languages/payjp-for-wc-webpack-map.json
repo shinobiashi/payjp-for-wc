@@ -1,0 +1,6 @@
+{
+    "build/blocks/checkout.js": [
+        "src/blocks/checkout/payment-method-card.js",
+        "src/blocks/checkout/payment-method-paypay.js"
+    ]
+}

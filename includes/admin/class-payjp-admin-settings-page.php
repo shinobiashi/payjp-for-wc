@@ -66,62 +66,62 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			array(
 				// ── API / Mode ──────────────────────────────────────────────────
 				array(
-					'title' => __( 'API 設定', 'payjp-for-wc' ),
+					'title' => __( 'API Settings', 'payjp-for-wc' ),
 					'type'  => 'title',
 					'id'    => 'payjp_api_settings',
 				),
 				array(
-					'title'    => __( 'テストモード', 'payjp-for-wc' ),
+					'title'    => __( 'Test Mode', 'payjp-for-wc' ),
 					'type'     => 'checkbox',
 					'id'       => 'payjp_test_mode',
 					'default'  => 'yes',
-					'label'    => __( 'テスト環境の API キーを使用する', 'payjp-for-wc' ),
+					'label'    => __( 'Use test environment API keys', 'payjp-for-wc' ),
 					'desc_tip' => true,
-					'desc'     => __( 'チェックを入れると、テスト用 API キーで動作し実際の決済は発生しません。本番運用時はチェックを外して本番用 API キーを使用してください。', 'payjp-for-wc' ),
+					'desc'     => __( 'When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'       => __( 'テスト公開鍵', 'payjp-for-wc' ),
+					'title'       => __( 'Test Public Key', 'payjp-for-wc' ),
 					'type'        => 'text',
 					'id'          => 'payjp_test_public_key',
 					'default'     => '',
 					'placeholder' => 'pk_test_',
 					'desc_tip'    => false,
-					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>pk_test_</code> から始まる文字列です。', 'payjp-for-wc' ),
+					'desc'        => __( 'Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>pk_test_</code>.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'       => __( 'テスト秘密鍵', 'payjp-for-wc' ),
+					'title'       => __( 'Test Secret Key', 'payjp-for-wc' ),
 					'type'        => 'password',
 					'id'          => 'payjp_test_secret_key',
 					'default'     => '',
 					'placeholder' => 'sk_test_',
 					'desc_tip'    => false,
-					'desc'        => __( 'PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>sk_test_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。', 'payjp-for-wc' ),
+					'desc'        => __( 'Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>sk_test_</code>. Keep this key secret and never expose it publicly.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'       => __( '本番公開鍵', 'payjp-for-wc' ),
+					'title'       => __( 'Live Public Key', 'payjp-for-wc' ),
 					'type'        => 'text',
 					'id'          => 'payjp_live_public_key',
 					'default'     => '',
 					'placeholder' => 'pk_live_',
 					'desc_tip'    => false,
-					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>pk_live_</code> から始まる文字列です。', 'payjp-for-wc' ),
+					'desc'        => __( 'Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>pk_live_</code>.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'       => __( '本番秘密鍵', 'payjp-for-wc' ),
+					'title'       => __( 'Live Secret Key', 'payjp-for-wc' ),
 					'type'        => 'password',
 					'id'          => 'payjp_live_secret_key',
 					'default'     => '',
 					'placeholder' => 'sk_live_',
 					'desc_tip'    => false,
-					'desc'        => __( 'PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>sk_live_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。', 'payjp-for-wc' ),
+					'desc'        => __( 'Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>sk_live_</code>. Keep this key secret and never expose it publicly.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'    => __( 'Webhook シークレット', 'payjp-for-wc' ),
+					'title'    => __( 'Webhook Secret', 'payjp-for-wc' ),
 					'type'     => 'password',
 					'id'       => 'payjp_webhook_secret',
 					'default'  => '',
 					'desc_tip' => false,
-					'desc'     => __( 'PAY.JP ダッシュボード > Webhook で設定した認証トークンです。決済完了・返金などのイベントをサーバーへ通知するために必要です。設定しない場合、Webhook によるオーダーステータスの自動更新が機能しません。', 'payjp-for-wc' ),
+					'desc'     => __( 'The authentication token configured in PAY.JP Dashboard &gt; Webhooks. Required for receiving payment and refund events on your server. Without this, automatic order status updates via webhook will not work.', 'payjp-for-wc' ),
 				),
 				array(
 					'type' => 'sectionend',
@@ -129,7 +129,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 				),
 				// ── Enabled payment methods ──────────────────────────────────
 				array(
-					'title' => __( '有効にする決済手段', 'payjp-for-wc' ),
+					'title' => __( 'Payment Methods', 'payjp-for-wc' ),
 					'type'  => 'title',
 					'id'    => 'payjp_methods_settings',
 				),
@@ -143,21 +143,21 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 				),
 				// ── Debug ─────────────────────────────────────────────────────
 				array(
-					'title' => __( 'デバッグ', 'payjp-for-wc' ),
+					'title' => __( 'Debug', 'payjp-for-wc' ),
 					'type'  => 'title',
 					'id'    => 'payjp_debug_settings',
-					'desc'  => __( '決済処理の問題調査や開発時に役立つオプションです。本番環境での常時有効化は避けてください。', 'payjp-for-wc' ),
+					'desc'  => __( 'Useful for diagnosing payment issues during development. Do not leave enabled in production.', 'payjp-for-wc' ),
 				),
 				array(
-					'title'    => __( 'デバッグログ', 'payjp-for-wc' ),
+					'title'    => __( 'Debug Log', 'payjp-for-wc' ),
 					'type'     => 'checkbox',
 					'id'       => 'payjp_debug_log',
 					'default'  => 'no',
-					'label'    => __( 'ロギングを有効にする', 'payjp-for-wc' ),
+					'label'    => __( 'Enable logging', 'payjp-for-wc' ),
 					'desc_tip' => false,
 					'desc'     => sprintf(
 						/* translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag */
-						__( 'PAY.JP API へのリクエスト・レスポンス・決済イベント・Webhook の受信内容をログファイルに記録します。問題の調査やデバッグ時のみ有効にし、本番環境では通常はオフにしてください。ログは %1$sWooCommerce &gt; ステータス &gt; ログ%2$s で確認できます。', 'payjp-for-wc' ),
+						__( 'Logs PAY.JP API requests, responses, payment events, and received webhooks. Enable only when debugging; keep off in production. Logs are available at %1$sWooCommerce &gt; Status &gt; Logs%2$s.', 'payjp-for-wc' ),
 						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-status&tab=logs&source=payjp-for-wc' ) ) . '">',
 						'</a>'
 					),
@@ -217,16 +217,16 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	public function output_enabled_methods_field( array $value ): void {
 		$enabled = Payjp_Settings::get_enabled_methods();
 		$methods = array(
-			'card'   => __( 'クレジットカード（PAY.JP）', 'payjp-for-wc' ),
-			'paypay' => __( 'PayPay（PAY.JP）', 'payjp-for-wc' ),
+			'card'   => __( 'Credit Card (PAY.JP)', 'payjp-for-wc' ),
+			'paypay' => __( 'PayPay (PAY.JP)', 'payjp-for-wc' ),
 		);
 		?>
 		<tr valign="top">
-			<th scope="row" class="titledesc"><?php esc_html_e( '決済手段', 'payjp-for-wc' ); ?></th>
+			<th scope="row" class="titledesc"><?php esc_html_e( 'Payment Method', 'payjp-for-wc' ); ?></th>
 			<td class="forminp">
 				<fieldset>
 					<legend class="screen-reader-text">
-						<span><?php esc_html_e( '有効にする決済手段', 'payjp-for-wc' ); ?></span>
+						<span><?php esc_html_e( 'Enable Payment Methods', 'payjp-for-wc' ); ?></span>
 					</legend>
 					<?php foreach ( $methods as $method_id => $label ) : ?>
 					<label for="payjp_enabled_methods_<?php echo esc_attr( $method_id ); ?>">
@@ -241,7 +241,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					</label><br />
 					<?php endforeach; ?>
 					<p class="description">
-						<?php esc_html_e( 'チェックを入れた決済手段がチェックアウト画面に表示されます。表示するには API キーの設定も必要です。', 'payjp-for-wc' ); ?>
+						<?php esc_html_e( 'Checked payment methods will appear on the checkout page. API keys must also be configured for them to be available.', 'payjp-for-wc' ); ?>
 					</p>
 				</fieldset>
 			</td>
@@ -305,6 +305,6 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			update_option( $option_key, $gateway_settings );
 		}
 
-		WC_Admin_Settings::add_message( __( 'PAY.JP の設定を保存しました。', 'payjp-for-wc' ) );
+		WC_Admin_Settings::add_message( __( 'PAY.JP settings saved.', 'payjp-for-wc' ) );
 	}
 }

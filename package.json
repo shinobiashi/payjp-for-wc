@@ -15,7 +15,10 @@
         "env:clean": "wp-env clean",
         "env:destroy": "wp-env destroy",
         "env:logs": "wp-env logs",
-        "env:run": "wp-env run"
+        "env:run": "wp-env run",
+        "i18n:pot": "wp i18n make-pot . languages/payjp-for-wc.pot --domain=payjp-for-wc --exclude=vendor,node_modules,tests,build",
+        "i18n:json": "wp i18n make-json languages/ --no-purge && node scripts/merge-block-translations.js",
+        "i18n": "npm run i18n:pot && npm run i18n:json"
     },
     "devDependencies": {
         "@playwright/test": "^1.49.0",

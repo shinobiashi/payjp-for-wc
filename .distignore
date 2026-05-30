@@ -1,0 +1,44 @@
+# Development & build tooling
+.github/
+node_modules/
+src/
+vendor/
+scripts/
+
+# Test suites
+tests/
+test-results/
+playwright.config.js
+phpunit.xml
+
+# PHP quality tools config
+phpcs.xml
+phpstan.neon
+phpstan-bootstrap.php
+phpstan-wcs-stubs.php
+
+# JS build config
+webpack.config.js
+eslint.config.js
+package.json
+package-lock.json
+
+# Composer manifests
+composer.json
+composer.lock
+
+# Project documentation (dev-only)
+CLAUDE.md
+CONTRACT.md
+DEVELOPMENT_PLAN.md
+ESTIMATE.md
+README.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Misc
+messages.mo
+*.DS_Store

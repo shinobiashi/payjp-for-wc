@@ -15,6 +15,7 @@
  *   node scripts/merge-block-translations.js
  */
 
+/* eslint-disable no-console */
 'use strict';
 
 const fs = require( 'fs' );
@@ -104,7 +105,9 @@ for ( const [ bundlePath, sourcePaths ] of Object.entries( map ) ) {
 		}
 		merged[ '' ] = header; // Restore header after merge.
 
-		const stringCount = Object.keys( merged ).filter( ( k ) => k !== '' ).length;
+		const stringCount = Object.keys( merged ).filter(
+			( k ) => k !== ''
+		).length;
 
 		const output = {
 			'translation-revision-date':

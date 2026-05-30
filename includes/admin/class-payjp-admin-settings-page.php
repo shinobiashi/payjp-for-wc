@@ -351,7 +351,9 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					array_map(
 						'sanitize_key',
 						array_filter(
-							isset( $_POST['payjp_enabled_methods'] ) ? (array) wp_unslash( (array) $_POST['payjp_enabled_methods'] ) : array(),
+							isset( $_POST['payjp_enabled_methods'] ) && is_array( $_POST['payjp_enabled_methods'] )
+								? array_map( 'sanitize_text_field', wp_unslash( $_POST['payjp_enabled_methods'] ) )
+								: array(),
 							'is_string'
 						)
 					),

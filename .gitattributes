@@ -34,17 +34,35 @@
 *.woff binary
 *.woff2 binary
 
-# Export-ignore (excluded from release zip)
+# Export-ignore (excluded from release zip / git archive)
 /.claude export-ignore
+/.distignore export-ignore
 /.git export-ignore
 /.github export-ignore
 /.gitattributes export-ignore
 /.gitignore export-ignore
 /.nvmrc export-ignore
+/.wordpress-org export-ignore
 /.wp-env.json export-ignore
+/CLAUDE.md export-ignore
+/CONTRACT.md export-ignore
+/DEVELOPMENT_PLAN.md export-ignore
+/ESTIMATE.md export-ignore
+/README.md export-ignore
+/README-JA.md export-ignore
 /composer.json export-ignore
-/node_modules export-ignore
-/phpcs.xml.dist export-ignore
+/composer.lock export-ignore
+/eslint.config.js export-ignore
+/messages.mo export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/phpcs.xml export-ignore
 /phpstan.neon export-ignore
+/phpstan-bootstrap.php export-ignore
+/phpstan-wcs-stubs.php export-ignore
+/phpunit.xml export-ignore
+/playwright.config.js export-ignore
+/scripts export-ignore
 /src export-ignore
+/tests export-ignore
 /webpack.config.js export-ignore

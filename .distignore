@@ -1,5 +1,8 @@
 # Development & build tooling
+.claude/
 .github/
+.nvmrc
+.wp-env.json
 node_modules/
 src/
 vendor/
@@ -33,6 +36,7 @@ CONTRACT.md
 DEVELOPMENT_PLAN.md
 ESTIMATE.md
 README.md
+README-JA.md
 
 # Git
 .git/

@@ -1,12 +1,12 @@
 === PAY.JP for WooCommerce ===
 Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
-Requires at least: 6.4
+Requires at least: 6.9
 Tested up to:      7.0
-Stable tag:        1.0.0
+Stable tag:        0.9.0
 Requires PHP:      8.3
-WC requires at least: 8.0
-WC tested up to:   9.9
+WC requires at least: 9.0
+WC tested up to:   10.8
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 

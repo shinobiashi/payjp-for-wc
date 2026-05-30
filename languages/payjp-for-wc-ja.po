@@ -1,0 +1,409 @@
+# Copyright (C) 2026 Shohei Tanaka
+# This file is distributed under the GPL-2.0-or-later.
+msgid ""
+msgstr ""
+"Project-Id-Version: PAY.JP for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
+"POT-Creation-Date: 2026-05-30T00:04:43+00:00\n"
+"PO-Revision-Date: 2026-05-30 00:00+0000\n"
+"Last-Translator: Shohei Tanaka <shohei.t@artws.info>\n"
+"Language-Team: Japanese <ja@li.org>\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Manual\n"
+"X-Domain: payjp-for-wc\n"
+
+#. Plugin Name of the plugin
+#: payjp-for-wc.php
+msgid "PAY.JP for WooCommerce"
+msgstr "PAY.JP for WooCommerce"
+
+#. Plugin URI of the plugin
+#: payjp-for-wc.php
+msgid "https://wordpress.org/plugins/payjp-for-wc/"
+msgstr ""
+
+#. Description of the plugin
+#: payjp-for-wc.php
+msgid "PAY.JP v2 payment gateway for WooCommerce. Supports credit card and PayPay payments via Payment Widgets."
+msgstr "WooCommerce 向け PAY.JP v2 決済ゲートウェイ。Payment Widgets を使用したクレジットカード・PayPay 決済に対応しています。"
+
+#. Author of the plugin
+#: payjp-for-wc.php
+msgid "Shohei Tanaka"
+msgstr ""
+
+#. Author URI of the plugin
+#: payjp-for-wc.php
+msgid "https://artws.info"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:48
+msgid "PAY.JP"
+msgstr "PAY.JP"
+
+#: includes/admin/class-payjp-admin-settings-page.php:69
+msgid "API Settings"
+msgstr "API 設定"
+
+#: includes/admin/class-payjp-admin-settings-page.php:74
+msgid "Test Mode"
+msgstr "テストモード"
+
+#: includes/admin/class-payjp-admin-settings-page.php:78
+msgid "Use test environment API keys"
+msgstr "テスト環境の API キーを使用する"
+
+#: includes/admin/class-payjp-admin-settings-page.php:80
+msgid "When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production."
+msgstr "チェックを入れると、テスト用 API キーで動作し実際の決済は発生しません。本番運用時はチェックを外して本番用 API キーを使用してください。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:83
+msgid "Test Public Key"
+msgstr "テスト公開鍵"
+
+#: includes/admin/class-payjp-admin-settings-page.php:89
+msgid "Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>pk_test_</code>."
+msgstr "PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>pk_test_</code> から始まる文字列です。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:92
+msgid "Test Secret Key"
+msgstr "テスト秘密鍵"
+
+#: includes/admin/class-payjp-admin-settings-page.php:98
+msgid "Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>sk_test_</code>. Keep this key secret and never expose it publicly."
+msgstr "PAY.JP ダッシュボード（テスト環境）の API キーページで確認できます。<code>sk_test_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:101
+msgid "Live Public Key"
+msgstr "本番公開鍵"
+
+#: includes/admin/class-payjp-admin-settings-page.php:107
+msgid "Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>pk_live_</code>."
+msgstr "PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>pk_live_</code> から始まる文字列です。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:110
+msgid "Live Secret Key"
+msgstr "本番秘密鍵"
+
+#: includes/admin/class-payjp-admin-settings-page.php:116
+msgid "Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>sk_live_</code>. Keep this key secret and never expose it publicly."
+msgstr "PAY.JP ダッシュボード（本番環境）の API キーページで確認できます。<code>sk_live_</code> から始まる文字列です。外部に漏らさないよう厳重に管理してください。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:119
+msgid "Webhook Secret"
+msgstr "Webhook シークレット"
+
+#: includes/admin/class-payjp-admin-settings-page.php:124
+msgid "The authentication token configured in PAY.JP Dashboard &gt; Webhooks. Required for receiving payment and refund events on your server. Without this, automatic order status updates via webhook will not work."
+msgstr "PAY.JP ダッシュボード &gt; Webhook で設定した認証トークンです。決済完了・返金などのイベントをサーバーへ通知するために必要です。設定しない場合、Webhook によるオーダーステータスの自動更新が機能しません。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:132
+msgid "Payment Methods"
+msgstr "決済手段"
+
+#: includes/admin/class-payjp-admin-settings-page.php:146
+msgid "Debug"
+msgstr "デバッグ"
+
+#: includes/admin/class-payjp-admin-settings-page.php:149
+msgid "Useful for diagnosing payment issues during development. Do not leave enabled in production."
+msgstr "決済処理の問題調査や開発時に役立つオプションです。本番環境での常時有効化は避けてください。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:152
+msgid "Debug Log"
+msgstr "デバッグログ"
+
+#: includes/admin/class-payjp-admin-settings-page.php:156
+msgid "Enable logging"
+msgstr "ロギングを有効にする"
+
+#. translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag
+#: includes/admin/class-payjp-admin-settings-page.php:160
+#, php-format
+msgid "Logs PAY.JP API requests, responses, payment events, and received webhooks. Enable only when debugging; keep off in production. Logs are available at %1$sWooCommerce &gt; Status &gt; Logs%2$s."
+msgstr "PAY.JP API へのリクエスト・レスポンス・決済イベント・Webhook の受信内容をログファイルに記録します。問題の調査やデバッグ時のみ有効にし、本番環境では通常はオフにしてください。ログは %1$sWooCommerce &gt; ステータス &gt; ログ%2$s で確認できます。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:220
+#: src/blocks/checkout/payment-method-card.js:23
+msgid "Credit Card (PAY.JP)"
+msgstr "クレジットカード（PAY.JP）"
+
+#: includes/admin/class-payjp-admin-settings-page.php:221
+#: src/blocks/checkout/payment-method-paypay.js:13
+msgid "PayPay (PAY.JP)"
+msgstr "PayPay（PAY.JP）"
+
+#: includes/admin/class-payjp-admin-settings-page.php:225
+msgid "Payment Method"
+msgstr "決済手段"
+
+#: includes/admin/class-payjp-admin-settings-page.php:229
+msgid "Enable Payment Methods"
+msgstr "有効にする決済手段"
+
+#: includes/admin/class-payjp-admin-settings-page.php:244
+msgid "Checked payment methods will appear on the checkout page. API keys must also be configured for them to be available."
+msgstr "チェックを入れた決済手段がチェックアウト画面に表示されます。表示するには API キーの設定も必要です。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:308
+msgid "PAY.JP settings saved."
+msgstr "PAY.JP の設定を保存しました。"
+
+#: includes/gateways/payjp/class-payjp-api.php:142
+msgid "PAY.JP returned an unexpected non-JSON response."
+msgstr "PAY.JP から予期しない非 JSON レスポンスが返されました。"
+
+#: includes/gateways/payjp/class-payjp-api.php:151
+#: includes/gateways/payjp/class-payjp-api.php:173
+msgid "An unknown PAY.JP error occurred."
+msgstr "PAY.JP で不明なエラーが発生しました。"
+
+#. translators: %d: HTTP status code
+#: includes/gateways/payjp/class-payjp-api.php:182
+#, php-format
+msgid "PAY.JP API returned HTTP %d."
+msgstr "PAY.JP API が HTTP %d を返しました。"
+
+#: includes/gateways/payjp/class-payjp-subscriptions.php:86
+msgid "PAY.JP: No subscription found for this renewal order."
+msgstr "PAY.JP: この更新注文に対するサブスクリプションが見つかりません。"
+
+#: includes/gateways/payjp/class-payjp-subscriptions.php:99
+msgid "PAY.JP: No saved payment method found for this subscription. Please update the payment method."
+msgstr "PAY.JP: このサブスクリプションに保存済みの支払い方法が見つかりません。支払い方法を更新してください。"
+
+#: includes/gateways/payjp/class-payjp-subscriptions.php:144
+msgid "PAY.JP: Renewal payment failed or requires additional authentication."
+msgstr "PAY.JP: 更新支払いが失敗したか、追加認証が必要です。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:79
+msgid "Failed to create PAY.JP customer."
+msgstr "PAY.JP 顧客の作成に失敗しました。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:104
+msgid "Failed to create card setup session."
+msgstr "カードセットアップセッションの作成に失敗しました。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:141
+msgid "Invalid card setup session."
+msgstr "無効なカードセットアップセッションです。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:163
+msgid "Card setup was not completed. Please try again."
+msgstr "カードの設定が完了しませんでした。もう一度お試しください。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:173
+msgid "Card setup completed but no payment method was returned."
+msgstr "カードの設定は完了しましたが、支払い方法が返されませんでした。"
+
+#: includes/gateways/payjp/class-payjp-token-manager.php:188
+msgid "Card saved successfully."
+msgstr "カードを保存しました。"
+
+#. translators: 1: PAY.JP PaymentMethod ID, 2: error message
+#: includes/gateways/payjp/class-payjp-token-manager.php:330
+#, php-format
+msgid "PAY.JP: Failed to save card %1$s after payment: %2$s"
+msgstr "PAY.JP: 支払い後にカード %1$s の保存に失敗しました: %2$s"
+
+#. translators: PAY.JP failed payment note shown in WooCommerce admin
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:201
+msgid "PAY.JP payment failed (webhook)."
+msgstr "PAY.JP 決済が失敗しました（Webhook）。"
+
+#. translators: 1: PAY.JP refund ID, 2: refund amount in JPY
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:243
+#, php-format
+msgid "PAY.JP refund created (webhook). Refund ID: %1$s. Amount: ¥%2$s."
+msgstr "PAY.JP 返金が作成されました（Webhook）。返金 ID: %1$s。金額: ¥%2$s。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:42
+msgid "PAY.JP Credit Card"
+msgstr "PAY.JP クレジットカード"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:43
+msgid "Accept credit card payments via PAY.JP v2 Payment Widgets."
+msgstr "PAY.JP v2 Payment Widgets を使用したクレジットカード決済を受け付けます。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:87
+msgid "After clicking \"Place order\", you will be taken to a secure page to enter your card details."
+msgstr "「注文する」ボタンをクリックすると、カード情報を入力するセキュアなページに移動します。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:92
+msgid "Save payment methods"
+msgstr "支払い方法を保存する"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:94
+msgid "Allow customers to save their card for future purchases"
+msgstr "お客様が今後の購入のためにカードを保存できるようにする"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:133
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:548
+msgid "Pay now"
+msgstr "今すぐ支払う"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:134
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:179
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:98
+msgid "Processing…"
+msgstr "処理中…"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:178
+msgid "Add card"
+msgstr "カードを追加する"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:180
+msgid "An error occurred. Please try again."
+msgstr "エラーが発生しました。もう一度お試しください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:230
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:137
+msgid "Unable to load the order for payment."
+msgstr "支払い用の注文を読み込めませんでした。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:270
+msgid "The minimum order amount for PAY.JP card payments is ¥50."
+msgstr "PAY.JP カード決済の最低注文金額は ¥50 です。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:291
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:362
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:157
+msgid "PAY.JP returned an incomplete payment session. Please try again."
+msgstr "PAY.JP から不完全な決済セッションが返されました。もう一度お試しください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:329
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:510
+msgid "Invalid payment token. Please try again."
+msgstr "無効な支払いトークンです。もう一度お試しください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:382
+msgid "Payment failed. Please try a different card."
+msgstr "支払いに失敗しました。別のカードをお試しください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:420
+msgid "JavaScript is required to add a payment method. Please enable JavaScript and try again."
+msgstr "支払い方法を追加するには JavaScript が必要です。JavaScript を有効にしてから再度お試しください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:437
+msgid "Order not found."
+msgstr "注文が見つかりません。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:444
+msgid "No PAY.JP Payment Flow ID found for this order."
+msgstr "この注文に PAY.JP Payment Flow ID が見つかりません。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:465
+msgid "PAY.JP returned an incomplete refund response."
+msgstr "PAY.JP から不完全な返金レスポンスが返されました。"
+
+#. translators: PAY.JP refund confirmation shown in WooCommerce order notes. %s: PAY.JP refund ID.
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:476
+#, php-format
+msgid "PAY.JP refund processed. Refund ID: %s."
+msgstr "PAY.JP 返金処理が完了しました。返金 ID: %s。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:498
+msgid "Please select a saved card to update your subscription payment method."
+msgstr "サブスクリプションの支払い方法を更新するには、保存済みカードを選択してください。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:538
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:194
+msgid "Payment session expired."
+msgstr "決済セッションの有効期限が切れました。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:540
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:196
+msgid "Return to checkout"
+msgstr "チェックアウトに戻る"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:552
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:208
+msgid "Change payment method"
+msgstr "支払い方法を変更する"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:40
+msgid "PAY.JP PayPay"
+msgstr "PAY.JP PayPay"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:41
+msgid "Accept PayPay payments via PAY.JP v2 Payment Widgets."
+msgstr "PAY.JP v2 Payment Widgets を使用した PayPay 決済を受け付けます。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:57
+msgid "After clicking \"Place order\", you will be taken to a secure page to complete your PayPay payment."
+msgstr "「注文する」ボタンをクリックすると、PayPay 決済を完了するためのセキュアなページに移動します。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:97
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:204
+msgid "Pay with PayPay"
+msgstr "PayPay で支払う"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:100
+msgid "Enable/Disable"
+msgstr "有効 / 無効"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:102
+msgid "Enable this payment method"
+msgstr "この決済手段を有効にする"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:106
+msgid "Title"
+msgstr "タイトル"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:108
+msgid "Payment method title shown to the customer at checkout."
+msgstr "チェックアウト時にお客様に表示される決済手段のタイトルです。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:113
+msgid "Description"
+msgstr "説明"
+
+#. translators: Admin tooltip for payment method description field.
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:116
+msgid "Payment method description shown to the customer at checkout. Basic HTML tags are supported (e.g. &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;)."
+msgstr "チェックアウト時にお客様に表示される決済手段の説明文です。基本的な HTML タグをサポートしています（例: &lt;strong&gt;、&lt;a&gt;、&lt;br&gt;）。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:312
+msgid "Payment verification failed. Please contact support."
+msgstr "決済の検証に失敗しました。サポートにお問い合わせください。"
+
+#. translators: PAY.JP order-hold note shown in WooCommerce admin
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:344
+msgid "PAY.JP authorised. Awaiting manual capture."
+msgstr "PAY.JP 認証済み。手動キャプチャ待ちです。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:351
+msgid "Payment was not completed. Please try again."
+msgstr "支払いが完了しませんでした。もう一度お試しください。"
+
+#. translators: %s: WooCommerce plugin name
+#: payjp-for-wc.php:110
+#, php-format
+msgid "PAY.JP for WooCommerce requires %s to be installed and active."
+msgstr "PAY.JP for WooCommerce を使用するには %s のインストールと有効化が必要です。"
+
+#: src/blocks/checkout/payment-method-card.js:42
+#: src/blocks/checkout/payment-method-card.js:111
+msgid "Pay securely with your credit card via PAY.JP."
+msgstr "PAY.JP を通じてクレジットカードで安全にお支払いいただけます。"
+
+#. translators: %1$s: card brand (e.g. Visa), %2$s: last 4 digits
+#: src/blocks/checkout/payment-method-card.js:130
+#, js-format
+msgid "%1$s ending in %2$s"
+msgstr "%1$s（末尾 %2$s）"
+
+#: src/blocks/checkout/payment-method-card.js:131
+msgid "Card"
+msgstr "カード"
+
+#: src/blocks/checkout/payment-method-card.js:137
+msgid "Use a new payment method"
+msgstr "新しい支払い方法を使用する"
+
+#: src/blocks/checkout/payment-method-paypay.js:45
+msgid "You will be redirected to PayPay to complete your payment."
+msgstr "PayPay に移動して支払いを完了します。"

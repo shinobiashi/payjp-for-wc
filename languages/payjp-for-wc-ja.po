@@ -405,3 +405,27 @@ msgstr "新しい支払い方法を使用する"
 #: src/blocks/checkout/payment-method-paypay.js:45
 msgid "You will be redirected to PayPay to complete your payment."
 msgstr "PayPay に移動して支払いを完了します。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:173
+msgid "Webhook"
+msgstr "Webhook"
+
+#: includes/admin/class-payjp-admin-settings-page.php:279
+msgid "Webhook URL"
+msgstr "Webhook URL"
+
+#. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
+#: includes/admin/class-payjp-admin-settings-page.php:295
+#, php-format
+msgid "Register the URL above in %1$sPAY.JP Dashboard &gt; Webhooks%2$s."
+msgstr "上記の URL を %1$sPAY.JP ダッシュボード &gt; Webhooks%2$s に登録してください。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:302
+msgid "Enable the following events:"
+msgstr "以下のイベントを有効にしてください："
+
+#. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
+#: includes/admin/class-payjp-admin-settings-page.php:314
+#, php-format
+msgid "Set the %1$sWebhook Secret%2$s from PAY.JP Dashboard into the \"Webhook Secret\" field above and save."
+msgstr "PAY.JP ダッシュボードの %1$sWebhook Secret%2$s を上の「Webhook シークレット」フィールドに入力して保存してください。"

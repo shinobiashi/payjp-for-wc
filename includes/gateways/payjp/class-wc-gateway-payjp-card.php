@@ -446,7 +446,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			);
 		}
 
-		$body = array( 'payment_flow' => $flow_id );
+		$body = array( 'payment_flow_id' => $flow_id );
 
 		// Only send amount for partial refunds; omit to trigger a full refund.
 		if ( null !== $amount && $amount > 0 ) {
@@ -454,7 +454,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		}
 
 		try {
-			$refund = $this->get_api()->post( '/refunds', $body );
+			$refund = $this->get_api()->post( '/payment_refunds', $body );
 		} catch ( RuntimeException $e ) {
 			return new \WP_Error( 'payjp_refund_error', $e->getMessage() );
 		}

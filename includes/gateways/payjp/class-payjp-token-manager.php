@@ -34,6 +34,7 @@ class Payjp_Token_Manager {
 	public static function init(): void {
 		add_action( 'rest_api_init', array( self::class, 'register_rest_routes' ) );
 		add_action( 'template_redirect', array( self::class, 'handle_setup_return' ) );
+		add_action( 'woocommerce_payment_token_deleted', array( self::class, 'on_token_deleted' ), 10, 2 );
 	}
 
 	/**
@@ -239,6 +240,39 @@ class Payjp_Token_Manager {
 		}
 
 		return $customer_id;
+	}
+
+	/**
+	 * Detach the PAY.JP PaymentMethod from the customer when its WC token is deleted.
+	 *
+	 * Fires on the woocommerce_payment_token_deleted action. Only acts on payjp_card tokens.
+	 * Logs errors silently — WC has already removed the local token, so we don't block the user.
+	 *
+	 * @param int              $token_id WooCommerce token ID (unused; token object carries all needed data).
+	 * @param WC_Payment_Token $token    The deleted WooCommerce token object.
+	 */
+	public static function on_token_deleted( int $token_id, WC_Payment_Token $token ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		if ( 'payjp_card' !== $token->get_gateway_id() ) {
+			return;
+		}
+
+		$pm_id = $token->get_token();
+		if ( ! $pm_id ) {
+			return;
+		}
+
+		$api = new Payjp_API(
+			Payjp_Settings::get_secret_key(),
+			JP4WC_Logger::get_instance( 'payjp-for-wc', static fn() => (bool) Payjp_Settings::get( 'debug_log' ) )
+		);
+
+		try {
+			$api->post( '/payment_methods/' . rawurlencode( $pm_id ) . '/detach', array() );
+		} catch ( RuntimeException $e ) {
+			// Log only; the WC token is already deleted so the user should not be blocked.
+			JP4WC_Logger::get_instance( 'payjp-for-wc', static fn() => true )
+				->log_error( 'Failed to detach PAY.JP payment method ' . $pm_id, null, $e );
+		}
 	}
 
 	/**

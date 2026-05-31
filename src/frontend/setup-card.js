@@ -23,6 +23,7 @@ document.addEventListener( 'DOMContentLoaded', () => {
 	const { publicKey, returnUrl, restUrl, nonce, i18n } = payjpSetupData;
 
 	let widgetsInstance = null;
+	let setupFlowId = null;
 	let setupInitialised = false;
 	let isInitializing = false;
 
@@ -66,11 +67,13 @@ document.addEventListener( 'DOMContentLoaded', () => {
 			return false;
 		}
 
-		if ( flowData.error || ! flowData.client_secret ) {
+		if ( flowData.error || ! flowData.client_secret || ! flowData.setup_flow_id ) {
 			showError( flowData.error || i18n.errorGeneric );
 			isInitializing = false;
 			return false;
 		}
+
+		setupFlowId = flowData.setup_flow_id;
 
 		const payments = PayjpPayments( publicKey );
 		widgetsInstance = payments.widgets( {
@@ -120,8 +123,11 @@ document.addEventListener( 'DOMContentLoaded', () => {
 				submitButton.textContent = i18n.processing;
 			}
 
+			// Append setup_flow_id to the return URL so handle_setup_return()
+			// can verify the flow server-side. PAY.JP does not add it automatically.
+			const callbackUrl = returnUrl + '&setup_flow_id=' + encodeURIComponent( setupFlowId );
 			const result = await widgetsInstance.confirmSetup( {
-				return_url: returnUrl,
+				return_url: callbackUrl,
 			} );
 
 			if ( result && result.error ) {

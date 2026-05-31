@@ -87,7 +87,7 @@ class Payjp_Token_Manager {
 				'/setup_flows',
 				array(
 					'payment_method_types' => array( 'card' ),
-					'customer'             => $customer_id,
+					'customer_id'          => $customer_id,
 				)
 			);
 		} catch ( RuntimeException $e ) {

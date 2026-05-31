@@ -3,7 +3,7 @@ Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.0
-Stable tag:        0.9.0
+Stable tag:        0.9.1
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   10.8
@@ -170,6 +170,18 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.1 =
+* Fixed: Refund endpoint corrected from /refunds to /payment_refunds.
+* Fixed: Refund request parameter corrected from payment_flow to payment_flow_id.
+* Fixed: PayPay return handling — requires_action status now redirects to order-received page instead of showing an error.
+* Fixed: Setup Flow customer parameter corrected from customer to customer_id.
+* Fixed: Setup Flow return URL now includes setup_flow_id so card save completes correctly.
+* Fixed: Subscription renewal payment parameters corrected (payment_method_id, customer_id).
+* Changed: REST API namespace updated from payjp/v1 to payjp/v2.
+* Added: PAY.JP Dashboard / sign-up button in admin settings.
+* Added: Test card and PayPay test account links shown when test mode is active.
+* Added: Webhook URL display with setup instructions in admin settings.
+
 = 0.9.0 =
 * Added: Credit card payments via PAY.JP v2 Payment Widgets (embedded, PCI DSS compliant).
 * Added: PayPay payments via PAY.JP v2 Payment Widgets (embedded).
@@ -184,6 +196,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.1 =
+Bug fixes for refunds, PayPay return handling, card save via Setup Flow, and subscription renewals. Recommended update.
 
 = 0.9.0 =
 Initial release.

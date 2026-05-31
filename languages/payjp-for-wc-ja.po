@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PAY.JP for WooCommerce 0.9.0\n"
+"Project-Id-Version: PAY.JP for WooCommerce 0.9.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
 "Last-Translator: Shohei Tanaka <shohei.t@artws.info>\n"
 "Language-Team: Japanese <ja@li.org>\n"

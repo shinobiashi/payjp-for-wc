@@ -253,6 +253,11 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			return array( 'result' => 'failure' );
 		}
 
+		// Correct payment_method on the order object before saving (see PayPay gateway for rationale).
+		if ( $this->id !== $order->get_payment_method() ) {
+			$order->set_payment_method( $this->id );
+		}
+
 		// WC checkout verifies nonce before calling process_payment; no further nonce check needed here.
 		// phpcs:disable WordPress.Security.NonceVerification.Missing
 		$raw_token_id = isset( $_POST['wc-payjp_card-payment-token'] ) && is_string( $_POST['wc-payjp_card-payment-token'] )

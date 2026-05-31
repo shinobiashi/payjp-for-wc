@@ -138,6 +138,16 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			wc_add_notice( esc_html__( 'Unable to load the order for payment.', 'payjp-for-wc' ), 'error' );
 			return array( 'result' => 'failure' );
 		}
+
+		// Correct payment_method on the order object before saving. Block Checkout creates
+		// a draft order with the first available gateway; a stale WP object cache may
+		// still carry that value when process_payment() is called after the StoreAPI
+		// updates the DB. Explicitly setting it here ensures our save() writes the
+		// correct gateway ID.
+		if ( $this->id !== $order->get_payment_method() ) {
+			$order->set_payment_method( $this->id );
+		}
+
 		$amount = (int) round( $order->get_total() );
 
 		try {

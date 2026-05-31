@@ -88,6 +88,21 @@ class Payjp_Loader {
 		Payjp_Webhook_Handler::init();
 		Payjp_Token_Manager::init();
 		Payjp_Subscriptions::init();
+
+		// Correct payment_method on orders after payment_complete(). WooCommerce Block
+		// Checkout (StoreAPI) resets payment_method to the default gateway via
+		// update_order_from_cart() during draft-order sync. Even though
+		// update_order_from_request() corrects it later, certain save paths may
+		// re-overwrite it. This hook uses the authoritative _payjp_payment_method meta
+		// to ensure the HPOS payment_method column always reflects the real gateway.
+		add_action( 'woocommerce_payment_complete', array( self::class, 'fix_payment_method_after_complete' ) );
+
+		// When a customer has a saved payjp_card token, PaymentUtils::get_default_payment_method()
+		// returns 'payjp_card' regardless of session — causing update_order_from_cart() to
+		// override 'payjp_paypay' back to 'payjp_card' on every cart sync.
+		// Suppressing is_default in StoreAPI context forces the fallback to the session value
+		// (set by update_order_from_request to the user's actual selection).
+		add_filter( 'woocommerce_payment_methods_list_item', array( self::class, 'suppress_payjp_token_default_in_storeapi' ), 5, 2 );
 	}
 
 	/**
@@ -100,5 +115,64 @@ class Payjp_Loader {
 		$gateways[] = 'WC_Gateway_Payjp_Card';
 		$gateways[] = 'WC_Gateway_Payjp_Paypay';
 		return $gateways;
+	}
+
+	/**
+	 * Suppress is_default on payjp_card tokens during StoreAPI requests.
+	 *
+	 * Without this, PaymentUtils::get_default_payment_method() returns 'payjp_card'
+	 * whenever a saved card exists, ignoring the user's actual selection (e.g. PayPay).
+	 * Suppressing is_default in REST context forces the method to fall through to the
+	 * session value, which update_order_from_request() sets to the chosen gateway.
+	 *
+	 * My Account > Payment Methods is unaffected (not a REST_REQUEST).
+	 *
+	 * @param array<string, mixed> $list_item Saved payment method list item.
+	 * @param \WC_Payment_Token    $token     The WooCommerce payment token.
+	 * @return array<string, mixed>
+	 */
+	public static function suppress_payjp_token_default_in_storeapi( array $list_item, \WC_Payment_Token $token ): array {
+		if ( 'payjp_card' === $token->get_gateway_id() && defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			$list_item['is_default'] = false;
+		}
+		return $list_item;
+	}
+
+	/**
+	 * Correct the WooCommerce payment_method column for PAY.JP orders after payment completes.
+	 *
+	 * The StoreAPI's update_order_from_cart() resets payment_method to the first
+	 * available gateway before our process_payment() runs. Even though
+	 * update_order_from_request() corrects it, a later save can revert the value.
+	 * This hook uses the authoritative _payjp_payment_method meta (set by our own
+	 * process_payment()) to ensure payment_method always reflects the actual gateway.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 */
+	public static function fix_payment_method_after_complete( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		$payjp_method = (string) $order->get_meta( '_payjp_payment_method' );
+
+		$gateway_map = array(
+			'card'   => 'payjp_card',
+			'paypay' => 'payjp_paypay',
+		);
+
+		if ( ! isset( $gateway_map[ $payjp_method ] ) ) {
+			return;
+		}
+
+		$correct_gateway = $gateway_map[ $payjp_method ];
+
+		if ( $correct_gateway === $order->get_payment_method() ) {
+			return;
+		}
+
+		$order->set_payment_method( $correct_gateway );
+		$order->save();
 	}
 }

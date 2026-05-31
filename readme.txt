@@ -3,7 +3,7 @@ Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.0
-Stable tag:        0.9.1
+Stable tag:        0.9.2
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   10.8
@@ -170,6 +170,15 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.2 =
+* Fixed: PayPay payments recorded as credit card when saved card tokens exist (Block Checkout default payment method conflict).
+* Fixed: Correct payment_method written to HPOS after payment_complete() using _payjp_payment_method meta as authority.
+* Fixed: Manual capture for authorized orders — empty request body now serialized as {} (JSON object) instead of [] (JSON array).
+* Fixed: Authorized orders now set to processing status instead of on-hold for clearer merchant workflow.
+* Fixed: Card token deletion now calls POST /payment_methods/{id}/detach on PAY.JP to sync removal.
+* Added: Manual capture (authorize only) support for PayPay payments — mirrors credit card capture behaviour.
+* Added: Payment capture setting in PAY.JP PayPay individual gateway settings (immediate / authorize only).
+
 = 0.9.1 =
 * Fixed: Refund endpoint corrected from /refunds to /payment_refunds.
 * Fixed: Refund request parameter corrected from payment_flow to payment_flow_id.
@@ -196,6 +205,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.2 =
+Important fixes for Block Checkout payment method handling with saved cards, capture API, and card token deletion sync. Recommended update.
 
 = 0.9.1 =
 Bug fixes for refunds, PayPay return handling, card save via Setup Flow, and subscription renewals. Recommended update.

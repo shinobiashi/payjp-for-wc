@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PAY.JP for WooCommerce 0.9.1\n"
+"Project-Id-Version: PAY.JP for WooCommerce 0.9.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
 "Last-Translator: Shohei Tanaka <shohei.t@artws.info>\n"
 "Language-Team: Japanese <ja@li.org>\n"
@@ -149,6 +149,56 @@ msgstr "チェックを入れた決済手段がチェックアウト画面に表
 #: includes/admin/class-payjp-admin-settings-page.php:308
 msgid "PAY.JP settings saved."
 msgstr "PAY.JP の設定を保存しました。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:100
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:64
+msgid "Payment capture"
+msgstr "支払いキャプチャ"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:103
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:67
+msgid "Capture immediately (recommended)"
+msgstr "即時キャプチャ（推奨）"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:104
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:68
+msgid "Authorize only — capture when order is marked Completed"
+msgstr "仮売上のみ — 注文が「完了」になった時点でキャプチャ"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:108
+msgid "Immediate: the card is charged at checkout. Authorize only: funds are reserved now and captured automatically when you set the order to Completed."
+msgstr "即時：チェックアウト時にカードに課金します。仮売上：現時点で資金を予約し、注文を「完了」に設定するとキャプチャされます。"
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:72
+msgid "Immediate: the payment is confirmed at checkout. Authorize only: funds are reserved now and captured automatically when you set the order to Completed."
+msgstr "即時：チェックアウト時に決済が確定します。仮売上：現時点で資金を予約し、注文を「完了」に設定するとキャプチャされます。"
+
+#. translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:348
+msgid "PAY.JP authorised. Payment will be captured when the order is marked Completed."
+msgstr "PAY.JP 仮売上完了。注文を「完了」に変更するとキャプチャが実行されます。"
+
+#. translators: PAY.JP capture success note shown in WooCommerce order admin.
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:490
+msgid "PAY.JP: Payment captured successfully."
+msgstr "PAY.JP: 支払いのキャプチャが完了しました。"
+
+#. translators: %s: PAY.JP error message
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:496
+#, php-format
+msgid "PAY.JP: Payment capture failed — %s"
+msgstr "PAY.JP: 支払いのキャプチャに失敗しました — %s"
+
+#. translators: PAY.JP PayPay capture success note shown in WooCommerce order admin.
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:245
+msgid "PAY.JP PayPay: Payment captured successfully."
+msgstr "PAY.JP PayPay: 支払いのキャプチャが完了しました。"
+
+#. translators: %s: PAY.JP error message
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:251
+#, php-format
+msgid "PAY.JP PayPay: Payment capture failed — %s"
+msgstr "PAY.JP PayPay: 支払いのキャプチャに失敗しました — %s"
 
 #: includes/gateways/payjp/class-payjp-api.php:142
 msgid "PAY.JP returned an unexpected non-JSON response."

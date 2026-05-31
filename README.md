@@ -46,7 +46,7 @@ PAY.JP v2 payment gateway plugin for WooCommerce. Supports credit card and PayPa
 4. Go to **WooCommerce > Settings > Payments > PAY.JP**.
 5. Enter your PAY.JP API keys, set the Webhook Secret, and enable the payment methods you want.
 
-**Webhook URL:** `https://yoursite.com/wp-json/payjp/v1/webhook`
+**Webhook URL:** `https://yoursite.com/wp-json/payjp/v2/webhook`
 
 Register this URL in the PAY.JP Dashboard under **Webhook** with the following events:
 - `payment_flow.succeeded`

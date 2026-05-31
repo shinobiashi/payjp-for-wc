@@ -173,7 +173,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			array(
 				'publicKey' => Payjp_Settings::get_public_key(),
 				'returnUrl' => $return_url,
-				'restUrl'   => rest_url( 'payjp/v1/setup-flow' ),
+				'restUrl'   => rest_url( 'payjp/v2/setup-flow' ),
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
 				'i18n'      => array(
 					'addCard'      => __( 'Add card', 'payjp-for-wc' ),

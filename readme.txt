@@ -109,7 +109,7 @@ The PAY.JP payments.js script is loaded from PAY.JP's CDN to render the secure c
 5. Copy the **Webhook URL** shown in the settings and register it in your PAY.JP dashboard under **Webhook**.
 6. Save changes and place a test order.
 
-**Webhook URL format:** `https://yoursite.com/wp-json/payjp/v1/webhook`
+**Webhook URL format:** `https://yoursite.com/wp-json/payjp/v2/webhook`
 
 == Frequently Asked Questions ==
 
@@ -135,7 +135,7 @@ Yes. Customers can save cards to their account during checkout. Saved cards are 
 
 = How do I configure webhooks? =
 
-1. In the PAY.JP for WooCommerce settings, copy the **Webhook URL** (`https://yoursite.com/wp-json/payjp/v1/webhook`).
+1. In the PAY.JP for WooCommerce settings, copy the **Webhook URL** (`https://yoursite.com/wp-json/payjp/v2/webhook`).
 2. Log in to your PAY.JP dashboard and go to **Webhook**.
 3. Add the webhook URL and enable the following events: `payment_flow.succeeded`, `payment_flow.payment_failed`, `refund.created`.
 4. Copy the **Webhook Secret** from PAY.JP into the plugin settings and save.

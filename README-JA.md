@@ -99,7 +99,7 @@ WooCommerce 向けの PAY.JP v2 決済プラグインです。クレジットカ
 PAY.JP ダッシュボード → **Webhooks** に以下の URL を登録してください:
 
 ```
-https://your-store.example.com/wp-json/payjp/v1/webhook
+https://your-store.example.com/wp-json/payjp/v2/webhook
 ```
 
 受信するイベントとして少なくとも以下を選択してください:

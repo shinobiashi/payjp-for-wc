@@ -202,7 +202,7 @@ test.describe( 'Plugin health', () => {
 	} );
 
 	test( 'webhook endpoint returns 401 without token', async ( { page } ) => {
-		const response = await page.request.post( '/wp-json/payjp/v1/webhook', {
+		const response = await page.request.post( '/wp-json/payjp/v2/webhook', {
 			headers: { 'Content-Type': 'application/json' },
 			data: JSON.stringify( { type: 'test' } ),
 		} );
@@ -212,7 +212,7 @@ test.describe( 'Plugin health', () => {
 	test( 'webhook endpoint returns 415 for non-JSON content type', async ( {
 		page,
 	} ) => {
-		const response = await page.request.post( '/wp-json/payjp/v1/webhook', {
+		const response = await page.request.post( '/wp-json/payjp/v2/webhook', {
 			headers: {
 				'Content-Type': 'text/plain',
 				'X-Payjp-Webhook-Token': webhookSecret,
@@ -225,7 +225,7 @@ test.describe( 'Plugin health', () => {
 	test( 'webhook endpoint returns 400 for invalid JSON', async ( {
 		page,
 	} ) => {
-		const response = await page.request.post( '/wp-json/payjp/v1/webhook', {
+		const response = await page.request.post( '/wp-json/payjp/v2/webhook', {
 			headers: {
 				'Content-Type': 'application/json',
 				'X-Payjp-Webhook-Token': webhookSecret,
@@ -238,7 +238,7 @@ test.describe( 'Plugin health', () => {
 	test( 'webhook endpoint returns 200 for valid event', async ( {
 		page,
 	} ) => {
-		const response = await page.request.post( '/wp-json/payjp/v1/webhook', {
+		const response = await page.request.post( '/wp-json/payjp/v2/webhook', {
 			headers: {
 				'Content-Type': 'application/json',
 				'X-Payjp-Webhook-Token': webhookSecret,

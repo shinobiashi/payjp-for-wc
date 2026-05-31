@@ -335,7 +335,7 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 **目標:** PAY.JP からの Webhook を受信し、注文ステータスを権威ソースで更新する。
 
-- [x] REST エンドポイント: `POST /wp-json/payjp/v1/webhook`
+- [x] REST エンドポイント: `POST /wp-json/payjp/v2/webhook`
 - [x] `hash_equals()` でトークン検証
 - [x] `payment_flow.succeeded` → `payment_complete()`（冪等）
 - [x] `payment_flow.payment_failed` → `update_status('failed')`

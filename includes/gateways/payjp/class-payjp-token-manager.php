@@ -41,7 +41,7 @@ class Payjp_Token_Manager {
 	 */
 	public static function register_rest_routes(): void {
 		register_rest_route(
-			'payjp/v1',
+			'payjp/v2',
 			'/setup-flow',
 			array(
 				'methods'             => 'POST',

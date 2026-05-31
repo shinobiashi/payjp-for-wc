@@ -20,7 +20,7 @@ if ( class_exists( 'Payjp_Webhook_Handler' ) ) {
  * Registers the REST API endpoint for PAY.JP webhooks and routes events
  * to the appropriate order status handlers.
  *
- * Endpoint: POST /wp-json/payjp/v1/webhook
+ * Endpoint: POST /wp-json/payjp/v2/webhook
  *
  * Supported events:
  *   - payment_flow.succeeded      → payment_complete()
@@ -34,7 +34,7 @@ class Payjp_Webhook_Handler {
 	 *
 	 * @var string
 	 */
-	const REST_NAMESPACE = 'payjp/v1';
+	const REST_NAMESPACE = 'payjp/v2';
 
 	/**
 	 * REST API route for the webhook endpoint.
@@ -51,7 +51,7 @@ class Payjp_Webhook_Handler {
 	}
 
 	/**
-	 * Register the /wp-json/payjp/v1/webhook REST endpoint.
+	 * Register the /wp-json/payjp/v2/webhook REST endpoint.
 	 */
 	public static function register_endpoint(): void {
 		register_rest_route(

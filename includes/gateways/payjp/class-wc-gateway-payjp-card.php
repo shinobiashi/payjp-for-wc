@@ -75,6 +75,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
 		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'setup_card_scripts' ) );
+		add_action( 'woocommerce_order_status_completed', array( $this, 'capture_payment' ) );
 	}
 
 	// ── Template-method implementations ──────────────────────────────────────
@@ -89,11 +90,22 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			'After clicking "Place order", you will be taken to a secure page to enter your card details.',
 			'payjp-for-wc'
 		);
-		$this->form_fields['save_payment_methods']   = array(
+		$this->form_fields['save_payment_methods'] = array(
 			'title'   => __( 'Save payment methods', 'payjp-for-wc' ),
 			'type'    => 'checkbox',
 			'label'   => __( 'Allow customers to save their card for future purchases', 'payjp-for-wc' ),
 			'default' => 'yes',
+		);
+		$this->form_fields['capture_method']       = array(
+			'title'    => __( 'Payment capture', 'payjp-for-wc' ),
+			'type'     => 'select',
+			'options'  => array(
+				'automatic' => __( 'Capture immediately (recommended)', 'payjp-for-wc' ),
+				'manual'    => __( 'Authorize only — capture when order is marked Completed', 'payjp-for-wc' ),
+			),
+			'default'  => 'automatic',
+			'desc_tip' => false,
+			'desc'     => __( 'Immediate: the card is charged at checkout. Authorize only: funds are reserved now and captured automatically when you set the order to Completed.', 'payjp-for-wc' ),
 		);
 	}
 
@@ -134,6 +146,15 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			'payNow'     => __( 'Pay now', 'payjp-for-wc' ),
 			'processing' => __( 'Processing…', 'payjp-for-wc' ),
 		);
+	}
+
+	/**
+	 * Return the configured capture method: 'automatic' or 'manual'.
+	 *
+	 * @return string
+	 */
+	private function get_capture_method(): string {
+		return 'manual' === $this->get_option( 'capture_method', 'automatic' ) ? 'manual' : 'automatic';
 	}
 
 	// ── Gateway-specific methods ──────────────────────────────────────────────
@@ -275,13 +296,14 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		}
 
 		try {
-			$flow = $this->get_api()->post(
+			$capture_method = $this->get_capture_method();
+			$flow           = $this->get_api()->post(
 				'/payment_flows',
 				array(
 					'amount'               => $amount,
 					'currency'             => 'jpy',
 					'payment_method_types' => array( 'card' ),
-					'capture_method'       => 'automatic',
+					'capture_method'       => $capture_method,
 				)
 			);
 
@@ -296,7 +318,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
 			$order->update_meta_data( '_payjp_client_secret', $client_secret );
 			$order->update_meta_data( '_payjp_payment_method', 'card' );
-			$order->update_meta_data( '_payjp_capture_method', 'automatic' );
+			$order->update_meta_data( '_payjp_capture_method', $capture_method );
 			$order->save();
 
 			return array(
@@ -335,13 +357,14 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 		$amount      = (int) round( $order->get_total() );
 		$customer_id = Payjp_Token_Manager::get_customer_id( (int) $order->get_customer_id() );
 
-		$payload = array(
+		$capture_method = $this->get_capture_method();
+		$payload        = array(
 			'amount'            => $amount,
 			'currency'          => 'jpy',
 			'payment_method_id' => $pm_id,
 			'confirm'           => true,
 			'return_url'        => $this->build_return_url( $order ),
-			'capture_method'    => 'automatic',
+			'capture_method'    => $capture_method,
 		);
 
 		if ( $customer_id ) {
@@ -366,7 +389,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 
 		$order->update_meta_data( '_payjp_payment_flow_id', $flow_id );
 		$order->update_meta_data( '_payjp_payment_method', 'card' );
-		$order->update_meta_data( '_payjp_capture_method', 'automatic' );
+		$order->update_meta_data( '_payjp_capture_method', $capture_method );
 
 		if ( 'succeeded' === $status ) {
 			$order->save();
@@ -422,6 +445,55 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			'error'
 		);
 		return array( 'result' => 'failure' );
+	}
+
+	/**
+	 * Capture a previously authorized (manual-capture) payment when the order is Completed.
+	 *
+	 * Fires on woocommerce_order_status_completed. Skips silently for orders that were
+	 * charged immediately (capture_method = automatic) or already captured.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 */
+	public function capture_payment( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		if ( 'payjp_card' !== $order->get_payment_method() ) {
+			return;
+		}
+
+		if ( 'manual' !== (string) $order->get_meta( '_payjp_capture_method' ) ) {
+			return;
+		}
+
+		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
+		if ( ! $flow_id ) {
+			return;
+		}
+
+		$logger = $this->get_logger();
+
+		try {
+			$this->get_api()->post(
+				'/payment_flows/' . rawurlencode( $flow_id ) . '/capture',
+				array()
+			);
+			/* translators: PAY.JP capture success note shown in WooCommerce order admin. */
+			$order->add_order_note( __( 'PAY.JP: Payment captured successfully.', 'payjp-for-wc' ) );
+			$logger->log_event( 'captured', $order_id, array( 'flow_id' => $flow_id ) );
+		} catch ( RuntimeException $e ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: PAY.JP error message */
+					__( 'PAY.JP: Payment capture failed — %s', 'payjp-for-wc' ),
+					esc_html( $e->getMessage() )
+				)
+			);
+			$logger->log_error( 'Capture failed', $order_id, $e );
+		}
 	}
 
 	/**

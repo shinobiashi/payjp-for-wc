@@ -63,7 +63,7 @@ class Payjp_API {
 			PAYJP_API_BASE . $endpoint,
 			array(
 				'headers' => $this->build_headers(),
-				'body'    => wp_json_encode( $body ),
+				'body'    => wp_json_encode( empty( $body ) ? new \stdClass() : $body ),
 				'timeout' => 30,
 			)
 		);

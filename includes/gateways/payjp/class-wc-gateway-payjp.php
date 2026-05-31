@@ -341,8 +341,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			// Persist the flow ID as the transaction ID so the order retains
 			// a reference to the PAY.JP Payment Flow for later capture or refund.
 			$order->set_transaction_id( $flow_id );
-			/* translators: PAY.JP order-hold note shown in WooCommerce admin */
-			$order->update_status( 'on-hold', __( 'PAY.JP authorised. Awaiting manual capture.', 'payjp-for-wc' ) );
+			$order->save();
+			// Set to "processing" so the merchant can fulfil and then Complete the order,
+			// which triggers capture_payment(). "on-hold" implies a problem to customers.
+			/* translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders */
+			$order->update_status( 'processing', __( 'PAY.JP authorised. Payment will be captured when the order is marked Completed.', 'payjp-for-wc' ) );
 			$logger->log_event( 'authorized', $order_id, array( 'flow_id' => $flow_id ) );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;

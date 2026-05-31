@@ -60,7 +60,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			'After clicking "Place order", you will be taken to a secure page to complete your PayPay payment.',
 			'payjp-for-wc'
 		);
-		$this->form_fields['capture_method'] = array(
+		$this->form_fields['capture_method']         = array(
 			'title'    => __( 'Payment capture', 'payjp-for-wc' ),
 			'type'     => 'select',
 			'options'  => array(

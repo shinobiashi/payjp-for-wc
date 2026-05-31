@@ -90,13 +90,13 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			'After clicking "Place order", you will be taken to a secure page to enter your card details.',
 			'payjp-for-wc'
 		);
-		$this->form_fields['save_payment_methods'] = array(
+		$this->form_fields['save_payment_methods']   = array(
 			'title'   => __( 'Save payment methods', 'payjp-for-wc' ),
 			'type'    => 'checkbox',
 			'label'   => __( 'Allow customers to save their card for future purchases', 'payjp-for-wc' ),
 			'default' => 'yes',
 		);
-		$this->form_fields['capture_method']       = array(
+		$this->form_fields['capture_method']         = array(
 			'title'    => __( 'Payment capture', 'payjp-for-wc' ),
 			'type'     => 'select',
 			'options'  => array(

@@ -52,6 +52,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 		add_action( 'woocommerce_admin_field_payjp_enabled_methods', array( $this, 'output_enabled_methods_field' ) );
 		add_action( 'woocommerce_admin_field_payjp_webhook_info', array( $this, 'output_webhook_info_field' ) );
+		add_action( 'woocommerce_admin_field_payjp_test_mode_notice', array( $this, 'output_test_mode_notice_field' ) );
 	}
 
 	/**
@@ -80,6 +81,10 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'label'    => __( 'Use test environment API keys', 'payjp-for-wc' ),
 					'desc_tip' => true,
 					'desc'     => __( 'When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production.', 'payjp-for-wc' ),
+				),
+				array(
+					'type' => 'payjp_test_mode_notice',
+					'id'   => 'payjp_test_mode_notice',
 				),
 				array(
 					'title'       => __( 'Test Secret Key', 'payjp-for-wc' ),
@@ -221,6 +226,43 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		foreach ( array_keys( $option_map ) as $key ) {
 			remove_filter( "pre_option_{$key}", $closures[ $key ] );
 		}
+	}
+
+	/**
+	 * Output a test mode notice with a link to PAY.JP test card documentation.
+	 * Rendered only when test mode is currently enabled.
+	 *
+	 * @param array<string, mixed> $value Field definition array (unused).
+	 */
+	public function output_test_mode_notice_field( array $value ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		if ( ! Payjp_Settings::is_test_mode() ) {
+			return;
+		}
+		?>
+		<tr valign="top">
+			<th scope="row"></th>
+			<td class="forminp">
+				<p class="description">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: URL to PAY.JP test mode documentation */
+							__( 'Test mode is active. <a href="%s" target="_blank" rel="noopener noreferrer">View test card numbers and test accounts &rarr;</a>', 'payjp-for-wc' ),
+							'https://docs.pay.jp/v2/guide/developers/testmode-livemode'
+						),
+						array(
+							'a' => array(
+								'href'   => array(),
+								'target' => array(),
+								'rel'    => array(),
+							),
+						)
+					);
+					?>
+				</p>
+			</td>
+		</tr>
+		<?php
 	}
 
 	/**

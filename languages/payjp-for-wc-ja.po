@@ -412,6 +412,12 @@ msgstr "PayPay に移動して支払いを完了します。"
 msgid "Test mode is active. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View test card numbers and test accounts &rarr;</a>"
 msgstr "テストモードが有効です。<a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">テストカード番号とテストアカウントを確認する &rarr;</a>"
 
+#. translators: %s: URL to PAY.JP PayPay test documentation
+#: includes/admin/class-payjp-admin-settings-page.php:275
+#, php-format
+msgid "PayPay is enabled. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View PayPay test accounts and instructions &rarr;</a>"
+msgstr "PayPay が有効です。<a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">PayPay テストアカウントと手順を確認する &rarr;</a>"
+
 #: includes/admin/class-payjp-admin-settings-page.php:283
 msgid "Open PAY.JP Dashboard"
 msgstr "PAY.JP ダッシュボードを開く"

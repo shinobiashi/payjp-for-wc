@@ -242,6 +242,14 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		if ( ! Payjp_Settings::is_test_mode() ) {
 			return;
 		}
+
+		$allowed = array(
+			'a' => array(
+				'href'   => array(),
+				'target' => array(),
+				'rel'    => array(),
+			),
+		);
 		?>
 		<tr valign="top">
 			<th scope="row"></th>
@@ -254,16 +262,24 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 							__( 'Test mode is active. <a href="%s" target="_blank" rel="noopener noreferrer">View test card numbers and test accounts &rarr;</a>', 'payjp-for-wc' ),
 							'https://docs.pay.jp/v2/guide/developers/testmode-livemode'
 						),
-						array(
-							'a' => array(
-								'href'   => array(),
-								'target' => array(),
-								'rel'    => array(),
-							),
-						)
+						$allowed
 					);
 					?>
 				</p>
+				<?php if ( Payjp_Settings::is_method_enabled( 'paypay' ) ) : ?>
+				<p class="description">
+					<?php
+					echo wp_kses(
+						sprintf(
+							/* translators: %s: URL to PAY.JP PayPay test documentation */
+							__( 'PayPay is enabled. <a href="%s" target="_blank" rel="noopener noreferrer">View PayPay test accounts and instructions &rarr;</a>', 'payjp-for-wc' ),
+							'https://docs.pay.jp/v2/guide/payments/methods/paypay'
+						),
+						$allowed
+					);
+					?>
+				</p>
+				<?php endif; ?>
 			</td>
 		</tr>
 		<?php

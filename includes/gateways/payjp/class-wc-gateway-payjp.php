@@ -348,6 +348,20 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			exit;
 		}
 
+		// Payment methods such as PayPay confirm asynchronously: the user is redirected
+		// back while PAY.JP's backend is still processing. "requires_action" at this
+		// point means the customer completed the off-site flow and the payment is
+		// pending server-side confirmation. Redirect to the thank-you page and let
+		// the payment_flow.succeeded webhook call payment_complete() a few seconds later.
+		if ( 'requires_action' === $status ) {
+			$logger->log_event( 'payment_pending_confirmation', $order_id, array( 'flow_id' => $flow_id ) );
+			$order->add_order_note(
+				__( 'PAY.JP payment is awaiting confirmation. Order will be updated automatically via webhook.', 'payjp-for-wc' )
+			);
+			wp_safe_redirect( $order->get_checkout_order_received_url() );
+			exit;
+		}
+
 		$logger->log_event( 'payment_incomplete', $order_id, array( 'flow_status' => $status ) );
 		wc_add_notice( __( 'Payment was not completed. Please try again.', 'payjp-for-wc' ), 'error' );
 		wp_safe_redirect( wc_get_checkout_url() );

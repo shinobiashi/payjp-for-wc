@@ -434,6 +434,10 @@ msgstr "PAY.JP アカウントを作成する"
 msgid "You need a PAY.JP account to accept payments. Sign up for free."
 msgstr "決済を受け付けるには PAY.JP アカウントが必要です。無料で登録できます。"
 
+#: includes/gateways/payjp/class-wc-gateway-payjp.php
+msgid "PAY.JP payment is awaiting confirmation. Order will be updated automatically via webhook."
+msgstr "PAY.JP の決済確認待ちです。Webhook により自動的に注文が更新されます。"
+
 #: includes/admin/class-payjp-admin-settings-page.php:173
 msgid "Webhook"
 msgstr "Webhook"

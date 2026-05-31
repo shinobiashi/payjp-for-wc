@@ -111,13 +111,12 @@ class Payjp_Subscriptions {
 			$flow = $api->post(
 				'/payment_flows',
 				array(
-					'amount'               => (int) round( $amount ),
-					'currency'             => strtolower( get_woocommerce_currency() ),
-					'payment_method_types' => array( 'card' ),
-					'payment_method'       => $pm_id,
-					'customer'             => $customer_id,
-					'confirm'              => true,
-					'capture_method'       => 'automatic',
+					'amount'            => (int) round( $amount ),
+					'currency'          => strtolower( get_woocommerce_currency() ),
+					'payment_method_id' => $pm_id,
+					'customer_id'       => $customer_id,
+					'confirm'           => true,
+					'capture_method'    => 'automatic',
 				)
 			);
 		} catch ( RuntimeException $e ) {

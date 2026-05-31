@@ -406,6 +406,28 @@ msgstr "新しい支払い方法を使用する"
 msgid "You will be redirected to PayPay to complete your payment."
 msgstr "PayPay に移動して支払いを完了します。"
 
+#. translators: %s: URL to PAY.JP test mode documentation
+#: includes/admin/class-payjp-admin-settings-page.php:253
+#, php-format
+msgid "Test mode is active. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View test card numbers and test accounts &rarr;</a>"
+msgstr "テストモードが有効です。<a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">テストカード番号とテストアカウントを確認する &rarr;</a>"
+
+#: includes/admin/class-payjp-admin-settings-page.php:283
+msgid "Open PAY.JP Dashboard"
+msgstr "PAY.JP ダッシュボードを開く"
+
+#: includes/admin/class-payjp-admin-settings-page.php:284
+msgid "Manage API keys, webhooks, and payments on the PAY.JP Dashboard."
+msgstr "PAY.JP ダッシュボードで API キー・Webhook・決済を管理できます。"
+
+#: includes/admin/class-payjp-admin-settings-page.php:288
+msgid "Create a PAY.JP Account"
+msgstr "PAY.JP アカウントを作成する"
+
+#: includes/admin/class-payjp-admin-settings-page.php:289
+msgid "You need a PAY.JP account to accept payments. Sign up for free."
+msgstr "決済を受け付けるには PAY.JP アカウントが必要です。無料で登録できます。"
+
 #: includes/admin/class-payjp-admin-settings-page.php:173
 msgid "Webhook"
 msgstr "Webhook"

@@ -53,6 +53,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		add_action( 'woocommerce_admin_field_payjp_enabled_methods', array( $this, 'output_enabled_methods_field' ) );
 		add_action( 'woocommerce_admin_field_payjp_webhook_info', array( $this, 'output_webhook_info_field' ) );
 		add_action( 'woocommerce_admin_field_payjp_test_mode_notice', array( $this, 'output_test_mode_notice_field' ) );
+		add_action( 'woocommerce_admin_field_payjp_dashboard_link', array( $this, 'output_dashboard_link_field' ) );
 	}
 
 	/**
@@ -74,17 +75,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'id'    => 'payjp_api_settings',
 				),
 				array(
-					'title'    => __( 'Test Mode', 'payjp-for-wc' ),
-					'type'     => 'checkbox',
-					'id'       => 'payjp_test_mode',
-					'default'  => 'yes',
-					'label'    => __( 'Use test environment API keys', 'payjp-for-wc' ),
-					'desc_tip' => true,
-					'desc'     => __( 'When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production.', 'payjp-for-wc' ),
-				),
-				array(
-					'type' => 'payjp_test_mode_notice',
-					'id'   => 'payjp_test_mode_notice',
+					'type' => 'payjp_dashboard_link',
+					'id'   => 'payjp_dashboard_link',
 				),
 				array(
 					'title'       => __( 'Test Secret Key', 'payjp-for-wc' ),
@@ -129,6 +121,18 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'default'  => '',
 					'desc_tip' => false,
 					'desc'     => __( 'The authentication token configured in PAY.JP Dashboard &gt; Webhooks. Required for receiving payment and refund events on your server. Without this, automatic order status updates via webhook will not work.', 'payjp-for-wc' ),
+				),
+				array(
+					'title'    => __( 'Test Mode', 'payjp-for-wc' ),
+					'type'     => 'checkbox',
+					'id'       => 'payjp_test_mode',
+					'default'  => 'yes',
+					'desc_tip' => false,
+					'desc'     => __( 'When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production.', 'payjp-for-wc' ),
+				),
+				array(
+					'type' => 'payjp_test_mode_notice',
+					'id'   => 'payjp_test_mode_notice',
 				),
 				array(
 					'type' => 'sectionend',
@@ -259,6 +263,45 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 						)
 					);
 					?>
+				</p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Output a button linking to the PAY.JP Dashboard (keys configured) or
+	 * the PAY.JP sign-up page (no keys configured yet).
+	 *
+	 * @param array<string, mixed> $value Field definition array (unused).
+	 */
+	public function output_dashboard_link_field( array $value ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		$all      = Payjp_Settings::get_all();
+		$has_keys = ! empty( $all['test_secret_key'] ) || ! empty( $all['live_secret_key'] );
+
+		if ( $has_keys ) {
+			$url   = 'https://console.pay.jp/d/login';
+			$label = __( 'Open PAY.JP Dashboard', 'payjp-for-wc' );
+			$desc  = __( 'Manage API keys, webhooks, and payments on the PAY.JP Dashboard.', 'payjp-for-wc' );
+			$class = 'button button-primary';
+		} else {
+			$url   = 'https://console.pay.jp/d/signup';
+			$label = __( 'Create a PAY.JP Account', 'payjp-for-wc' );
+			$desc  = __( 'You need a PAY.JP account to accept payments. Sign up for free.', 'payjp-for-wc' );
+			$class = 'button button-secondary';
+		}
+		?>
+		<tr valign="top">
+			<th scope="row"></th>
+			<td class="forminp">
+				<a
+					href="<?php echo esc_url( $url ); ?>"
+					class="<?php echo esc_attr( $class ); ?>"
+					target="_blank"
+					rel="noopener noreferrer"
+				><?php echo esc_html( $label ); ?> &rarr;</a>
+				<p class="description" style="margin-top:.5em;">
+					<?php echo esc_html( $desc ); ?>
 				</p>
 			</td>
 		</tr>

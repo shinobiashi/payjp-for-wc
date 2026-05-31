@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-30T23:14:17+00:00\n"
+"POT-Creation-Date: 2026-05-31T07:33:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: payjp-for-wc\n"
@@ -43,136 +43,150 @@ msgstr ""
 msgid "PAY.JP"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:71
+#: includes/admin/class-payjp-admin-settings-page.php:73
 msgid "API Settings"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:76
-msgid "Test Mode"
-msgstr ""
-
-#: includes/admin/class-payjp-admin-settings-page.php:80
-msgid "Use test environment API keys"
-msgstr ""
-
 #: includes/admin/class-payjp-admin-settings-page.php:82
-msgid "When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production."
-msgstr ""
-
-#: includes/admin/class-payjp-admin-settings-page.php:85
-msgid "Test Public Key"
-msgstr ""
-
-#: includes/admin/class-payjp-admin-settings-page.php:91
-msgid "Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>pk_test_</code>."
-msgstr ""
-
-#: includes/admin/class-payjp-admin-settings-page.php:94
 msgid "Test Secret Key"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:100
+#: includes/admin/class-payjp-admin-settings-page.php:88
 msgid "Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>sk_test_</code>. Keep this key secret and never expose it publicly."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:103
-msgid "Live Public Key"
+#: includes/admin/class-payjp-admin-settings-page.php:91
+msgid "Test Public Key"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:109
-msgid "Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>pk_live_</code>."
+#: includes/admin/class-payjp-admin-settings-page.php:97
+msgid "Found on the API keys page of your PAY.JP dashboard (test). Starts with <code>pk_test_</code>."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:112
+#: includes/admin/class-payjp-admin-settings-page.php:100
 msgid "Live Secret Key"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:118
+#: includes/admin/class-payjp-admin-settings-page.php:106
 msgid "Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>sk_live_</code>. Keep this key secret and never expose it publicly."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:121
+#: includes/admin/class-payjp-admin-settings-page.php:109
+msgid "Live Public Key"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:115
+msgid "Found on the API keys page of your PAY.JP dashboard (live). Starts with <code>pk_live_</code>."
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:118
 msgid "Webhook Secret"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:126
+#: includes/admin/class-payjp-admin-settings-page.php:123
 msgid "The authentication token configured in PAY.JP Dashboard &gt; Webhooks. Required for receiving payment and refund events on your server. Without this, automatic order status updates via webhook will not work."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:134
+#: includes/admin/class-payjp-admin-settings-page.php:126
+msgid "Test Mode"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:130
+msgid "When enabled, test API keys are used and no real payments are processed. Uncheck this and use live API keys for production."
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:142
 msgid "Payment Methods"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:148
+#: includes/admin/class-payjp-admin-settings-page.php:156
 msgid "Debug"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:151
+#: includes/admin/class-payjp-admin-settings-page.php:159
 msgid "Useful for diagnosing payment issues during development. Do not leave enabled in production."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:154
+#: includes/admin/class-payjp-admin-settings-page.php:162
 msgid "Debug Log"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:158
+#: includes/admin/class-payjp-admin-settings-page.php:166
 msgid "Enable logging"
 msgstr ""
 
 #. translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag
-#: includes/admin/class-payjp-admin-settings-page.php:162
+#: includes/admin/class-payjp-admin-settings-page.php:170
 #, php-format
 msgid "Logs PAY.JP API requests, responses, payment events, and received webhooks. Enable only when debugging; keep off in production. Logs are available at %1$sWooCommerce &gt; Status &gt; Logs%2$s."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:173
+#: includes/admin/class-payjp-admin-settings-page.php:181
 msgid "Webhook"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:236
+#. translators: %s: URL to PAY.JP test mode documentation
+#: includes/admin/class-payjp-admin-settings-page.php:253
+#, php-format
+msgid "Test mode is active. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View test card numbers and test accounts &rarr;</a>"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:283
+msgid "Open PAY.JP Dashboard"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:284
+msgid "Manage API keys, webhooks, and payments on the PAY.JP Dashboard."
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:288
+msgid "Create a PAY.JP Account"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:289
+msgid "You need a PAY.JP account to accept payments. Sign up for free."
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:320
 #: src/blocks/checkout/payment-method-card.js:23
 msgid "Credit Card (PAY.JP)"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:237
+#: includes/admin/class-payjp-admin-settings-page.php:321
 #: src/blocks/checkout/payment-method-paypay.js:13
 msgid "PayPay (PAY.JP)"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:241
+#: includes/admin/class-payjp-admin-settings-page.php:325
 msgid "Payment Method"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:245
+#: includes/admin/class-payjp-admin-settings-page.php:329
 msgid "Enable Payment Methods"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:260
+#: includes/admin/class-payjp-admin-settings-page.php:344
 msgid "Checked payment methods will appear on the checkout page. API keys must also be configured for them to be available."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:279
+#: includes/admin/class-payjp-admin-settings-page.php:363
 msgid "Webhook URL"
 msgstr ""
 
 #. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
-#: includes/admin/class-payjp-admin-settings-page.php:295
+#: includes/admin/class-payjp-admin-settings-page.php:379
 #, php-format
 msgid "Register the URL above in %1$sPAY.JP Dashboard &gt; Webhooks%2$s."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:302
+#: includes/admin/class-payjp-admin-settings-page.php:386
 msgid "Enable the following events:"
 msgstr ""
 
 #. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
-#: includes/admin/class-payjp-admin-settings-page.php:314
+#: includes/admin/class-payjp-admin-settings-page.php:398
 #, php-format
 msgid "Set the %1$sWebhook Secret%2$s from PAY.JP Dashboard into the \"Webhook Secret\" field above and save."
-msgstr ""
-
-#: includes/admin/class-payjp-admin-settings-page.php:385
-msgid "PAY.JP settings saved."
 msgstr ""
 
 #: includes/gateways/payjp/class-payjp-api.php:143
@@ -198,7 +212,7 @@ msgstr ""
 msgid "PAY.JP: No saved payment method found for this subscription. Please update the payment method."
 msgstr ""
 
-#: includes/gateways/payjp/class-payjp-subscriptions.php:145
+#: includes/gateways/payjp/class-payjp-subscriptions.php:144
 msgid "PAY.JP: Renewal payment failed or requires additional authentication."
 msgstr ""
 

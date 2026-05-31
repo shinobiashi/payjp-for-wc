@@ -381,7 +381,5 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			$gateway_settings['enabled'] = in_array( $method, $settings['enabled_methods'], true ) ? 'yes' : 'no';
 			update_option( $option_key, $gateway_settings );
 		}
-
-		WC_Admin_Settings::add_message( __( 'PAY.JP settings saved.', 'payjp-for-wc' ) );
 	}
 }

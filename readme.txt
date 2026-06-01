@@ -80,8 +80,8 @@ The PAY.JP payments.js script is loaded from PAY.JP's CDN to render the secure c
 * **Script URL:** `https://js.pay.jp/payments.js`
 * **When loaded:** On any checkout page where PAY.JP is an available payment method.
 * **Data handled:** Card details entered by the customer are tokenized entirely within this script and its iframe — they are never accessible to your WordPress site.
-* **Privacy Policy:** https://pay.jp/privacy
-* **Terms of Service:** https://pay.jp/terms
+* **Privacy Policy:** https://pay.co.jp/privacy
+* **Terms of Service:** https://pay.jp/legal/tos
 
 == Installation ==
 
@@ -104,7 +104,7 @@ The PAY.JP payments.js script is loaded from PAY.JP's CDN to render the secure c
 
 1. Navigate to **WooCommerce > Settings > Payments**.
 2. Click **PAY.JP** to open the unified settings page.
-3. Enter your **Public Key** and **Secret Key** from the [PAY.JP dashboard](https://pay.jp/).
+3. Enter your **Public Key** and **Secret Key** from the [PAY.JP dashboard](https://console.pay.jp/d/login).
 4. Set the mode to **Test** for development or **Live** for production.
 5. Copy the **Webhook URL** shown in the settings and register it in your PAY.JP dashboard under **Webhook**.
 6. Save changes and place a test order.
@@ -115,7 +115,7 @@ The PAY.JP payments.js script is loaded from PAY.JP's CDN to render the secure c
 
 = Where do I get my PAY.JP API keys? =
 
-Sign up or log in at [pay.jp](https://pay.jp/), then go to **API** in the dashboard. You will find your Public Key and Secret Key there. Use the test keys during development and the live keys for production.
+Sign up or log in at [pay.jp](https://console.pay.jp/d/login), then go to **API** in the dashboard. You will find your Public Key and Secret Key there. Use the test keys during development and the live keys for production.
 
 = Is this plugin PCI DSS compliant? =
 

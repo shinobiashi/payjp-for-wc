@@ -3,7 +3,7 @@ Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.0
-Stable tag:        0.9.2
+Stable tag:        0.9.3
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   10.8
@@ -170,6 +170,13 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.3 =
+* Fixed: Removed discouraged load_plugin_textdomain() call — WordPress 4.6+ loads translations automatically.
+* Fixed: Hook names fired by the plugin now use the payjp_for_wc_ prefix (Plugin Check compliance).
+* Fixed: Global variables in uninstall.php wrapped in a prefixed function to satisfy PrefixAllGlobals rule.
+* Fixed: Removed hidden file languages/.gitkeep (replaced by actual translation files).
+* Fixed: Added .distignore to its own exclusion list so it is not included in WordPress.org distribution ZIPs.
+
 = 0.9.2 =
 * Fixed: PayPay payments recorded as credit card when saved card tokens exist (Block Checkout default payment method conflict).
 * Fixed: Correct payment_method written to HPOS after payment_complete() using _payjp_payment_method meta as authority.
@@ -205,6 +212,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.3 =
+Code quality and Plugin Check compliance fixes. No functional changes. Safe to update.
 
 = 0.9.2 =
 Important fixes for Block Checkout payment method handling with saved cards, capture API, and card token deletion sync. Recommended update.

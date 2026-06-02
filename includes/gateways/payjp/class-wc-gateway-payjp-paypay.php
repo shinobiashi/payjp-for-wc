@@ -129,7 +129,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	public function get_icon(): string {
 		$url  = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
 		$icon = '<img src="' . esc_url( $url ) . '" alt="' . esc_attr( $this->get_title() ) . '" style="height:2em;width:auto;vertical-align:middle;" />';
-		return apply_filters( 'woocommerce_gateway_icon', $icon, $this->id );
+		return apply_filters( 'payjp_for_wc_gateway_icon', $icon, $this->id );
 	}
 
 	// ── Gateway-specific methods ──────────────────────────────────────────────

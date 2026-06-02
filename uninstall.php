@@ -12,36 +12,43 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-$option_keys = array(
-	'payjp_settings',
-	'woocommerce_payjp_card_settings',
-	'woocommerce_payjp_paypay_settings',
-);
-
-if ( is_multisite() ) {
-	// Remove per-site options from every subsite.
-	$sites = get_sites(
-		array(
-			'fields' => 'ids',
-			'number' => 0,
-		)
+/**
+ * Delete all PAY.JP plugin options and user meta.
+ */
+function payjp_for_wc_run_uninstall(): void {
+	$option_keys = array(
+		'payjp_settings',
+		'woocommerce_payjp_card_settings',
+		'woocommerce_payjp_paypay_settings',
 	);
-	foreach ( $sites as $site_id ) {
-		switch_to_blog( (int) $site_id );
+
+	if ( is_multisite() ) {
+		// Remove per-site options from every subsite.
+		$sites = get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		);
+		foreach ( $sites as $site_id ) {
+			switch_to_blog( (int) $site_id );
+			foreach ( $option_keys as $key ) {
+				delete_option( $key );
+			}
+			restore_current_blog();
+		}
+		// Remove network-level options stored via add_site_option().
+		foreach ( $option_keys as $key ) {
+			delete_site_option( $key );
+		}
+	} else {
 		foreach ( $option_keys as $key ) {
 			delete_option( $key );
 		}
-		restore_current_blog();
 	}
-	// Remove network-level options stored via add_site_option().
-	foreach ( $option_keys as $key ) {
-		delete_site_option( $key );
-	}
-} else {
-	foreach ( $option_keys as $key ) {
-		delete_option( $key );
-	}
+
+	// Remove PAY.JP Customer ID from all users.
+	delete_metadata( 'user', 0, '_payjp_customer_id', '', true );
 }
 
-// Remove PAY.JP Customer ID from all users.
-delete_metadata( 'user', 0, '_payjp_customer_id', '', true );
+payjp_for_wc_run_uninstall();

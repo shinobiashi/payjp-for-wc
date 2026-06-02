@@ -22,7 +22,6 @@ class Payjp_Loader {
 	 */
 	public static function init(): void {
 		self::load_classes();
-		self::load_textdomain();
 		self::register_hooks();
 	}
 
@@ -51,18 +50,6 @@ class Payjp_Loader {
 		// admin/class-payjp-admin-settings-page.php extends WC_Settings_Page which is NOT
 		// available at plugins_loaded; it is required inside the woocommerce_get_settings_pages
 		// filter callback (see register_hooks()) where WC admin has already booted.
-	}
-
-	/**
-	 * Load the plugin text domain.
-	 * Called directly because we're already inside plugins_loaded.
-	 */
-	public static function load_textdomain(): void {
-		load_plugin_textdomain(
-			'payjp-for-wc',
-			false,
-			dirname( plugin_basename( PAYJP_FOR_WC_FILE ) ) . '/languages'
-		);
 	}
 
 	/**

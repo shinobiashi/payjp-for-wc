@@ -42,6 +42,8 @@ README-JA.md
 .git/
 .gitignore
 .gitattributes
+.gitkeep
+.distignore
 
 # WP.org directory assets (banners/icons go to SVN /assets/, not plugin ZIP)
 .wordpress-org/

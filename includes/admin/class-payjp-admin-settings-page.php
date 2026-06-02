@@ -66,7 +66,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	 */
 	public function get_settings( $current_section = '' ): array {
 		return apply_filters(
-			'woocommerce_get_settings_payjp',
+			'payjp_for_wc_get_settings',
 			array(
 				// ── API / Mode ──────────────────────────────────────────────────
 				array(

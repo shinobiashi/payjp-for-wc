@@ -173,6 +173,7 @@ class Payjp_Webhook_Handler {
 		}
 
 		$order->payment_complete( $flow_id );
+		$order->add_order_note( __( 'PAY.JP: Payment confirmed via webhook.', 'payjp-for-wc' ) );
 		self::logger()->log_event(
 			'succeeded',
 			$order->get_id(),

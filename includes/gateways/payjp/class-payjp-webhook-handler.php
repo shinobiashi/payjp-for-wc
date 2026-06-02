@@ -92,8 +92,8 @@ class Payjp_Webhook_Handler {
 		}
 
 		$type   = isset( $event['type'] ) && is_string( $event['type'] ) ? $event['type'] : '';
-		$object = isset( $event['data']['object'] ) && is_array( $event['data']['object'] )
-			? $event['data']['object']
+		$object = isset( $event['data'] ) && is_array( $event['data'] )
+			? $event['data']
 			: array();
 
 		self::logger()->log_webhook( $type, $event );

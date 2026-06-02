@@ -23,9 +23,10 @@ if ( class_exists( 'Payjp_Webhook_Handler' ) ) {
  * Endpoint: POST /wp-json/payjp/v2/webhook
  *
  * Supported events:
- *   - payment_flow.succeeded      → payment_complete()
- *   - payment_flow.payment_failed → update_status('failed')
- *   - refund.created              → add order note
+ *   - payment_flow.succeeded                → payment_complete()
+ *   - payment_flow.amount_capturable_updated → update_status('processing') for requires_capture (manual capture)
+ *   - payment_flow.payment_failed           → update_status('failed')
+ *   - refund.created                        → add order note
  */
 class Payjp_Webhook_Handler {
 
@@ -103,6 +104,10 @@ class Payjp_Webhook_Handler {
 				self::handle_payment_succeeded( $object );
 				break;
 
+			case 'payment_flow.amount_capturable_updated':
+				self::handle_payment_capturable_updated( $object );
+				break;
+
 			case 'payment_flow.payment_failed':
 				self::handle_payment_failed( $object );
 				break;
@@ -170,6 +175,53 @@ class Payjp_Webhook_Handler {
 		$order->payment_complete( $flow_id );
 		self::logger()->log_event(
 			'succeeded',
+			$order->get_id(),
+			array(
+				'flow_id' => $flow_id,
+				'source'  => 'webhook',
+			)
+		);
+	}
+
+	/**
+	 * Handle payment_flow.amount_capturable_updated: move order to processing for manual-capture flows.
+	 *
+	 * Fires when PayPay authorises a manual-capture Payment Flow (status → requires_capture).
+	 * The customer may have returned from PayPay while the flow was still requires_action,
+	 * so handle_return() left the order in pending payment. This webhook completes the
+	 * transition so the merchant can fulfil and then capture.
+	 *
+	 * @param array<string, mixed> $flow Payment Flow object from the webhook payload.
+	 */
+	private static function handle_payment_capturable_updated( array $flow ): void {
+		$flow_id = isset( $flow['id'] ) && is_string( $flow['id'] ) ? $flow['id'] : '';
+		if ( ! $flow_id ) {
+			return;
+		}
+
+		$status = isset( $flow['status'] ) && is_string( $flow['status'] ) ? $flow['status'] : '';
+		if ( 'requires_capture' !== $status ) {
+			return;
+		}
+
+		$order = self::find_order_by_flow_id( $flow_id );
+		if ( ! $order ) {
+			return;
+		}
+
+		if ( ! $order->has_status( array( 'pending', 'on-hold' ) ) ) {
+			return;
+		}
+
+		$order->set_transaction_id( $flow_id );
+		$order->save();
+		$order->update_status(
+			'processing',
+			/* translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders confirmed via webhook. */
+			__( 'PAY.JP authorised via webhook. Payment will be captured when the order is marked Completed.', 'payjp-for-wc' )
+		);
+		self::logger()->log_event(
+			'authorized',
 			$order->get_id(),
 			array(
 				'flow_id' => $flow_id,

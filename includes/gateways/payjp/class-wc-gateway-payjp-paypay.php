@@ -265,53 +265,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	 * @return bool|\WP_Error True on success; WP_Error describing the failure.
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ): bool|\WP_Error {
-		$order = wc_get_order( $order_id );
-		if ( ! $order ) {
-			return new \WP_Error( 'invalid_order', __( 'Order not found.', 'payjp-for-wc' ) );
-		}
-
-		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
-		if ( ! $flow_id ) {
-			return new \WP_Error(
-				'no_flow_id',
-				__( 'No PAY.JP Payment Flow ID found for this order.', 'payjp-for-wc' )
-			);
-		}
-
-		$body = array( 'payment_flow_id' => $flow_id );
-
-		// Only send amount for partial refunds; omit to trigger a full refund.
-		if ( null !== $amount && $amount > 0 ) {
-			$body['amount'] = (int) round( $amount );
-		}
-
-		try {
-			$refund = $this->get_api()->post( '/payment_refunds', $body );
-		} catch ( RuntimeException $e ) {
-			return new \WP_Error( 'payjp_refund_error', $e->getMessage() );
-		}
-
-		$refund_id = isset( $refund['id'] ) && is_string( $refund['id'] ) ? $refund['id'] : '';
-		if ( ! $refund_id ) {
-			return new \WP_Error(
-				'payjp_refund_error',
-				__( 'PAY.JP returned an incomplete refund response.', 'payjp-for-wc' )
-			);
-		}
-
-		// Seed the idempotency marker so the refund.created webhook skips adding a duplicate note.
-		$order->update_meta_data( '_payjp_refund_processed_' . $refund_id, '1' );
-		$order->save();
-
-		$order->add_order_note(
-			sprintf(
-				/* translators: PAY.JP PayPay refund confirmation shown in WooCommerce order notes. %s: PAY.JP refund ID. */
-				__( 'PAY.JP PayPay refund processed. Refund ID: %s.', 'payjp-for-wc' ),
-				esc_html( $refund_id )
-			)
-		);
-
-		return true;
+		return $this->do_refund( $order_id, $amount, 'PAY.JP PayPay' );
 	}
 
 	/**

@@ -381,6 +381,68 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	protected function after_payment_complete( WC_Order $order, array $flow ): void {}
 
 	/**
+	 * Execute a PAY.JP refund via POST /payment_refunds and record an order note.
+	 *
+	 * Shared implementation used by card and PayPay subclasses.
+	 * Callers are responsible for ensuring the order belongs to their gateway.
+	 *
+	 * @param int        $order_id   WooCommerce order ID.
+	 * @param float|null $amount     Refund amount; null triggers a full refund.
+	 * @param string     $note_label Gateway-specific label for the order note (e.g. "PAY.JP" or "PAY.JP PayPay").
+	 * @return bool|\WP_Error True on success; WP_Error on failure.
+	 */
+	protected function do_refund( int $order_id, ?float $amount, string $note_label ): bool|\WP_Error {
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return new \WP_Error( 'invalid_order', __( 'Order not found.', 'payjp-for-wc' ) );
+		}
+
+		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
+		if ( ! $flow_id ) {
+			return new \WP_Error(
+				'no_flow_id',
+				__( 'No PAY.JP Payment Flow ID found for this order.', 'payjp-for-wc' )
+			);
+		}
+
+		$body = array( 'payment_flow_id' => $flow_id );
+
+		// Only send amount for partial refunds; omit to trigger a full refund.
+		if ( null !== $amount && $amount > 0 ) {
+			$body['amount'] = (int) round( $amount );
+		}
+
+		try {
+			$refund = $this->get_api()->post( '/payment_refunds', $body );
+		} catch ( RuntimeException $e ) {
+			return new \WP_Error( 'payjp_refund_error', $e->getMessage() );
+		}
+
+		$refund_id = isset( $refund['id'] ) && is_string( $refund['id'] ) ? $refund['id'] : '';
+		if ( ! $refund_id ) {
+			return new \WP_Error(
+				'payjp_refund_error',
+				__( 'PAY.JP returned an incomplete refund response.', 'payjp-for-wc' )
+			);
+		}
+
+		// Seed the idempotency marker so the refund.created webhook skips adding a duplicate note.
+		$order->update_meta_data( '_payjp_refund_processed_' . $refund_id, '1' );
+		$order->save();
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: 1: Gateway label (e.g. "PAY.JP" or "PAY.JP PayPay"), 2: PAY.JP refund ID. */
+				__( '%1$s refund processed. Refund ID: %2$s.', 'payjp-for-wc' ),
+				esc_html( $note_label ),
+				esc_html( $refund_id )
+			)
+		);
+
+		return true;
+	}
+
+	/**
 	 * Build the return URL to which PAY.JP redirects after confirmPayment().
 	 *
 	 * @param WC_Order $order WooCommerce order.

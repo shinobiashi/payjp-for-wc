@@ -1,9 +1,9 @@
 <?php
 /**
- * Unit tests for WC_Gateway_Payjp_Card::process_refund().
+ * Unit tests for WC_Gateway_Payjp_Paypay::process_refund().
  *
  * Covers: order-not-found, missing flow ID, API error, empty API response,
- * full refund, partial refund, and successful order note.
+ * full refund, partial refund, idempotency marker, and order note label.
  *
  * @package Payjp_For_WooCommerce
  */
@@ -15,18 +15,18 @@ use Brain\Monkey\Functions;
 use Mockery;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use WC_Gateway_Payjp_Card;
+use WC_Gateway_Payjp_Paypay;
 use WC_Order;
 use Payjp_API;
 use WP_Error;
 
 /**
- * Tests for WC_Gateway_Payjp_Card::process_refund().
+ * Tests for WC_Gateway_Payjp_Paypay::process_refund().
  */
-class CardGatewayRefundTest extends TestCase {
+class PaypayGatewayRefundTest extends TestCase {
 
-	/** @var WC_Gateway_Payjp_Card&\Mockery\MockInterface */
-	private WC_Gateway_Payjp_Card $gateway;
+	/** @var WC_Gateway_Payjp_Paypay&\Mockery\MockInterface */
+	private WC_Gateway_Payjp_Paypay $gateway;
 
 	/** @var Payjp_API&\Mockery\MockInterface */
 	private Payjp_API $api;
@@ -43,7 +43,7 @@ class CardGatewayRefundTest extends TestCase {
 		Functions\when( 'update_option' )->justReturn( true );
 
 		// Partial mock: real process_refund() / do_refund() run; get_api() (protected) is overridden.
-		$this->gateway = Mockery::mock( WC_Gateway_Payjp_Card::class )
+		$this->gateway = Mockery::mock( WC_Gateway_Payjp_Paypay::class )
 			->makePartial()
 			->shouldAllowMockingProtectedMethods();
 		$this->api     = Mockery::mock( Payjp_API::class );
@@ -85,7 +85,7 @@ class CardGatewayRefundTest extends TestCase {
 	#[Test]
 	public function refund_returns_wp_error_when_api_throws(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_abc' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp1' );
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )->andThrow( new \RuntimeException( 'network error' ) );
@@ -99,7 +99,7 @@ class CardGatewayRefundTest extends TestCase {
 	#[Test]
 	public function refund_returns_wp_error_when_api_returns_no_refund_id(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_abc' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp1' );
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )->andReturn( [] );
@@ -115,16 +115,16 @@ class CardGatewayRefundTest extends TestCase {
 	#[Test]
 	public function full_refund_omits_amount_from_api_request(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
-		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_full', '1' )->once();
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp2' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_full', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )
 			->once()
-			->with( '/payment_refunds', [ 'payment_flow_id' => 'pflw_xyz' ] )
-			->andReturn( [ 'id' => 'pyr_full' ] );
+			->with( '/payment_refunds', [ 'payment_flow_id' => 'pflw_pp2' ] )
+			->andReturn( [ 'id' => 'pyr_pp_full' ] );
 
 		$result = $this->gateway->process_refund( 1, null );
 
@@ -134,32 +134,32 @@ class CardGatewayRefundTest extends TestCase {
 	#[Test]
 	public function partial_refund_sends_amount_to_api(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
-		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_partial', '1' )->once();
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp3' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_partial', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )
 			->once()
-			->with( '/payment_refunds', [ 'payment_flow_id' => 'pflw_xyz', 'amount' => 500 ] )
-			->andReturn( [ 'id' => 'pyr_partial' ] );
+			->with( '/payment_refunds', [ 'payment_flow_id' => 'pflw_pp3', 'amount' => 100 ] )
+			->andReturn( [ 'id' => 'pyr_pp_partial' ] );
 
-		$result = $this->gateway->process_refund( 1, 500.0 );
+		$result = $this->gateway->process_refund( 1, 100.0 );
 
 		$this->assertTrue( $result );
 	}
 
 	#[Test]
-	public function successful_refund_writes_idempotency_marker_before_note(): void {
+	public function successful_refund_writes_idempotency_marker(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
-		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_idem', '1' )->once();
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp4' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_idem', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
-		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_idem' ] );
+		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_pp_idem' ] );
 
 		$result = $this->gateway->process_refund( 1 );
 
@@ -167,35 +167,33 @@ class CardGatewayRefundTest extends TestCase {
 	}
 
 	#[Test]
-	public function successful_refund_adds_order_note_with_refund_id(): void {
+	public function order_note_contains_refund_id(): void {
 		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
-		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_note_test', '1' )->once();
-		$order->shouldReceive( 'save' )->once();
-		$order->shouldReceive( 'add_order_note' )
-			->once()
-			->with( Mockery::on( fn( $note ) => str_contains( $note, 'pyr_note_test' ) ) );
-		Functions\when( 'wc_get_order' )->justReturn( $order );
-
-		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_note_test' ] );
-
-		$result = $this->gateway->process_refund( 1 );
-
-		$this->assertTrue( $result );
-	}
-
-	#[Test]
-	public function order_note_contains_gateway_label_pay_jp(): void {
-		$order = Mockery::mock( WC_Order::class );
-		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_xyz' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp5' );
 		$order->shouldReceive( 'update_meta_data' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )
 			->once()
-			->with( Mockery::on( fn( $note ) => str_contains( $note, 'PAY.JP' ) && ! str_contains( $note, 'PayPay' ) ) );
+			->with( Mockery::on( fn( $note ) => str_contains( $note, 'pyr_pp_note' ) ) );
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
-		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_label' ] );
+		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_pp_note' ] );
+
+		$this->assertTrue( $this->gateway->process_refund( 1 ) );
+	}
+
+	#[Test]
+	public function order_note_contains_gateway_label_paypay(): void {
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp6' );
+		$order->shouldReceive( 'update_meta_data' )->once();
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'add_order_note' )
+			->once()
+			->with( Mockery::on( fn( $note ) => str_contains( $note, 'PAY.JP PayPay' ) ) );
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		$this->api->shouldReceive( 'post' )->andReturn( [ 'id' => 'pyr_pp_label' ] );
 
 		$this->assertTrue( $this->gateway->process_refund( 1 ) );
 	}

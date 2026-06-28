@@ -265,7 +265,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 	 * @return bool|\WP_Error True on success; WP_Error describing the failure.
 	 */
 	public function process_refund( $order_id, $amount = null, $reason = '' ): bool|\WP_Error {
-		return $this->do_refund( $order_id, $amount, 'PAY.JP PayPay' );
+		return $this->do_refund( (int) $order_id, null !== $amount ? (float) $amount : null, 'PAY.JP PayPay' );
 	}
 
 	/**

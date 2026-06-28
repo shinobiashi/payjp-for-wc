@@ -11,7 +11,7 @@
 | Phase 3 | カード決済（埋め込み型） | ✅ 完了 | #5 | 2026-05-16 |
 | Phase 4 | PayPay 決済（埋め込み型） | ✅ 完了 | #6 | 2026-05-16 |
 | Phase 5 | Webhook ハンドラ | ✅ 完了 | #6 | 2026-05-16 |
-| Phase 6 | 返金処理 | ✅ 完了 | — | 2026-05-17 |
+| Phase 6 | 返金処理 | 🔄 進行中 | — | — |
 | Phase 7 | Block Checkout 統合 | ✅ 完了 | — | 2026-05-17 |
 | Phase 8 | カードトークン保存 | ✅ 完了 | #10 | 2026-05-17 |
 | Phase 9 | WooCommerce Subscriptions 対応 | ✅ 完了 | — | 2026-05-28 |
@@ -347,16 +347,19 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 
 ---
 
-### Phase 6: 返金処理 ✅
+### Phase 6: 返金処理 🔄
 
 **目標:** WooCommerce 管理画面からの返金が PAY.JP に反映される。
 
-- [x] カード: `process_refund()` → `POST /v2/refunds`（部分返金・全額返金対応）
-- [x] PayPay: `supports` に `refunds` を含めず、手動対応とする
+- [x] カード: `process_refund()` → `POST /v2/payment_refunds`（部分返金・全額返金対応）
+- [ ] PayPay: `process_refund()` → `POST /v2/payment_refunds`（部分返金・全額返金対応）
+  - `$this->supports` に `'refunds'` を追加
+  - カードと同一の `process_refund()` ロジックを実装（Payment Flow ID は共通 API）
 
-**完了条件:** カード注文に対して部分・全額返金が成功する。
+**完了条件:** カード・PayPay 注文の両方で部分・全額返金が成功する。
 
-> ✅ 2026-05-17 完了
+> ✅ カード: 2026-05-17 完了
+> ⬜ PayPay: 未実装
 
 ---
 

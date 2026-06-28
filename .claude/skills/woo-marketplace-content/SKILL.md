@@ -1,131 +1,162 @@
 ---
 name: woo-marketplace-content
 description: >
-  Skill for creating sales content for the WooCommerce.com Marketplace, including product pages,
-  documentation, and FAQs. Generates product pages (name, short description, long description,
-  media gallery, FAQ), user-facing documentation (installation instructions, setup guides,
-  settings references, troubleshooting), developer documentation (hooks/filters list, template
-  overrides), and visual asset briefs aligned with screenshot guidelines.
-  Use when keywords like "write the product page", "create documentation", "write FAQ",
-  "usage guide", "marketplace description", "plugin description", "installation instructions",
-  "setup guide", "troubleshooting", "hooks reference", or "screenshot guide" appear.
-  Also reference proactively when consulting on sales preparation or content creation for a
-  WooCommerce plugin.
+  WooCommerce.com Marketplace向け製品ページ・ドキュメント・FAQなどの販売用コンテンツを作成するスキル。
+  製品ページ（名前、短い説明、長い説明、メディアギャラリー、FAQ）、ユーザー向けドキュメント（インストール手順、
+  セットアップガイド、設定リファレンス、トラブルシューティング）、開発者向けドキュメント（フック/フィルター一覧、
+  テンプレートオーバーライド）、スクリーンショットガイドラインに沿ったアセット指示書を生成する。
+  「製品ページを書いて」「ドキュメントを作って」「FAQを書いて」「使い方ガイド」「マーケットプレイスの説明文」
+  「プラグインの説明」「インストール手順」「セットアップガイド」「トラブルシューティング」「フックリファレンス」
+  「スクリーンショットガイド」といったキーワードが出た場合に使用する。WooCommerceプラグインの販売準備やコンテンツ
+  作成について相談された場合にも積極的に参照すること。
 ---
 
 # WooCommerce Marketplace Content Creation
 
-Selling a product on the WooCommerce.com marketplace requires not just code, but both a
-compelling product page that drives purchases and documentation that supports users after
-they buy. This skill generates content that complies with the official marketplace guidelines.
+WooCommerce.comマーケットプレイスで製品を販売するには、コードだけでなく、
+購入を促す製品ページと、購入後のユーザーを支えるドキュメントの両方が必要。
+このスキルは、マーケットプレイスの公式ガイドラインに準拠したコンテンツを生成する。
 
-## Content Overview
+## コンテンツ全体像
 
-A marketplace product requires content across four main categories:
+マーケットプレイス製品に必要なコンテンツは大きく4カテゴリ:
 
 ```
-1. Product Page (edited in Vendor Dashboard)
-   ├── Product name
-   ├── Short Description
-   ├── Long Description
-   ├── FAQ section
-   ├── Media gallery / demo
-   └── Icon / highlight card
+1. 製品ページ（Vendor Dashboard で編集）
+   ├── 製品名
+   ├── 短い説明（Short Description）
+   ├── 長い説明（Description）
+   ├── FAQ セクション
+   ├── メディアギャラリー / デモ
+   └── アイコン / ハイライトカード
 
-2. User-Facing Documentation (Documentation section)
-   ├── Installation & Setup
-   ├── Settings Reference
-   ├── Usage Guide (by use case)
-   ├── Troubleshooting
-   └── Frequently Asked Questions
+2. ユーザー向けドキュメント（Documentation セクション）
+   ├── インストール & セットアップ
+   ├── 設定リファレンス
+   ├── 使い方ガイド（ユースケース別）
+   ├── トラブルシューティング
+   └── よくある質問
 
-3. Developer Documentation
-   ├── Hooks & Filters reference
-   ├── Template overrides
-   ├── REST API (if applicable)
-   └── Code examples
+3. 開発者向けドキュメント
+   ├── フック & フィルター一覧
+   ├── テンプレートオーバーライド
+   ├── REST API（あれば）
+   └── コード例
 
-4. Visual Asset Brief
-   ├── Screenshot plan
-   ├── Icon specifications
-   └── Demo environment checklist
+4. ビジュアルアセット指示書
+   ├── スクリーンショット計画
+   ├── アイコン仕様
+   └── デモ環境チェックリスト
 ```
 
-## Process
+## 手順
 
-### 1) Gather Product Information
+### 1) 製品情報のヒアリング
 
-Confirm the following information for content generation:
+コンテンツ生成に必要な情報を確認する:
 
-- Plugin name (a name that describes the feature, not a brand name)
-- What the plugin does (in one sentence)
-- Core features (3–5 top benefits)
-- Target users (what kind of merchants will use it)
-- Differentiators from competitors
-- Compatibility requirements (WC/WP versions, integrations with other extensions)
-- Price range
-- Settings screen structure (number of tabs, key settings)
+- プラグイン名（機能を端的に表す名前、ブランド名でなく）
+- 何をするプラグインか（1文で）
+- 主要機能（3〜5個のトップベネフィット）
+- ターゲットユーザー（どんなマーチャントが使うか）
+- 競合との差別化ポイント
+- 互換性要件（WC/WP バージョン、他の拡張との連携）
+- 価格帯
+- 設定画面の構成（タブ数、主要設定項目）
 
-### 2) Generate Product Page Content
+### 2) 製品ページコンテンツの生成
 
-Generate sales-optimized copy following the marketplace's Content Style Guide.
+マーケットプレイスのContent Style Guideに従い、販売に最適化した文章を生成する。
 
 See: `references/product-page.md`
 
-### 3) Generate Documentation
+### 3) ドキュメントの生成
 
-Generate user and developer documentation following official WooCommerce documentation templates.
+WooCommerce公式ドキュメントテンプレートに従い、ユーザー/開発者向けドキュメントを生成する。
 
 See: `references/documentation.md`
 
-### 4) Visual Asset Plan
+### 4) ビジュアルアセット計画
 
-Generate a preparation guide for screenshots, icons, and the demo environment.
+スクリーンショット・アイコン・デモ環境の準備ガイドを生成する。
 
 See: `references/visual-assets.md`
 
-## Output Format
+## WooCommerce公式ドキュメントポータルへの掲載（UXレビュー必須要件）
 
-Generate content in Markdown format. Intended for pasting into the Vendor Dashboard, so
-comply with the HTML/Markdown format supported by WooCommerce.com:
+WooCommerceマーケットプレイスでは、製品のドキュメントをWooCommerce公式ドキュメントポータルに
+掲載することがUXレビューの審査対象になる。**ドキュメントが未掲載だとUXレビューで審査がブロックされる**。
+コードレビュー通過後すぐに着手し、UXレビュー開始前に公開しておくことが必須。
 
-- Headings: h2, h3 (do not use h1 — the product name automatically becomes h1)
-- Lists: bullet lists (`*` or `-`) and numbered lists
-- Bold/italic: `**bold**`, `*italic*`
-- Links: `[text](url)`
-- Code blocks: backticks
-- Images: upload separately via the Vendor Dashboard editor
-- Emoji: prohibited (per marketplace guidelines)
+### Gutenbergブロックエディタ形式
 
-## Voice & Tone
+公式ドキュメントポータルのドキュメントは **WordPress Gutenbergブロックエディタ** 形式で作成する。
+Vendor DashboardからWordPressのブロックエディタを使ってドキュメントを作成・編集・公開する。
 
-Align with the official WooCommerce voice:
+使用可能なブロック:
+- **見出し（Heading）ブロック**: H2でメインセクション、H3でサブセクション（H1は使わない）
+- **段落（Paragraph）ブロック**: 通常のテキスト
+- **リスト（List）ブロック**: 箇条書き・番号付きリスト
+- **テーブル（Table）ブロック**: 設定項目の一覧表
+- **コード（Code）ブロック**: コードスニペット
+- **画像（Image）ブロック**: スクリーンショット（altテキスト必須）
+- 絵文字・装飾的HTMLは使用禁止（マーケットプレイスガイドライン）
 
-- **Human**: Avoid jargon; use plain language
-- **Plain-speaking**: Avoid roundabout expressions
-- **Confident**: Describe features definitively ("it does X", not "it might do X")
-- **Empathetic**: Show understanding of the user's challenges
+### ドキュメントの充実度チェックリスト（UXレビュー基準）
 
-Adjust tone by context:
-- Product page: Enthusiastic yet professional
-- Documentation: Clear and instructional
-- FAQ: Friendly and reassuring
-- Troubleshooting: Calm and solution-focused
+UXレビュアーがドキュメントで確認する項目:
+- [ ] インストール手順が明確で完結しているか
+- [ ] 初期セットアップ（API連携、初期設定など）が手順通りに再現できるか
+- [ ] 主要機能の使い方が網羅されているか
+- [ ] FAQでよくある質問に回答しているか
+- [ ] トラブルシューティングで代表的な問題を解説しているか
+- [ ] スクリーンショットで画面操作を補足しているか
 
-## Multilingual Support
+See: `references/documentation.md`
 
-For the Japanese market, generate both English and Japanese versions.
-English is the default language on the marketplace — always create the English version first,
-then prepare the Japanese version. For the Japanese version, adjust to expressions that feel
-natural to Japanese merchants rather than providing a literal translation.
+---
 
-## Validation
+## 出力形式
 
-- Does the product name describe the feature (not just a brand name)?
-- Is the short description concise and search-optimized?
-- Does the long description follow the benefits → features → use cases order?
-- Does the FAQ address pre-purchase concerns?
-- Does the documentation cover everything from installation through each feature?
-- Do screenshots cover both the frontend and backend?
-- Are there any emoji in the content?
-- Is any third-party trademark being used inappropriately?
+コンテンツはMarkdown形式で生成する。Vendor Dashboardへの貼り付けを想定し、
+WooCommerce.comが対応するHTML/Markdownフォーマットに準拠する:
+
+- 見出し: h2, h3（h1は使わない — 製品名が自動的にh1になる）
+- リスト: 箇条書き（`*` or `-`）と番号付きリスト
+- 太字/イタリック: `**bold**`, `*italic*`
+- リンク: `[text](url)`
+- コードブロック: バッククォート
+- 画像: Vendor Dashboard のエディタで別途アップロード
+- 絵文字: 使用禁止（マーケットプレイスガイドライン）
+
+## ボイス & トーン
+
+WooCommerceの公式ボイスに合わせる:
+
+- **Human（人間的）**: 専門用語を避け、平易な言葉で
+- **Plain-speaking（率直）**: 回りくどい表現を避ける
+- **Confident（自信ある）**: 機能を断定的に説明する（「〜かもしれません」ではなく「〜します」）
+- **Empathetic（共感的）**: ユーザーの課題を理解している姿勢
+
+トーンはコンテキストによって変える:
+- 製品ページ: 熱意を持ちつつプロフェッショナル
+- ドキュメント: 明確で指示的
+- FAQ: フレンドリーで安心感を与える
+- トラブルシューティング: 冷静で解決志向
+
+## 多言語対応
+
+日本市場向けの場合は英語版と日本語版の両方を生成する。
+英語がマーケットプレイスのデフォルト言語であり、まず英語版を作成してから日本語版を準備する。
+日本語版では単なる翻訳ではなく、日本のマーチャントに馴染む表現に調整する。
+
+## 検証
+
+- 製品名が機能を説明しているか（ブランド名だけでないか）
+- 短い説明が簡潔で検索に最適化されているか
+- 長い説明がベネフィット→機能→ユースケースの順か
+- FAQが購入前の疑問を解消しているか
+- ドキュメントがインストールから各機能まで網羅しているか
+- スクリーンショットが前面/背面の両方をカバーしているか
+- 絵文字が使われていないか
+- 他ブランドの商標を不適切に使用していないか

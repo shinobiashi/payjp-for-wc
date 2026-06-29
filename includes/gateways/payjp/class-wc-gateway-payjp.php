@@ -552,30 +552,24 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		}
 
 		// Payment already captured: the cancel endpoint is unavailable for succeeded flows.
-		// Issue a full refund automatically via wc_create_refund(), which creates a WC
-		// refund record and calls process_refund() → do_refund() → PAY.JP /payment_refunds.
+		// Call do_refund() directly to issue a full refund via PAY.JP /payment_refunds.
+		// Using wc_create_refund() is intentionally avoided here because it creates a WC
+		// refund record that triggers an automatic order status transition to 'refunded',
+		// overriding the 'cancelled' status the merchant just set.
 		if ( 'succeeded' === $status ) {
-			$refund = wc_create_refund(
-				array(
-					'order_id' => $order_id,
-					'amount'   => $order->get_total(),
-					/* translators: WooCommerce refund reason recorded when an order is cancelled after payment. */
-					'reason'   => __( 'Order cancelled.', 'payjp-for-wc' ),
-				)
-			);
-
-			if ( is_wp_error( $refund ) ) {
+			$result = $this->do_refund( $order_id, null, $note_label );
+			if ( is_wp_error( $result ) ) {
 				$order->add_order_note(
 					sprintf(
 						/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: error message. */
 						__( '%1$s: Automatic refund on cancellation failed — %2$s', 'payjp-for-wc' ),
 						esc_html( $note_label ),
-						esc_html( $refund->get_error_message() )
+						esc_html( $result->get_error_message() )
 					)
 				);
-				$logger->log_error( 'cancel_payment_flow: auto-refund failed', $order_id, new \RuntimeException( $refund->get_error_message() ) );
+				$logger->log_error( 'cancel_payment_flow: auto-refund failed', $order_id, new \RuntimeException( $result->get_error_message() ) );
 			}
-			// On success: do_refund() already adds "PAY.JP refund processed" order note.
+			// On success: do_refund() already adds "PAY.JP refund processed. Refund ID: xxx." order note.
 			return;
 		}
 

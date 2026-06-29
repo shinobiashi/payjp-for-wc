@@ -505,6 +505,101 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * Cancel the PAY.JP Payment Flow when the WooCommerce order is cancelled.
+	 *
+	 * Fetches the current flow status from the API and either calls the cancel
+	 * endpoint (for flows not yet captured) or adds an order note directing the
+	 * merchant to issue a manual refund via the WooCommerce Refund button
+	 * (for already-captured flows).
+	 *
+	 * Status handling:
+	 *   - requires_payment_method / requires_action / requires_capture → POST /cancel
+	 *   - succeeded → order note only (use WC Refund button)
+	 *   - canceled / payment_failed → skip (already terminal)
+	 *
+	 * @param WC_Order $order      WooCommerce order object.
+	 * @param string   $note_label Gateway-specific label for order notes, e.g. "PAY.JP".
+	 */
+	protected function cancel_payment_flow( WC_Order $order, string $note_label ): void {
+		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
+		if ( ! $flow_id ) {
+			// Payment Flow was never created (order cancelled before process_payment ran).
+			return;
+		}
+
+		$order_id = $order->get_id();
+		$logger   = $this->get_logger();
+
+		try {
+			$flow   = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
+			$status = isset( $flow['status'] ) && is_string( $flow['status'] ) ? $flow['status'] : '';
+		} catch ( RuntimeException $e ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message. */
+					__( '%1$s: Could not retrieve payment status during order cancellation — %2$s', 'payjp-for-wc' ),
+					esc_html( $note_label ),
+					esc_html( $e->getMessage() )
+				)
+			);
+			$logger->log_error( 'cancel_payment_flow: API fetch failed', $order_id, $e );
+			return;
+		}
+
+		// Already in a terminal state — nothing to do.
+		if ( in_array( $status, array( 'canceled', 'payment_failed' ), true ) ) {
+			return;
+		}
+
+		// Payment already captured: cannot cancel via the cancel endpoint.
+		// Direct the merchant to issue a refund through the WooCommerce Refund UI.
+		if ( 'succeeded' === $status ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+					__( '%s payment has already been captured. Please use the Refund button to return funds to the customer.', 'payjp-for-wc' ),
+					esc_html( $note_label )
+				)
+			);
+			return;
+		}
+
+		// Cancelable states: requires_payment_method, requires_confirmation,
+		// requires_action, processing, requires_capture.
+		try {
+			$this->get_api()->post(
+				'/payment_flows/' . rawurlencode( $flow_id ) . '/cancel',
+				array( 'cancellation_reason' => 'requested_by_customer' )
+			);
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+					__( '%s payment cancelled successfully.', 'payjp-for-wc' ),
+					esc_html( $note_label )
+				)
+			);
+			$logger->log_event(
+				'cancelled',
+				$order_id,
+				array(
+					'flow_id'     => $flow_id,
+					'flow_status' => $status,
+				)
+			);
+		} catch ( RuntimeException $e ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message. */
+					__( '%1$s: Payment cancellation failed — %2$s', 'payjp-for-wc' ),
+					esc_html( $note_label ),
+					esc_html( $e->getMessage() )
+				)
+			);
+			$logger->log_error( 'cancel_payment_flow: cancel API failed', $order_id, $e );
+		}
+	}
+
+	/**
 	 * Build the return URL to which PAY.JP redirects after confirmPayment().
 	 *
 	 * @param WC_Order $order WooCommerce order.

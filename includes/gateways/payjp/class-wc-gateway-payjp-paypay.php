@@ -47,6 +47,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		// payment_scripts() and handle_return() are registered by setup() via the base class.
 		add_action( 'woocommerce_receipt_' . $this->id, array( $this, 'receipt_page' ) );
 		add_action( 'woocommerce_order_status_completed', array( $this, 'capture_payment' ) );
+		add_action( 'woocommerce_order_status_cancelled', array( $this, 'cancel_order' ) );
 	}
 
 	// ── Template-method implementations ──────────────────────────────────────
@@ -254,6 +255,22 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			);
 			$logger->log_error( 'PayPay capture failed', $order_id, $e );
 		}
+	}
+
+	/**
+	 * Cancel the PAY.JP Payment Flow when the WooCommerce order is cancelled.
+	 *
+	 * Fires on woocommerce_order_status_cancelled. Skips orders that do not
+	 * belong to this gateway. Delegates to cancel_payment_flow() in the base class.
+	 *
+	 * @param int $order_id WooCommerce order ID.
+	 */
+	public function cancel_order( int $order_id ): void {
+		$order = wc_get_order( $order_id );
+		if ( ! $order || 'payjp_paypay' !== $order->get_payment_method() ) {
+			return;
+		}
+		$this->cancel_payment_flow( $order, 'PAY.JP PayPay' );
 	}
 
 	/**

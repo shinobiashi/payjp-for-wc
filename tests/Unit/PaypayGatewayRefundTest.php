@@ -86,6 +86,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function refund_returns_wp_error_when_api_throws(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp1' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )->andThrow( new \RuntimeException( 'network error' ) );
@@ -100,6 +101,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function refund_returns_wp_error_when_api_returns_no_refund_id(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp1' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
 		$this->api->shouldReceive( 'post' )->andReturn( [] );
@@ -116,6 +118,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function full_refund_omits_amount_from_api_request(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp2' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_full', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
@@ -135,6 +138,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function partial_refund_sends_amount_to_api(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp3' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_partial', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
@@ -154,6 +158,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function successful_refund_writes_idempotency_marker(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp4' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_pp_idem', '1' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
@@ -170,6 +175,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function order_note_contains_refund_id(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp5' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )
@@ -186,6 +192,7 @@ class PaypayGatewayRefundTest extends TestCase {
 	public function order_note_contains_gateway_label_paypay(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_pp6' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( '' );
 		$order->shouldReceive( 'update_meta_data' )->once();
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )

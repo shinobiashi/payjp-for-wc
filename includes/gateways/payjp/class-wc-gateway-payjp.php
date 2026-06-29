@@ -386,6 +386,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	 * Shared implementation used by card and PayPay subclasses.
 	 * Callers are responsible for ensuring the order belongs to their gateway.
 	 *
+	 * For manual-capture card orders whose PaymentFlow is still in requires_capture state
+	 * (i.e. the authorization has not yet been captured), POST /payment_refunds is not
+	 * available. In that case this method calls cancel_flow() to void the authorization
+	 * via POST /payment_flows/{id}/cancel instead.
+	 *
 	 * @param int        $order_id   WooCommerce order ID.
 	 * @param float|null $amount     Refund amount; null triggers a full refund.
 	 * @param string     $note_label Gateway-specific label for the order note (e.g. "PAY.JP" or "PAY.JP PayPay").
@@ -403,6 +408,29 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				'no_flow_id',
 				__( 'No PAY.JP Payment Flow ID found for this order.', 'payjp-for-wc' )
 			);
+		}
+
+		// Manual-capture orders may still be in requires_capture state (authorized but not yet
+		// captured). POST /payment_refunds requires status succeeded; for uncaptured flows we
+		// must cancel the authorization via POST /payment_flows/{id}/cancel instead.
+		if ( 'manual' === (string) $order->get_meta( '_payjp_capture_method' ) ) {
+			try {
+				$flow        = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
+				$flow_status = isset( $flow['status'] ) && is_string( $flow['status'] ) ? $flow['status'] : '';
+			} catch ( RuntimeException $e ) {
+				return new \WP_Error( 'payjp_api_error', $e->getMessage() );
+			}
+
+			if ( 'requires_capture' === $flow_status ) {
+				// Partial void is impossible; only a full authorization cancellation is supported.
+				if ( null !== $amount && $amount < (float) $order->get_total() - 0.01 ) {
+					return new \WP_Error(
+						'payjp_partial_void_not_supported',
+						__( 'Partial refunds are not available for uncaptured payments. Complete the order first to capture the payment, then issue a partial refund.', 'payjp-for-wc' )
+					);
+				}
+				return $this->cancel_flow( $order, $flow_id, $note_label );
+			}
 		}
 
 		$body = array( 'payment_flow_id' => $flow_id );
@@ -436,6 +464,40 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 				__( '%1$s refund processed. Refund ID: %2$s.', 'payjp-for-wc' ),
 				esc_html( $note_label ),
 				esc_html( $refund_id )
+			)
+		);
+
+		return true;
+	}
+
+	/**
+	 * Cancel (void) a PaymentFlow that is in requires_capture state.
+	 *
+	 * Called when a refund is requested for a manual-capture order whose payment has not
+	 * yet been captured. POST /payment_refunds is only valid for captured (succeeded) flows;
+	 * for authorized-but-uncaptured flows, POST /payment_flows/{id}/cancel voids the
+	 * authorization and releases the reserved funds back to the customer.
+	 *
+	 * @param WC_Order $order      WooCommerce order object.
+	 * @param string   $flow_id    PAY.JP Payment Flow ID.
+	 * @param string   $note_label Gateway-specific label for the order note.
+	 * @return bool|\WP_Error True on success; WP_Error on failure.
+	 */
+	private function cancel_flow( WC_Order $order, string $flow_id, string $note_label ): bool|\WP_Error {
+		try {
+			$this->get_api()->post(
+				'/payment_flows/' . rawurlencode( $flow_id ) . '/cancel',
+				array()
+			);
+		} catch ( RuntimeException $e ) {
+			return new \WP_Error( 'payjp_cancel_error', $e->getMessage() );
+		}
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+				__( '%s payment authorization voided (payment was not yet captured).', 'payjp-for-wc' ),
+				esc_html( $note_label )
 			)
 		);
 

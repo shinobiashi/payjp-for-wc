@@ -40,4 +40,13 @@ class WP_REST_Request {
 	public function get_json_params(): array {
 		return $this->json_params;
 	}
+
+	/**
+	 * Returns the JSON-encoded body so the handler can call json_decode( $request->get_body(), true ).
+	 *
+	 * @return string
+	 */
+	public function get_body(): string {
+		return (string) json_encode( $this->json_params );
+	}
 }

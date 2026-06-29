@@ -28,6 +28,9 @@ class WebhookHandlerTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
+		// Reset the Payjp_Settings static cache so each test gets a fresh get_option() call.
+		\Payjp_Settings::flush_cache();
+
 		// Stub WordPress translation/escape functions used inside the handler.
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'esc_html' )->returnArg( 1 );
@@ -77,7 +80,7 @@ class WebhookHandlerTest extends TestCase {
 	public function unknown_event_type_returns_200_without_side_effects(): void {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
-		$payload  = [ 'type' => 'unsupported.event', 'data' => [ 'object' => [] ] ];
+		$payload  = [ 'type' => 'unsupported.event', 'data' => [] ];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
 
@@ -94,7 +97,7 @@ class WebhookHandlerTest extends TestCase {
 
 		$payload = [
 			'type' => 'payment_flow.succeeded',
-			'data' => [ 'object' => [ 'id' => 'pflw_unknown', 'status' => 'succeeded' ] ],
+			'data' => [ 'id' => 'pflw_unknown', 'status' => 'succeeded' ],
 		];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
@@ -109,11 +112,13 @@ class WebhookHandlerTest extends TestCase {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
 		$order->shouldReceive( 'payment_complete' )->once()->with( 'pflw_abc123' );
+		$order->shouldReceive( 'add_order_note' )->once();
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [
 			'type' => 'payment_flow.succeeded',
-			'data' => [ 'object' => [ 'id' => 'pflw_abc123', 'status' => 'succeeded' ] ],
+			'data' => [ 'id' => 'pflw_abc123', 'status' => 'succeeded' ],
 		];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
@@ -134,7 +139,7 @@ class WebhookHandlerTest extends TestCase {
 
 		$payload = [
 			'type' => 'payment_flow.succeeded',
-			'data' => [ 'object' => [ 'id' => 'pflw_paid', 'status' => 'succeeded' ] ],
+			'data' => [ 'id' => 'pflw_paid', 'status' => 'succeeded' ],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );
@@ -149,11 +154,12 @@ class WebhookHandlerTest extends TestCase {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'failed', 'cancelled' ] )->andReturn( false );
 		$order->shouldReceive( 'update_status' )->once()->with( 'failed', Mockery::type( 'string' ) );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [
 			'type' => 'payment_flow.payment_failed',
-			'data' => [ 'object' => [ 'id' => 'pflw_fail', 'status' => 'payment_failed' ] ],
+			'data' => [ 'id' => 'pflw_fail', 'status' => 'payment_failed' ],
 		];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		$response = Payjp_Webhook_Handler::handle_request( $request );
@@ -174,7 +180,7 @@ class WebhookHandlerTest extends TestCase {
 
 		$payload = [
 			'type' => 'payment_flow.payment_failed',
-			'data' => [ 'object' => [ 'id' => 'pflw_already_failed', 'status' => 'payment_failed' ] ],
+			'data' => [ 'id' => 'pflw_already_failed', 'status' => 'payment_failed' ],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );
@@ -191,16 +197,15 @@ class WebhookHandlerTest extends TestCase {
 		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_refund_processed_ref_abc', '1' );
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'add_order_note' )->once();
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [
 			'type' => 'refund.created',
 			'data' => [
-				'object' => [
-					'id'           => 'ref_abc',
-					'payment_flow' => 'pflw_xyz',
-					'amount'       => 1000,
-				],
+				'id'           => 'ref_abc',
+				'payment_flow' => 'pflw_xyz',
+				'amount'       => 1000,
 			],
 		];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
@@ -225,11 +230,9 @@ class WebhookHandlerTest extends TestCase {
 		$payload = [
 			'type' => 'refund.created',
 			'data' => [
-				'object' => [
-					'id'           => 'ref_abc',
-					'payment_flow' => 'pflw_xyz',
-					'amount'       => 1000,
-				],
+				'id'           => 'ref_abc',
+				'payment_flow' => 'pflw_xyz',
+				'amount'       => 1000,
 			],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
@@ -243,11 +246,9 @@ class WebhookHandlerTest extends TestCase {
 		$payload = [
 			'type' => 'refund.created',
 			'data' => [
-				'object' => [
-					'id'     => 'ref_abc',
-					'amount' => 1000,
-					// payment_flow intentionally missing
-				],
+				'id'     => 'ref_abc',
+				'amount' => 1000,
+				// payment_flow intentionally missing
 			],
 		];
 		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );

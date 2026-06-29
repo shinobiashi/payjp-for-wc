@@ -40,7 +40,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 		$this->icon               = PAYJP_FOR_WC_URL . 'assets/images/pp_logo_02.svg';
 		$this->method_title       = __( 'PAY.JP PayPay', 'payjp-for-wc' );
 		$this->method_description = __( 'Accept PayPay payments via PAY.JP v2 Payment Widgets.', 'payjp-for-wc' );
-		$this->supports           = array( 'products' );
+		$this->supports           = array( 'products', 'refunds' );
 
 		$this->setup();
 
@@ -254,6 +254,18 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			);
 			$logger->log_error( 'PayPay capture failed', $order_id, $e );
 		}
+	}
+
+	/**
+	 * Process a refund for a PayPay order via the PAY.JP v2 Refunds API.
+	 *
+	 * @param int        $order_id WooCommerce order ID.
+	 * @param float|null $amount   Refund amount. Omit (null) for a full refund.
+	 * @param string     $reason   Free-text reason from the WooCommerce admin (not forwarded to PAY.JP).
+	 * @return bool|\WP_Error True on success; WP_Error describing the failure.
+	 */
+	public function process_refund( $order_id, $amount = null, $reason = '' ): bool|\WP_Error {
+		return $this->do_refund( (int) $order_id, null !== $amount ? (float) $amount : null, 'PAY.JP PayPay' );
 	}
 
 	/**

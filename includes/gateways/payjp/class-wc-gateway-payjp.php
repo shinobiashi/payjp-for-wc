@@ -508,13 +508,13 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 	 * Cancel the PAY.JP Payment Flow when the WooCommerce order is cancelled.
 	 *
 	 * Fetches the current flow status from the API and either calls the cancel
-	 * endpoint (for flows not yet captured) or adds an order note directing the
-	 * merchant to issue a manual refund via the WooCommerce Refund button
-	 * (for already-captured flows).
+	 * endpoint (for flows not yet captured) or automatically issues a full refund
+	 * via do_refund() → PAY.JP /payment_refunds (for already-captured flows).
 	 *
 	 * Status handling:
-	 *   - requires_payment_method / requires_action / requires_capture → POST /cancel
-	 *   - succeeded → order note only (use WC Refund button)
+	 *   - requires_payment_method / requires_confirmation / requires_action
+	 *     / processing / requires_capture → POST /payment_flows/{id}/cancel
+	 *   - succeeded → automatic full refund via do_refund() / PAY.JP /payment_refunds
 	 *   - canceled / payment_failed → skip (already terminal)
 	 *
 	 * @param WC_Order $order      WooCommerce order object.
@@ -578,7 +578,8 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		try {
 			$this->get_api()->post(
 				'/payment_flows/' . rawurlencode( $flow_id ) . '/cancel',
-				array( 'cancellation_reason' => 'requested_by_customer' )
+				array( 'cancellation_reason' => 'requested_by_customer' ),
+				$order_id
 			);
 			$order->add_order_note(
 				sprintf(

@@ -33,15 +33,30 @@ use Payjp_API;
  */
 class GatewayCancelTest extends TestCase {
 
-	/** @var WC_Gateway_Payjp_Card&\Mockery\MockInterface */
+	/**
+	 * Card gateway partial mock.
+	 *
+	 * @var WC_Gateway_Payjp_Card&\Mockery\MockInterface
+	 */
 	private WC_Gateway_Payjp_Card $card;
 
-	/** @var WC_Gateway_Payjp_Paypay&\Mockery\MockInterface */
+	/**
+	 * PayPay gateway partial mock.
+	 *
+	 * @var WC_Gateway_Payjp_Paypay&\Mockery\MockInterface
+	 */
 	private WC_Gateway_Payjp_Paypay $paypay;
 
-	/** @var Payjp_API&\Mockery\MockInterface */
+	/**
+	 * PAY.JP API mock shared across all gateways under test.
+	 *
+	 * @var Payjp_API&\Mockery\MockInterface
+	 */
 	private Payjp_API $api;
 
+	/**
+	 * Bootstrap Brain\Monkey, stub WP functions, and build partial-mocked gateways.
+	 */
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
@@ -70,6 +85,9 @@ class GatewayCancelTest extends TestCase {
 		$this->paypay->id = 'payjp_paypay';
 	}
 
+	/**
+	 * Tear down Brain\Monkey and verify all Mockery expectations.
+	 */
 	protected function tearDown(): void {
 		Monkey\tearDown();
 		Mockery::close();
@@ -78,6 +96,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── Gateway ID guard ──────────────────────────────────────────────────────
 
+	/**
+	 * Card gateway ignores orders that belong to a different gateway.
+	 */
 	#[Test]
 	public function card_cancel_order_skips_when_order_belongs_to_different_gateway(): void {
 		$this->expectNotToPerformAssertions();
@@ -90,6 +111,9 @@ class GatewayCancelTest extends TestCase {
 		$this->card->cancel_order( 1 );
 	}
 
+	/**
+	 * PayPay gateway ignores orders that belong to a different gateway.
+	 */
 	#[Test]
 	public function paypay_cancel_order_skips_when_order_belongs_to_different_gateway(): void {
 		$this->expectNotToPerformAssertions();
@@ -104,6 +128,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── No flow ID ────────────────────────────────────────────────────────────
 
+	/**
+	 * Returns early without adding an order note when no Payment Flow ID is stored.
+	 */
 	#[Test]
 	public function cancel_returns_early_when_no_flow_id(): void {
 		$this->expectNotToPerformAssertions();
@@ -119,6 +146,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── API fetch error ───────────────────────────────────────────────────────
 
+	/**
+	 * Adds an order note when the API throws during flow status retrieval.
+	 */
 	#[Test]
 	public function cancel_adds_note_when_flow_fetch_throws(): void {
 		$this->expectNotToPerformAssertions();
@@ -136,6 +166,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── Empty status guard ────────────────────────────────────────────────────
 
+	/**
+	 * Adds an order note when the API returns a flow without a status field.
+	 */
 	#[Test]
 	public function cancel_adds_note_when_flow_status_is_empty(): void {
 		$this->expectNotToPerformAssertions();
@@ -146,13 +179,16 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
-			->andReturn( array( 'id' => 'pflw_nostatus' ) ); // no 'status' key
+			->andReturn( array( 'id' => 'pflw_nostatus' ) ); // No 'status' key.
 
 		$this->card->cancel_order( 1 );
 	}
 
 	// ── Terminal state skip ───────────────────────────────────────────────────
 
+	/**
+	 * Does nothing when the flow is already in the canceled terminal state.
+	 */
 	#[Test]
 	public function cancel_skips_when_flow_already_canceled(): void {
 		$this->expectNotToPerformAssertions();
@@ -163,11 +199,19 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
-			->andReturn( array( 'id' => 'pflw_done', 'status' => 'canceled' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_done',
+					'status' => 'canceled',
+				)
+			);
 
 		$this->card->cancel_order( 1 );
 	}
 
+	/**
+	 * Does nothing when the flow is already in the payment_failed terminal state.
+	 */
 	#[Test]
 	public function cancel_skips_when_flow_payment_failed(): void {
 		$this->expectNotToPerformAssertions();
@@ -178,13 +222,21 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
-			->andReturn( array( 'id' => 'pflw_fail', 'status' => 'payment_failed' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_fail',
+					'status' => 'payment_failed',
+				)
+			);
 
 		$this->card->cancel_order( 1 );
 	}
 
 	// ── Succeeded → automatic refund ─────────────────────────────────────────
 
+	/**
+	 * Calls /payment_refunds when the flow has already been captured (succeeded).
+	 */
 	#[Test]
 	public function cancel_calls_refund_api_when_flow_succeeded(): void {
 		$this->expectNotToPerformAssertions();
@@ -199,7 +251,12 @@ class GatewayCancelTest extends TestCase {
 		$this->api->shouldReceive( 'get' )
 			->once()
 			->with( '/payment_flows/pflw_paid', Mockery::any() )
-			->andReturn( array( 'id' => 'pflw_paid', 'status' => 'succeeded' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_paid',
+					'status' => 'succeeded',
+				)
+			);
 
 		$this->api->shouldReceive( 'post' )
 			->once()
@@ -211,6 +268,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── Non-terminal → cancel endpoint ───────────────────────────────────────
 
+	/**
+	 * Calls the cancel endpoint when the flow is in requires_action (non-terminal) state.
+	 */
 	#[Test]
 	public function cancel_calls_cancel_endpoint_for_requires_action_flow(): void {
 		$this->expectNotToPerformAssertions();
@@ -222,7 +282,12 @@ class GatewayCancelTest extends TestCase {
 		$this->api->shouldReceive( 'get' )
 			->once()
 			->with( '/payment_flows/pflw_pend', Mockery::any() )
-			->andReturn( array( 'id' => 'pflw_pend', 'status' => 'requires_action' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_pend',
+					'status' => 'requires_action',
+				)
+			);
 
 		$this->api->shouldReceive( 'post' )
 			->once()
@@ -231,11 +296,19 @@ class GatewayCancelTest extends TestCase {
 				array( 'cancellation_reason' => 'requested_by_customer' ),
 				Mockery::any()
 			)
-			->andReturn( array( 'id' => 'pflw_pend', 'status' => 'canceled' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_pend',
+					'status' => 'canceled',
+				)
+			);
 
 		$this->card->cancel_order( 1 );
 	}
 
+	/**
+	 * Adds an error note when the cancel endpoint throws.
+	 */
 	#[Test]
 	public function cancel_adds_error_note_when_cancel_api_throws(): void {
 		$this->expectNotToPerformAssertions();
@@ -246,7 +319,12 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
-			->andReturn( array( 'id' => 'pflw_throw', 'status' => 'requires_payment_method' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_throw',
+					'status' => 'requires_payment_method',
+				)
+			);
 
 		$this->api->shouldReceive( 'post' )
 			->once()
@@ -257,6 +335,9 @@ class GatewayCancelTest extends TestCase {
 
 	// ── PayPay label ──────────────────────────────────────────────────────────
 
+	/**
+	 * Order note for PayPay cancellation includes the "PayPay" label.
+	 */
 	#[Test]
 	public function paypay_cancel_order_note_contains_paypay_label(): void {
 		$this->expectNotToPerformAssertions();
@@ -269,7 +350,12 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
-			->andReturn( array( 'id' => 'pflw_pp', 'status' => 'requires_action' ) );
+			->andReturn(
+				array(
+					'id'     => 'pflw_pp',
+					'status' => 'requires_action',
+				)
+			);
 
 		$this->api->shouldReceive( 'post' )
 			->once()

@@ -155,6 +155,7 @@ defined( 'PAYJP_API_BASE' )       || define( 'PAYJP_API_BASE',       'https://ap
 | `_payjp_payment_method` | string | `card` または `paypay` |
 | `_payjp_capture_method` | string | `automatic` または `manual` |
 | `_payjp_refund_processed_{id}` | string `'1'` | 処理済み返金 ID ごとに 1 エントリ（複数部分返金対応）|
+| `_payjp_cancel_refund_processed` | string `'1'` | 注文キャンセル時の自動返金済みフラグ（二重返金防止）|
 | `_payjp_customer_id` | string | PAY.JP Customer ID（トークン保存・Subscriptions 用）|
 | `_payjp_payment_method_id` | string | 保存カードの PaymentMethod ID |
 

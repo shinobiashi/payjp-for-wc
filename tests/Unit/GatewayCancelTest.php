@@ -242,9 +242,11 @@ class GatewayCancelTest extends TestCase {
 		$this->expectNotToPerformAssertions();
 
 		$order = $this->make_order( 'payjp_card', 'pflw_paid' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_cancel_refund_processed' )->andReturn( '' );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( 'automatic' );
 		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_auto', '1' )->once();
-		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_cancel_refund_processed', '1' )->once();
+		$order->shouldReceive( 'save' )->twice();
 		$order->shouldReceive( 'add_order_note' )->once();
 		Functions\when( 'wc_get_order' )->justReturn( $order );
 
@@ -262,6 +264,31 @@ class GatewayCancelTest extends TestCase {
 			->once()
 			->with( '/payment_refunds', array( 'payment_flow_id' => 'pflw_paid' ) )
 			->andReturn( array( 'id' => 'pyr_auto' ) );
+
+		$this->card->cancel_order( 1 );
+	}
+
+	/**
+	 * Does not re-issue a refund when the auto-refund guard meta is already set.
+	 */
+	#[Test]
+	public function cancel_skips_auto_refund_when_already_processed(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = $this->make_order( 'payjp_card', 'pflw_paid2' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_cancel_refund_processed' )->andReturn( '1' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->andReturn(
+				array(
+					'id'     => 'pflw_paid2',
+					'status' => 'succeeded',
+				)
+			);
+		$this->api->shouldNotReceive( 'post' );
 
 		$this->card->cancel_order( 1 );
 	}

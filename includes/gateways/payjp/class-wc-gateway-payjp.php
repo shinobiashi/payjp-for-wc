@@ -571,6 +571,12 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		// refund record that triggers an automatic order status transition to 'refunded',
 		// overriding the 'cancelled' status the merchant just set.
 		if ( 'succeeded' === $status ) {
+			// Idempotency guard: a succeeded flow stays 'succeeded' even after a refund,
+			// so if the order is cancelled more than once (e.g. status toggled away and
+			// back) we must not issue a duplicate refund.
+			if ( '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' ) ) {
+				return;
+			}
 			$result = $this->do_refund( $order_id, null, $note_label );
 			if ( is_wp_error( $result ) ) {
 				$order->add_order_note(
@@ -582,6 +588,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 					)
 				);
 				$logger->log_error( 'cancel_payment_flow: auto-refund failed', $order_id, new \RuntimeException( $result->get_error_message() ) );
+			} else {
+				// Persist the guard so a future cancellation of the same order does not
+				// trigger a second automatic refund.
+				$order->update_meta_data( '_payjp_cancel_refund_processed', '1' );
+				$order->save();
 			}
 			// On success: do_refund() already adds "PAY.JP refund processed. Refund ID: xxx." order note.
 			return;

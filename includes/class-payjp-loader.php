@@ -132,7 +132,8 @@ class Payjp_Loader {
 	 * available gateway before our process_payment() runs. Even though
 	 * update_order_from_request() corrects it, a later save can revert the value.
 	 * This hook uses the authoritative _payjp_payment_method meta (set by our own
-	 * process_payment()) to ensure payment_method always reflects the actual gateway.
+	 * process_payment()) to ensure both the payment_method ID and payment_method_title
+	 * always reflect the actual gateway used.
 	 *
 	 * @param int $order_id WooCommerce order ID.
 	 */
@@ -159,7 +160,15 @@ class Payjp_Loader {
 			return;
 		}
 
+		// Look up the gateway instance to also fix payment_method_title. Passing only a
+		// string ID to set_payment_method() skips the title update entirely.
+		$all_gateways = WC()->payment_gateways()->payment_gateways();
+		$gateway      = isset( $all_gateways[ $correct_gateway ] ) ? $all_gateways[ $correct_gateway ] : null;
+
 		$order->set_payment_method( $correct_gateway );
+		if ( $gateway instanceof WC_Payment_Gateway ) {
+			$order->set_payment_method_title( $gateway->get_title() );
+		}
 		$order->save();
 	}
 }

@@ -254,9 +254,12 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 			return array( 'result' => 'failure' );
 		}
 
-		// Correct payment_method on the order object before saving (see PayPay gateway for rationale).
+		// Correct payment_method and payment_method_title before saving. Setting both the
+		// gateway ID and the display title prevents stale cache from leaving a wrong
+		// title on the order. See PayPay gateway's process_payment() for the full rationale.
 		if ( $this->id !== $order->get_payment_method() ) {
 			$order->set_payment_method( $this->id );
+			$order->set_payment_method_title( $this->get_title() );
 		}
 
 		// WC checkout verifies nonce before calling process_payment; no further nonce check needed here.

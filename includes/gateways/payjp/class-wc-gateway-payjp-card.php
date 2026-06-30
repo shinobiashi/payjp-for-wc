@@ -512,7 +512,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
 	 */
 	public function cancel_order( int $order_id ): void {
 		$order = wc_get_order( $order_id );
-		if ( ! $order || 'payjp_card' !== $order->get_payment_method() ) {
+		if ( ! $order || $this->id !== $order->get_payment_method() ) {
 			return;
 		}
 		$this->cancel_payment_flow( $order, 'PAY.JP' );

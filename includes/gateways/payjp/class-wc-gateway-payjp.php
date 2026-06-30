@@ -546,6 +546,20 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 			return;
 		}
 
+		// Treat a missing status field as an unrecoverable API error: bail out rather
+		// than letting an empty string fall through to the cancel endpoint.
+		if ( '' === $status ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+					__( '%s: Could not determine payment status during order cancellation. Please check the PAY.JP dashboard.', 'payjp-for-wc' ),
+					esc_html( $note_label )
+				)
+			);
+			$logger->log_error( 'cancel_payment_flow: empty flow status', $order_id, new \RuntimeException( 'PAY.JP returned a flow without a status field.' ) );
+			return;
+		}
+
 		// Already in a terminal state — nothing to do.
 		if ( in_array( $status, array( 'canceled', 'payment_failed' ), true ) ) {
 			return;

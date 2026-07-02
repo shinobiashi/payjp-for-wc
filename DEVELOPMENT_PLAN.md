@@ -446,9 +446,9 @@ delete_option( 'woocommerce_payjp_paypay_settings' );
 - [x] `.github/workflows/release.yml` 作成（タグ push → ZIP 生成 → GitHub Release 添付）
 - [x] `.distignore` 作成（開発用ファイルをリリース ZIP から除外）
 - [x] 管理設定画面に Webhook URL 表示と設定手順を追加
-- [ ] 同梱テスト: Japanized for WooCommerce に組み込んで二重読み込みがないことを確認
-- [ ] カードトークン保存: 実際のテストカードで保存・再利用・削除の動作確認
-- [ ] WooCommerce Subscriptions: 定期購入の初回・自動更新・支払い方法変更の動作確認
+- [ ] 同梱テスト: Japanized for WooCommerce に組み込んで二重読み込みがないことを確認（保留：クライアント側の動作確認待ち）
+- [x] カードトークン保存: 実際のテストカードで保存・再利用・削除の動作確認
+- [x] WooCommerce Subscriptions: 定期購入の初回・自動更新・支払い方法変更の動作確認
 
 ---
 

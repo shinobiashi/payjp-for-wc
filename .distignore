@@ -4,7 +4,6 @@
 .nvmrc
 .wp-env.json
 node_modules/
-src/
 vendor/
 scripts/
 

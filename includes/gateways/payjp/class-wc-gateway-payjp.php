@@ -26,7 +26,7 @@ if ( class_exists( 'WC_Gateway_Payjp' ) ) {
  *   - receipt_page()
  *   - process_payment()
  */
-abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
+abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 
 	/**
 	 * PAY.JP payment method slug: 'card' or 'paypay'.

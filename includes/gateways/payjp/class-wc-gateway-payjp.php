@@ -25,8 +25,12 @@ if ( class_exists( 'WC_Gateway_Payjp' ) ) {
  *   - get_script_i18n()
  *   - receipt_page()
  *   - process_payment()
+ *
+ * Extends WC_Payment_Gateway (not _CC): tokenization helpers live on
+ * WC_Payment_Gateway since WC 2.6; WC_Payment_Gateway_CC only adds the
+ * classic-checkout card form renderer, which both gateways override.
  */
-abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
+abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 
 	/**
 	 * PAY.JP payment method slug: 'card' or 'paypay'.

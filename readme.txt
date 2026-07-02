@@ -3,7 +3,7 @@ Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.0
-Stable tag:        0.9.3
+Stable tag:        0.9.4
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   10.8
@@ -30,6 +30,7 @@ Raw card data never touches your server. The PAY.JP payments.js widget handles c
 
 * Embedded PayPay widget via PAY.JP v2 Payment Widgets
 * Seamless in-page payment experience
+* Full and partial refunds directly from the WooCommerce order screen
 
 **Subscriptions**
 
@@ -54,8 +55,8 @@ Raw card data never touches your server. The PAY.JP payments.js widget handles c
 
 === Requirements ===
 
-* WordPress 6.4 or later
-* WooCommerce 8.0 or later
+* WordPress 6.9 or later
+* WooCommerce 9.0 or later
 * PHP 8.3 or later
 * A [PAY.JP account](https://pay.jp/) (free to register)
 
@@ -170,6 +171,13 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.4 =
+* Added: PayPay refund processing via the PAY.JP API — full and partial refunds now work from the WooCommerce order screen for PayPay orders, not just credit card.
+* Added: The PAY.JP Payment Flow is automatically cancelled when a WooCommerce order is cancelled; already-captured payments are refunded automatically to prevent stuck charges.
+* Fixed: Payment Flow status `processing` (seen with asynchronous methods such as PayPay) was incorrectly treated as a failed payment on return from checkout — the customer now sees the order confirmation page and the order completes automatically once the `payment_flow.succeeded` webhook arrives.
+* Fixed: WooCommerce Blocks' cart-sync/Hydration requests could overwrite `payment_method` and `payment_method_title` on the order-pay page, occasionally showing a PayPay order as "Credit Card". The correct gateway and title are now restored before the order is saved, without interfering with legitimate payment method changes made in wp-admin.
+* Fixed: Duplicate refunds could be issued when an order was cancelled more than once; a guard now prevents re-processing an already-refunded cancellation.
+
 = 0.9.3 =
 * Fixed: Removed discouraged load_plugin_textdomain() call — WordPress 4.6+ loads translations automatically.
 * Fixed: Hook names fired by the plugin now use the payjp_for_wc_ prefix (Plugin Check compliance).
@@ -212,6 +220,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.4 =
+Adds PayPay refunds and automatic payment cancellation on order cancel; fixes a false "payment failed" message for asynchronous payments and a Block Checkout issue that could mislabel the payment method on the order. Recommended update.
 
 = 0.9.3 =
 Code quality and Plugin Check compliance fixes. No functional changes. Safe to update.

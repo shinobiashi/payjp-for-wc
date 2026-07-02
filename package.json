@@ -1,6 +1,6 @@
 {
     "name": "payjp-for-wc",
-    "version": "0.9.3",
+    "version": "0.9.4",
     "description": "PAY.JP v2 payment gateway for WooCommerce",
     "private": true,
     "license": "GPL-2.0-or-later",

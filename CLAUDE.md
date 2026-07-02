@@ -26,7 +26,7 @@
 | テキストドメイン | `payjp-for-wc` |
 | メインファイル | `payjp-for-wc.php` |
 | 決済 API | PAY.JP v2 |
-| 対象環境 | WordPress 6.4+ / WooCommerce 8.0+ / PHP 8.3+ |
+| 対象環境 | WordPress 6.9+ / WooCommerce 9.0+ / PHP 8.3+ |
 | ライセンス | GPL-2.0-or-later |
 | 配布 | ① wordpress.org standalone ② Japanized for WooCommerce 同梱 |
 

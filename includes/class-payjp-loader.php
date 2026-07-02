@@ -148,6 +148,12 @@ class Payjp_Loader {
 	 * payment_method to match the authoritative _payjp_payment_method meta, which is
 	 * written by process_payment() and never overwritten by WooCommerce internals.
 	 *
+	 * Also corrects payment_method_title: passing only a string ID to
+	 * set_payment_method() skips the title update entirely (see
+	 * fix_payment_method_after_complete()), so without this the order could keep a
+	 * stale title (e.g. "Credit Card") that Blocks' cart-sync code wrote alongside
+	 * the wrong gateway ID.
+	 *
 	 * @param \WC_Order $order Order being saved.
 	 */
 	public static function correct_payment_method_before_save( \WC_Order $order ): void {
@@ -172,8 +178,16 @@ class Payjp_Loader {
 
 		$correct_gateway = $gateway_map[ $payjp_method ];
 
-		if ( $correct_gateway !== $changes['payment_method'] ) {
-			$order->set_payment_method( $correct_gateway );
+		if ( $correct_gateway === $changes['payment_method'] ) {
+			return;
+		}
+
+		$order->set_payment_method( $correct_gateway );
+
+		$all_gateways = WC()->payment_gateways()->payment_gateways();
+		$gateway      = isset( $all_gateways[ $correct_gateway ] ) ? $all_gateways[ $correct_gateway ] : null;
+		if ( $gateway instanceof WC_Payment_Gateway ) {
+			$order->set_payment_method_title( $gateway->get_title() );
 		}
 	}
 

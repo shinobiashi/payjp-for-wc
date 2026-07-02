@@ -105,6 +105,13 @@ abstract class WC_Payment_Gateway {
 	public function get_tokens(): array {
 		return [];
 	}
+
+	/**
+	 * @return string
+	 */
+	public function get_title(): string {
+		return $this->title;
+	}
 }
 
 /**

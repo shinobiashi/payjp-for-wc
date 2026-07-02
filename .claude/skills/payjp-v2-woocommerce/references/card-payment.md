@@ -1,7 +1,7 @@
 # Card Payment Implementation
 
 Source: https://docs.pay.jp/v2/guide/payments/methods/card
-Last updated: 2026-04-24
+Last updated: 2026-07-02
 
 ## Supported brands
 
@@ -15,7 +15,7 @@ Visa, Mastercard, American Express, JCB, Diners Club, Discover
 ## Key features
 
 - Customer binding and reuse (card stored on PAY.JP, referenced by payment_method_id)
-- 3D Secure authentication (mandatory on first use in v2)
+- 3D Secure authentication (mandatory at card registration or first use in v2)
 - Authorization/capture separation (`capture_method: 'manual'`)
 - Billing info update (name, address only — card number cannot be changed)
 
@@ -32,7 +32,7 @@ Visa, Mastercard, American Express, JCB, Diners Club, Discover
 2. Frontend: Initialize payments.js with public key
 3. Frontend: Mount payment form widget to DOM
 4. Frontend: `widgets.confirmPayment({ return_url })` on form submit
-5. Frontend: Redirected to `return_url?payment_flow_id=xxx&payment_flow_client_secret=xxx`
+5. Frontend: Redirected to `return_url?payment_flow_id=pfw_xxx&payment_flow_client_secret=pfws_xxx`
 6. Server or Frontend: Verify via `retrievePaymentFlow(client_secret)` or API call
 
 ### Server-side (PHP)
@@ -128,9 +128,9 @@ function payjp_get_payment_flow( string $flow_id ): array {
 
 ```php
 function payjp_create_checkout_session( int $amount, string $order_id ): string {
-    // Using line_items requires pre-registered Products/Prices in PAY.JP dashboard
-    // Alternative: pass amount directly if using payment flow mode
-    $response = wp_remote_post( 'https://api.pay.jp/v2/checkout_sessions', [
+    // line_items is required in payment mode. Use inline price_data for dynamic
+    // cart totals (no pre-registered Product/Price needed; session-scoped, not reusable).
+    $response = wp_remote_post( 'https://api.pay.jp/v2/checkout/sessions', [
         'headers' => [
             'Authorization' => 'Bearer ' . get_option( 'payjp_secret_key' ),
             'Content-Type'  => 'application/json',
@@ -138,6 +138,16 @@ function payjp_create_checkout_session( int $amount, string $order_id ): string 
         'body' => wp_json_encode( [
             'mode'                 => 'payment',
             'payment_method_types' => [ 'card' ],
+            'line_items'           => [
+                [
+                    'price_data' => [
+                        'currency'     => 'jpy',
+                        'unit_amount'  => $amount,
+                        'product_data' => [ 'name' => 'Order #' . $order_id ],
+                    ],
+                    'quantity'   => 1,
+                ],
+            ],
             'success_url'          => home_url( '/payjp/success?order=' . $order_id ),
             'cancel_url'           => wc_get_checkout_url(),
             'metadata'             => [ 'order_id' => $order_id ],
@@ -152,7 +162,7 @@ function payjp_create_checkout_session( int $amount, string $order_id ): string 
 
 ## 3D Secure
 
-3DS is automatically triggered on first card use. To force 3DS on every payment:
+3DS is automatically triggered at card registration or first card use. To force 3DS on every payment:
 
 ```php
 $body['payment_method_options'] = [
@@ -176,6 +186,7 @@ $body['usage'] = 'on_session';
 $body['capture_method'] = 'manual';
 
 // Later: capture the authorization
+// Partial capture: pass [ 'amount_to_capture' => 3000 ] (only once; remainder auto-canceled)
 $response = wp_remote_post(
     'https://api.pay.jp/v2/payment_flows/' . $flow_id . '/capture',
     [
@@ -187,9 +198,10 @@ $response = wp_remote_post(
         'timeout' => 30,
     ]
 );
+// Response: status=succeeded, amount_received=captured amount
 ```
 
-Authorization hold: 7 days; extendable to 30 days.
+Authorization hold: 7 days; extendable to 30 days (not extendable for overseas-issued cards).
 
 ## Customer payment method reuse
 
@@ -207,14 +219,15 @@ $body = [
 ## Refunds
 
 - Allowed within 180 days of payment creation
-- Partial refunds supported
-- Total refunds cannot exceed original amount
+- Partial refunds supported (multiple; total cannot exceed `amount_received`)
+- Card refunds usually complete immediately (`status: succeeded`)
 
 ```php
-POST https://api.pay.jp/v2/refunds
+POST https://api.pay.jp/v2/payment_refunds
 {
-    "payment_flow": "pflw_xxx",
+    "payment_flow": "pfw_xxx",
     "amount": 500,           // optional; omit for full refund
     "reason": "requested_by_customer" // or "fraudulent" | "duplicate"
 }
+// Response: refund object (id: pyr_xxx)
 ```

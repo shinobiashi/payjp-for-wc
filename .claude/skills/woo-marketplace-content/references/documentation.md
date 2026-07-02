@@ -266,6 +266,8 @@ WooCommerce.com はUS Englishを使用:
 - "color" not "colour"
 - "customize" not "customise"
 - "center" not "centre"
+- 3項目以上の列挙には Oxford comma を使用
+- 強調のための ALL CAPS は使わない
 
 ### 用語
 
@@ -284,7 +286,9 @@ WooCommerce公式用語に従う:
 - h1は使わない（製品名が自動的にh1）
 - h2でメインセクション
 - h3でサブセクション
+- レベルをスキップしない（h2の次にh4を置かない）
 - h4以降は避ける（深すぎると読みにくい）
+- 見出しはセンテンスケース（先頭語と固有名詞のみ大文字）
 
 ### UIパスの記述
 

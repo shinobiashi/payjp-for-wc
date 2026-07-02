@@ -1,7 +1,7 @@
 ---
 name: wp-security-check
 description: "Use for security audits of WordPress plugins: nonce validation, capability checks, input sanitization, output escaping, SQL injection prevention, CSRF protection, PCI DSS compliance for payment plugins, and WooCommerce-specific security patterns."
-compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+). Requires PHPCS with WordPress standards."
+compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+; current stable: WordPress 7.0, WooCommerce 10.x). Requires PHPCS with WordPress standards."
 ---
 
 # WP Security Check
@@ -36,6 +36,9 @@ composer phpcs 2>&1 | grep -E "(nonce|sanitize|escape|wpdb|direct)" | head -50
 
 # PHPStan type safety
 composer phpstan 2>&1 | head -50
+
+# Plugin Check (PCP) — mandatory for wordpress.org submissions since Oct 2024
+wp plugin check <plugin-slug> 2>&1 | head -50
 ```
 
 ### 1) Check input sanitization
@@ -151,8 +154,9 @@ grep -r 'card\|credit\|cvv\|cvc\|expiry\|pan\|log\|error_log\|WC_Logger' include
 
 - Never log or store card numbers or CVV in any form
 - Tokenize: send card data directly to the payment gateway JS, receive a token
-- Always verify webhook signatures
+- Always verify webhook signatures (compare with `hash_equals()`, never `===` / `strcmp()`)
 - Protect webhooks with HMAC signatures or IP allowlisting
+- PCI DSS v4.0.1 is the current standard; the formerly future-dated requirements (incl. 6.4.3 payment page script management and 11.6.1 tamper detection) are mandatory since March 31, 2025
 
 See: `references/payment-security.md`
 

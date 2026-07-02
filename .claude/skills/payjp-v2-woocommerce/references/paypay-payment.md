@@ -1,30 +1,33 @@
 # PayPay Payment Implementation
 
 Source: https://docs.pay.jp/v2/guide/payments/methods/paypay
-Last updated: 2026-04-24
+Last updated: 2026-07-02
 
 ## Characteristics
 
 - **One-time payments only** — cannot be bound to a customer or reused
 - Minimum amount: ¥50
 - Maximum: determined by the individual PayPay user's account limit
-- `capture_method: 'manual'` requires prior PAY.JP approval (per product category)
+- Requires a separate PAY.JP application/review even if card payments are already approved
+- `capture_method: 'manual'` (auth = "出荷売上") requires prior PAY.JP approval (per merchant / product category); auth hold: 30 days (no extension)
 
 ## Fees
 
 - Physical goods / services: 3.5%
 - Digital content: 9.0%
 
-## Refund window
+## Refunds
 
-365 days from payment confirmation
+- Window: 365 days from payment confirmation (until 23:59:59)
+- **Async**: refund creation returns `status: 'pending'`; final result arrives via `refund.created` webhook — do not treat the initial response as completed
 
 ## Testing
 
 - Test limit: **¥100 per transaction**
 - Must perform full refund after each test transaction
 - Avoid consecutive same-amount transactions (wait 5+ minutes)
-- Test accounts: phone numbers 080-1111-5912 through 080-1111-5921 (10 accounts)
+- Test accounts: phone numbers 080-1111-5912 through 080-1111-5921 (10 accounts, password `Pay2test`, SMS code `1234`)
+- PayPay app can be switched to Sandbox mode for app-based testing
 
 ## Implementation: Embedded (Payment Widgets)
 
@@ -64,7 +67,7 @@ function payjp_create_paypay_payment_flow( int $amount ): array {
     }
 
     return $data;
-    // Returns: [ 'id' => 'pflw_xxx', 'client_secret' => '...', 'status' => 'requires_payment_method' ]
+    // Returns: [ 'id' => 'pfw_xxx', 'client_secret' => '...', 'status' => 'requires_payment_method' ]
 }
 ```
 
@@ -160,7 +163,7 @@ function payjp_create_paypay_checkout_session( string $order_id ): string {
     $order  = wc_get_order( (int) $order_id );
     $amount = (int) round( $order->get_total() );
 
-    $response = wp_remote_post( 'https://api.pay.jp/v2/checkout_sessions', [
+    $response = wp_remote_post( 'https://api.pay.jp/v2/checkout/sessions', [
         'headers' => [
             'Authorization' => 'Bearer ' . get_option( 'payjp_secret_key' ),
             'Content-Type'  => 'application/json',
@@ -168,6 +171,16 @@ function payjp_create_paypay_checkout_session( string $order_id ): string {
         'body' => wp_json_encode( [
             'mode'                 => 'payment',
             'payment_method_types' => [ 'paypay' ],
+            'line_items'           => [ // required in payment mode; price_data = inline price
+                [
+                    'price_data' => [
+                        'currency'     => 'jpy',
+                        'unit_amount'  => $amount,
+                        'product_data' => [ 'name' => 'Order #' . $order_id ],
+                    ],
+                    'quantity'   => 1,
+                ],
+            ],
             'success_url'          => home_url( '/payjp/success?order_id=' . $order_id ),
             'cancel_url'           => wc_get_checkout_url(),
             'metadata'             => [

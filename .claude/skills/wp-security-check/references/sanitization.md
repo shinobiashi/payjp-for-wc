@@ -26,7 +26,7 @@ wc_format_decimal( $price )
 ## Always unslash before sanitize
 
 ```php
-// Magic quotes may be active in old WP — always unslash first
+// WordPress core adds slashes to superglobals via wp_magic_quotes(), regardless of PHP version — always unslash first
 $value = sanitize_text_field( wp_unslash( $_POST['field'] ) );
 ```
 

@@ -3,7 +3,7 @@ name: woo-marketplace-qit
 description: >
   Skill for quality testing of plugins for the WooCommerce.com Marketplace. Covers all QIT
   (Quality Insights Toolkit) test suites (Activation, Security, PHPStan, PHP Compatibility,
-  Malware, Woo E2E, Woo API), how to run them locally, GitHub Actions CI integration, writing
+  Malware, Validation, Woo E2E, Woo API, Plugin Check), how to run them locally, GitHub Actions CI integration, writing
   custom E2E tests, and coding standards compliance via PHPCS/ESLint. Use when keywords like
   "QIT", "marketplace testing", "quality testing", "security scan", "PHPStan", "Woo E2E",
   "plugin testing", "pre-submission", "pre-submission check", "PHPCS", or "coding standards"
@@ -29,10 +29,12 @@ Managed tests required by the marketplace:
 | **Activation Test** | Verifies the plugin activates without errors or warnings in a clean WP+WC environment | ✅ |
 | **Security Test** | Semgrep-based security scan and coding best practices check | ✅ |
 | **PHPStan Test** | Static analysis to detect bugs and type errors | ✅ |
-| **PHP Compatibility Test** | Compatibility across different PHP versions (8.2–8.3+) | ✅ |
+| **PHP Compatibility Test** | Compatibility across different PHP versions (7.4–8.5) | ✅ |
 | **Malware Test** | Detection of malicious code | ✅ |
+| **Validation Test** | Validates readme/plugin headers (`Requires PHP`, `WC requires at least`, `Tested up to`, `License`) and HPOS / Cart-Checkout Blocks compatibility declarations | ✅ |
 | **Woo E2E Test** | Runs WooCommerce Core E2E tests (Playwright) with the extension active | ✅ |
 | **Woo API Test** | Runs WooCommerce Core API tests with the extension active | ✅ |
+| **Plugin Check Test** | Runs the WordPress.org Plugin Check tool (`plugin_repo` category) | Optional (not required for the marketplace) |
 | **Custom E2E Test** | Playwright E2E tests written by the developer | Recommended |
 
 Failing the Activation, Security, or Malware tests also blocks version update deployments.
@@ -44,7 +46,14 @@ Failing the Activation, Security, or Malware tests also blocks version update de
 ### Installation
 
 ```bash
+# Per-project
 composer require --dev woocommerce/qit-cli
+
+# Or globally
+composer global require "woocommerce/qit-cli:*"
+
+# Or via install script (recommended for CI)
+curl -sSL https://qit.io/install | bash
 ```
 
 ### Authentication
@@ -52,12 +61,18 @@ composer require --dev woocommerce/qit-cli
 Authenticate with your WooCommerce.com Partner Developer account:
 
 ```bash
-./vendor/bin/qit
+./vendor/bin/qit connect
 # A browser window opens and begins the authentication flow on WooCommerce.com
 ```
 
 Once logged in with your Vendor account, you can run QIT against plugins that have been
-submitted to or are listed on the marketplace.
+submitted to or are listed on the marketplace. Verify access with `qit extensions`.
+
+For non-interactive environments (CI), generate a QIT Token on WooCommerce.com and use:
+
+```bash
+qit partner:add --user=<partner-username> --qit_token=<qit-token>
+```
 
 ### Basic Test Execution
 
@@ -77,38 +92,46 @@ submitted to or are listed on the marketplace.
 # Malware test
 ./vendor/bin/qit run:malware my-extension --zip=./my-extension.zip
 
+# Validation test (readme/plugin headers, HPOS & Blocks compatibility declarations)
+./vendor/bin/qit run:validation my-extension --zip=./my-extension.zip
+
 # Woo E2E test (runs WooCommerce Core E2E with the plugin active)
-./vendor/bin/qit run:e2e my-extension --zip=./my-extension.zip
+./vendor/bin/qit run:woo-e2e my-extension --zip=./my-extension.zip
 
 # Woo API test
-./vendor/bin/qit run:api my-extension --zip=./my-extension.zip
+./vendor/bin/qit run:woo-api my-extension --zip=./my-extension.zip
+
+# WordPress.org Plugin Check (optional — not required for the marketplace)
+./vendor/bin/qit run:plugin-check my-extension --zip=./my-extension.zip
 ```
+
+Note: `run:e2e` (without the `woo-` prefix) runs *custom* E2E test packages — see below.
 
 ### Environment Customization
 
 ```bash
-# Specify PHP / WordPress / WooCommerce versions
-./vendor/bin/qit run:e2e my-extension \
+# Specify PHP / WordPress / WooCommerce versions ("stable" and "rc" are also accepted)
+./vendor/bin/qit run:woo-e2e my-extension \
   --zip=./my-extension.zip \
   --php_version=8.3 \
-  --wordpress_version=6.7 \
-  --woocommerce_version=9.6
+  --wordpress_version=stable \
+  --woocommerce_version=stable
 
-# Activate other extensions simultaneously for compatibility testing
+# Activate other plugins simultaneously for compatibility testing
+# (accepts WordPress.org slugs or WooCommerce.com product IDs, comma-separated)
 ./vendor/bin/qit run:activation my-extension \
   --zip=./my-extension.zip \
-  --with-extension=woocommerce-subscriptions \
-  --with-extension=woocommerce-payments
+  --additional_plugins=woocommerce-subscriptions,woocommerce-payments
 ```
 
 ### Compatibility Testing with Extension Sets
 
-QIT provides sets of top marketplace extensions to simplify compatibility testing:
+QIT provides predefined sets of top marketplace extensions to simplify compatibility testing:
 
 ```bash
-./vendor/bin/qit run:e2e my-extension \
+./vendor/bin/qit run:woo-e2e my-extension \
   --zip=./my-extension.zip \
-  --test-package=woocommerce/checkout-tests
+  --extension_set=compatibility
 ```
 
 Use this feature to fulfill the pre-submission checklist requirement of verifying compatibility
@@ -118,15 +141,21 @@ with top marketplace extensions.
 
 ## Local Test Environment (No Authentication Required)
 
-QIT's local test environment can be used without a WooCommerce.com connection:
+QIT's local test environment (Docker-based) can be used without a WooCommerce.com connection:
 
 ```bash
-# Run tests in the local environment
-./vendor/bin/qit run:e2e my-extension \
-  --zip=./my-extension.zip \
-  --local
+# Spin up a local WordPress + WooCommerce environment
+qit env:up
+
+# Stop / reset it
+qit env:down
+qit env:reset
+
+# Run a command inside the environment
+qit env:exec -- wp plugin list
 ```
 
+Custom E2E test packages (`qit run:e2e`) also run locally in Docker.
 Useful for rapid feedback loops during development. Note that installing premium marketplace
 plugins into the test environment does require authentication.
 
@@ -134,19 +163,33 @@ plugins into the test environment does require authentication.
 
 ## Custom E2E Tests (Playwright)
 
-QIT supports Playwright-based custom tests. By following the standardized format for test
-packages, you can also participate in cross-plugin compatibility testing.
+QIT supports Playwright-based custom tests via "test packages". By following the standardized
+format for test packages, you can also participate in cross-plugin compatibility testing.
+
+### Scaffold a Test Package
+
+```bash
+qit package:scaffold tests/e2e --package=my-extension/e2e
+```
 
 ### Test Structure
 
 ```
 tests/
 ├── e2e/
-│   ├── playwright.config.ts
-│   ├── example.spec.ts
-│   └── utils/
-│       └── helpers.ts
+│   ├── qit-test.json           # Test package manifest (package, phases, results)
+│   ├── package.json
+│   ├── playwright.config.js
+│   ├── bootstrap/
+│   │   ├── global-setup.sh
+│   │   ├── setup.sh
+│   │   └── global-teardown.sh
+│   └── tests/
+│       └── example.spec.js
 ```
+
+In `qit-test.json`, `package` uses the `namespace/name` format (the namespace must be an
+extension slug you maintain), and the `results` output must include `ctrf-json` for reporting.
 
 ### Basic playwright.config.ts
 
@@ -249,8 +292,8 @@ test.describe( 'Checkout Integration', () => {
 // composer.json
 {
   "require-dev": {
-    "squizlabs/php_codesniffer": "^3.7",
-    "wp-coding-standards/wpcs": "^3.0",
+    "squizlabs/php_codesniffer": "^3.13",
+    "wp-coding-standards/wpcs": "^3.1",
     "phpcompatibility/phpcompatibility-wp": "^2.1",
     "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
   },
@@ -298,7 +341,7 @@ test.describe( 'Checkout Integration', () => {
   <rule ref="PHPCompatibilityWP"/>
 
   <!-- Minimum WP version -->
-  <config name="minimum_supported_wp_version" value="6.7"/>
+  <config name="minimum_supported_wp_version" value="6.9"/>
 </ruleset>
 ```
 
@@ -331,9 +374,9 @@ parameters:
 // Add to composer.json
 {
   "require-dev": {
-    "phpstan/phpstan": "^1.10",
-    "phpstan/extension-installer": "^1.3",
-    "szepeviktor/phpstan-wordpress": "^1.3"
+    "phpstan/phpstan": "^2.1",
+    "phpstan/extension-installer": "^1.4",
+    "szepeviktor/phpstan-wordpress": "^2.0"
   },
   "scripts": {
     "phpstan": "phpstan analyse --memory-limit=512M"
@@ -373,7 +416,7 @@ parameters:
 {
   "devDependencies": {
     "@woocommerce/eslint-plugin": "^2.2.0",
-    "@wordpress/scripts": "^28.0.0"
+    "@wordpress/scripts": "^30.0.0"
   },
   "scripts": {
     "lint:js": "wp-scripts lint-js src/",
@@ -441,7 +484,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['8.2', '8.3']
+        php: ['8.2', '8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -461,8 +504,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        wc: ['9.0', 'latest']
-        php: ['8.2', '8.3']
+        wc: ['10.0', 'latest']
+        php: ['8.2', '8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -507,10 +550,12 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-      - run: composer install --no-progress
+      - name: Install QIT CLI
+        run: curl -sSL https://qit.io/install | bash
+      - name: Authenticate QIT
+        # Generate a QIT Token on WooCommerce.com (Partner Developer account)
+        # and store it in repository secrets.
+        run: qit partner:add --user="${{ secrets.QIT_PARTNER_USER }}" --qit_token="${{ secrets.QIT_TOKEN }}"
       - name: Build ZIP
         run: |
           npm ci && npm run build
@@ -518,14 +563,13 @@ jobs:
           zip -r dist/my-extension.zip . \
             -x ".git/*" "node_modules/*" ".github/*" "tests/*" ".wp-env*"
       - name: Run QIT Activation
-        env:
-          QIT_TOKEN: ${{ secrets.QIT_TOKEN }}
-        run: ./vendor/bin/qit run:activation my-extension --zip=dist/my-extension.zip
+        run: qit run:activation my-extension --zip=dist/my-extension.zip
       - name: Run QIT Security
-        env:
-          QIT_TOKEN: ${{ secrets.QIT_TOKEN }}
-        run: ./vendor/bin/qit run:security my-extension --zip=dist/my-extension.zip
+        run: qit run:security my-extension --zip=dist/my-extension.zip
 ```
+
+Setting the `CI` environment variable (GitHub Actions does this automatically) switches QIT
+to CI mode with suppressed interactive output.
 
 ---
 
@@ -537,11 +581,12 @@ Verify all of the following before submitting:
 - [ ] PHPCS (WordPress-Extra) zero errors
 - [ ] PHPStan level 5 or higher with zero errors
 - [ ] ESLint zero errors
-- [ ] PHP compatibility test passes for PHP 8.2 and 8.3
+- [ ] PHP compatibility test passes for PHP 8.2–8.4
 - [ ] Zero errors, warnings, or notices with WP_DEBUG enabled
 - [ ] QIT Activation Test passes (clean WP+WC environment)
 - [ ] QIT Security Test passes
 - [ ] QIT Malware Test passes
+- [ ] QIT Validation Test passes (readme/headers, HPOS & Blocks declarations)
 - [ ] QIT Woo E2E Test passes (Core Critical Flows not broken)
 - [ ] QIT Woo API Test passes
 

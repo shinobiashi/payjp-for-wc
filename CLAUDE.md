@@ -151,7 +151,7 @@ defined( 'PAYJP_API_BASE' )       || define( 'PAYJP_API_BASE',       'https://ap
 
 | キー | 型 | 説明 |
 |------|-----|------|
-| `_payjp_payment_flow_id` | string | Payment Flow ID (`pflw_xxx`) |
+| `_payjp_payment_flow_id` | string | Payment Flow ID (`pfw_xxx`) |
 | `_payjp_payment_method` | string | `card` または `paypay` |
 | `_payjp_capture_method` | string | `automatic` または `manual` |
 | `_payjp_refund_processed_{id}` | string `'1'` | 処理済み返金 ID ごとに 1 エントリ（複数部分返金対応）|

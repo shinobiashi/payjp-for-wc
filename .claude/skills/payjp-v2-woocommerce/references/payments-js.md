@@ -1,7 +1,7 @@
 # payments.js Reference
 
 Source: https://docs.pay.jp/v2/guide/developers/paymentsjs-reference
-Last updated: 2026-04-24
+Last updated: 2026-07-02
 
 ## Installation
 
@@ -51,7 +51,8 @@ const payments = PayjpPayments( publicKey, options );
 const widgets = payments.widgets({ clientSecret: clientSecret });
 ```
 
-`clientSecret`: obtained from server-side Payment Flow or Setup Flow creation.
+`clientSecret` (required): obtained from server-side Payment Flow or Setup Flow creation. Cannot be changed after creation.
+`locale` (optional): overrides the PayjpPayments-level setting.
 
 ## Creating Forms
 
@@ -67,12 +68,15 @@ const form = widgets.createForm( 'payment', options );
 |--------|--------|---------|-------------|
 | `layout` | `"accordion"` \| `"tab"` \| `object` | `"accordion"` | Form layout |
 | `paymentMethodOrder` | `["card", "paypay", "apple_pay"]` | auto | Display order |
-| `billingDetails.name` | `"auto"` \| `"never"` | `"auto"` | Name field |
-| `billingDetails.email` | `"auto"` \| `"never"` | `"auto"` | Email field |
-| `billingDetails.phone` | `"auto"` \| `"never"` | `"auto"` | Phone field |
-| `defaultValues.billingDetails` | object | — | Pre-fill billing info |
+| `fields.billingDetails.name` | `"auto"` \| `"never"` | `"auto"` | Name field |
+| `fields.billingDetails.email` | `"auto"` \| `"never"` | `"auto"` | Email field |
+| `fields.billingDetails.phone` | `"auto"` \| `"never"` | `"auto"` | Phone field |
+| `defaultValues.billingDetails` | object | — | Pre-fill billing info (name/email/phone/address) |
 
-Accordion layout with `defaultCollapsed`:
+`fields.billingDetails` also accepts a plain string (`"auto"` / `"never"`) applied to all fields.
+If hidden with `"never"`, pass the values via `confirmPayment`'s `payment_method_data.billing_details` instead.
+
+Accordion layout with `defaultCollapsed` (default: `true` for accordion, `false` for tab):
 ```javascript
 const form = widgets.createForm( 'payment', {
     layout: { type: 'accordion', defaultCollapsed: false },
@@ -86,19 +90,20 @@ const addressForm = widgets.createForm( 'address', options );
 ```
 
 **Required option:**
-- `mode`: `"shipping"` or `"billing"`
+- `mode`: `"shipping"` or `"billing"` (cannot be changed after creation)
 
 | Option | Values | Description |
 |--------|--------|-------------|
-| `phone` | `"always"` \| `"auto"` \| `"never"` | Phone field visibility |
+| `fields.phone` | `"always"` \| `"auto"` (default) \| `"never"` | Phone field visibility |
+| `defaultValues` | object | Pre-fill `name` / `phone` / `address` |
 
 ## Form Methods
 
 | Method | Description |
 |--------|-------------|
-| `form.mount( selector )` | Mount form to DOM element |
+| `form.mount( selector )` | Mount form to DOM element (selector or HTMLElement) |
 | `form.unmount()` | Remove from DOM (remountable) |
-| `form.update( options )` | Update form options post-mount |
+| `form.update( options )` | Update form options post-mount (`layout` / `mode` cannot change) |
 | `form.collapse()` | Collapse accordion sections |
 | `form.on( event, handler )` | Attach event listener |
 | `form.off( event, handler )` | Remove event listener |
@@ -107,12 +112,13 @@ const addressForm = widgets.createForm( 'address', options );
 
 | Method | Description |
 |--------|-------------|
-| `widgets.createForm( type, options )` | Create a form instance |
-| `widgets.getForm( type, options )` | Retrieve existing form |
+| `widgets.createForm( type, options )` | Create a form instance (`"payment"` or `"address"`) |
+| `widgets.getForm( type, options )` | Retrieve existing form (address requires `{ mode }`) |
 | `widgets.confirmPayment( params )` | Execute payment confirmation |
 | `widgets.confirmSetup( params )` | Execute setup flow confirmation |
 | `widgets.fetchUpdates()` | Fetch server-side updates |
-| `widgets.update( options )` | Update widget configuration |
+| `widgets.update( options )` | Update widget config (`clientSecret` cannot change) |
+| `widgets.on( 'updateEnd', handler )` | Fires when `update` / `fetchUpdates` completes |
 
 ## Confirming Payment
 
@@ -145,7 +151,9 @@ if ( result.error ) {
 ```
 
 On success, browser auto-redirects to `return_url` with:
-- `?payment_flow_id=pflw_xxx&payment_flow_client_secret=pflw_secret_xxx`
+- `?payment_flow_id=pfw_xxx&payment_flow_client_secret=pfws_xxx`
+
+(Setup Flow: `?setup_flow_id=sflw_xxx&setup_flow_client_secret=sflw_secret_xxx`)
 
 ## Confirming Setup Flow
 
@@ -160,16 +168,20 @@ const result = await widgets.confirmSetup({
 ```javascript
 // Retrieve Payment Flow status (frontend verification)
 const paymentFlow = await payments.retrievePaymentFlow( clientSecret );
-// Returns: { status: 'succeeded', id: 'pflw_xxx', ... }
+// Returns: { status: 'succeeded', id: 'pfw_xxx', ... }
 
 // Retrieve Setup Flow status
 const setupFlow = await payments.retrieveSetupFlow( clientSecret );
 
-// Handle additional authentication (3DS)
+// Handle additional authentication (3DS, PayPay page) after server-side confirm
+// returned requires_action. Redirects immediately; then goes to the flow's return_url
+// (set return_url via Payment Flow Update API if missing).
 await payments.handleNextAction({ clientSecret });
 ```
 
 ## Events
+
+Form events (`form.on(...)`):
 
 | Event | Trigger | Payload |
 |-------|---------|---------|
@@ -177,7 +189,8 @@ await payments.handleNextAction({ clientSecret });
 | `change` | User input changed | `{ complete, empty, value }` |
 | `focus` | Field focused | — |
 | `blur` | Field blurred | — |
-| `updateEnd` | Widget update complete | — |
+
+Widgets event: `updateEnd` (widget update complete) — subscribe via `widgets.on( 'updateEnd', ... )`, not on the form.
 
 ### `change` payload
 

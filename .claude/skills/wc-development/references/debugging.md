@@ -33,7 +33,8 @@
 
 ## WordPress 7.0 Compatibility (2026)
 
-WooCommerce 10.6.2 includes compatibility fixes for WP 7.0:
+WordPress 7.0 was released 2026-05-20. WooCommerce 10.6.2 includes compatibility fixes
+for WP 7.0, and WC 10.8+ requires WordPress 6.9 as minimum:
 
 - **Admin CSS changes**: Analytics tables, dashboard cards may have extra padding.
   Avoid relying on specific WP admin CSS class names for styling.
@@ -164,7 +165,7 @@ wc_get_logger()->debug(
 );
 ```
 
-## WC 10.5/10.6 Specific Notes
+## WC 10.5–10.9 Specific Notes
 
 - **Analytics batch imports**: WC 10.5 changed analytics imports to batch processing
   (100 orders every 12 hours). If your extension depends on real-time analytics data,
@@ -176,3 +177,13 @@ wc_get_logger()->debug(
   Store API endpoints. Extensions using `per_page=0` must implement pagination.
 - **Product image lazy-loading**: WC 10.6 lazy-loads product images by default.
   Use `woocommerce_product_image_loading_attr` filter to override.
+- **HPOS sync on read disabled**: WC 10.7 disables HPOS "sync on read" by default.
+  Direct writes to `wp_posts` for orders are no longer backfilled into HPOS tables.
+- **Fulfillments namespace move**: WC 10.7 moved Fulfillments from
+  `Automattic\WooCommerce\Internal\Fulfillments` to
+  `Automattic\WooCommerce\Admin\Features\Fulfillments`. Update direct references.
+- **Draft order creation delayed**: WC 10.9 delays Store API draft order creation
+  until later in the checkout flow. Extensions that assume a `checkout-draft` order
+  exists early in block checkout must handle its absence.
+- **Email logging in core**: WC 10.9 logs transactional email send attempts;
+  view under WooCommerce > Status > Logs.

@@ -113,6 +113,10 @@ public function process_payment( $order_id ) {
 }
 ```
 
+Note: since WC 10.9, the Store API no longer creates a persisted `checkout-draft` order
+early in the session — draft order creation happens closer to order placement. Do not
+assume a draft order exists before the shopper submits checkout.
+
 ## Store API Schema Extension
 
 Add custom data to Store API endpoints:

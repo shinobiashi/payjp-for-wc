@@ -7,10 +7,11 @@ description: >
   "WooCommerce plugin", "WC extension", "payment gateway", "HPOS", "order meta", "wc_get_orders",
   "checkout block", "Store API", "WC_Payment_Gateway", "shipping method", "product type",
   "WooCommerce REST API", or any WooCommerce-specific development task. Also trigger when the user
-  references WooCommerce hooks, filters, or classes. This skill targets WooCommerce 10.x (current stable: 10.6)
-  on WordPress 6.6+ / 7.0+.
+  references WooCommerce hooks, filters, or classes. This skill targets WooCommerce 10.x (current stable: 10.9)
+  on WordPress 6.9+ / 7.0.
 compatibility: >
-  WooCommerce 9.0–10.6+ on WordPress 6.7–7.0+. PHP 8.2+. HPOS required for all new extensions.
+  WooCommerce 9.0–10.9+ on WordPress 6.9–7.0+ (WC 10.8+ requires WP 6.9). PHP 8.2+ recommended
+  (WC core minimum is 7.4). HPOS required for all new extensions.
   Some workflows use WP-CLI with WooCommerce commands.
 ---
 
@@ -76,12 +77,16 @@ All new extensions MUST support HPOS:
 - Declare compatibility via `FeaturesUtil::declare_compatibility( 'custom_order_tables' )`
 - Never use `$order->id` (deprecated); use `$order->get_id()`
 - Never query `wp_posts` / `wp_postmeta` for order data
+- Note: since WC 10.7, HPOS "sync on read" is disabled by default — direct `wp_posts` writes
+  are no longer picked up on the fly
 
 See: `references/hpos.md`
 
 ### 3) Payment gateway implementation
 
-- Extend `WC_Payment_Gateway` (or `WC_Payment_Gateway_CC`)
+- Extend `WC_Payment_Gateway`; use `WC_Payment_Gateway_CC` only when you want its
+  default classic-checkout card form (`payment_fields()`/`form()`/`field_name()` are
+  all it adds — tokenization helpers live on `WC_Payment_Gateway` itself)
 - Implement: `process_payment()`, `init_form_fields()`, `init_settings()`
 - Handle both shortcode and **block-based checkout** via Blocks integration
 - Implement refund support via `process_refund()` if applicable
@@ -108,6 +113,8 @@ See: `references/blocks-integration.md`
 - Add order notes via `$order->add_order_note()`
 - Custom statuses: `wc_register_order_status()` + `wc_order_statuses` filter
 - Batch queries: `wc_get_orders()` with meta queries
+- New in 10.7: Fulfillments PHP API (tracking numbers, shipping providers) under
+  `Automattic\WooCommerce\Admin\Features\Fulfillments`
 
 See: `references/order-lifecycle.md`
 
@@ -137,6 +144,8 @@ See: `references/shipping.md`
 - Register custom endpoints using `WC_REST_Controller` base class
 - Respect WooCommerce authentication (API keys, OAuth 1.0a)
 - New in 10.5: experimental REST API caching feature
+- `wc/v3` remains the primary stable version; `wc/v4` endpoints (products, customers, orders)
+  are rolling out incrementally since 10.7
 
 See: `references/rest-api.md`
 

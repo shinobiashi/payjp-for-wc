@@ -32,9 +32,14 @@ Collect the following information to generate form text:
 
 Rules:
 - 4–60 characters
+- Aim for 1 to 5 words — the fewer the better (official guidance)
 - No accent characters (é, ü, etc.)
+- No superlative adjectives such as "best" or "amazing"
 - Must not duplicate an existing marketplace product name
 - Must comply with WooCommerce and other trademark guidelines
+  (https://woocommerce.com/trademark-guidelines/): never incorporate a Woo mark
+  into the name itself. "Product Name for WooCommerce" is allowed;
+  "WooCommerce Product Name" is not.
 
 Good examples:
 ```
@@ -252,14 +257,17 @@ The closest alternatives are:
 Select from the dropdown ($75, $99, $149, $199, $249, etc.).
 
 Use the skill's pricing framework to calculate the basis for your selection.
-If selling on your own site, the marketplace price must be equal to or lower.
+The marketplace sells single-site licenses only. If selling on your own site,
+the marketplace price should closely match your single-site license fee there
+and must not be higher.
 
 ### Is this product sold elsewhere? (required)
 
 If selling on other channels (your own site, other marketplaces, etc.), select "Yes"
 and enter the URL and price.
 
-Comply with the rule: marketplace price ≤ other channel price.
+Comply with the rule: marketplace price should closely match (and never exceed)
+your single-site license price on other channels.
 
 ---
 

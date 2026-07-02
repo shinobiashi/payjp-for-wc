@@ -1,6 +1,6 @@
 # WooCommerce Gateway Class Patterns
 
-Last updated: 2026-04-24
+Last updated: 2026-07-02 (WooCommerce current stable: 10.9)
 
 ## Plugin file structure
 
@@ -33,7 +33,7 @@ payjp-for-woocommerce/
  * Requires at least: 6.4
  * Requires PHP: 8.0
  * WC requires at least: 8.0
- * WC tested up to: 9.9
+ * WC tested up to: 10.9
  * Author:      Your Name
  * License:     GPL-2.0-or-later
  */
@@ -43,11 +43,16 @@ defined( 'ABSPATH' ) || exit;
 define( 'PAYJP_VERSION', '1.0.0' );
 define( 'PAYJP_PLUGIN_FILE', __FILE__ );
 
-// HPOS compatibility declaration
+// HPOS + Cart/Checkout Blocks compatibility declaration
 add_action( 'before_woocommerce_init', function () {
     if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
             'custom_order_tables',
+            __FILE__,
+            true
+        );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'cart_checkout_blocks',
             __FILE__,
             true
         );
@@ -74,6 +79,15 @@ add_action( 'plugins_loaded', function () {
 ```
 
 ## Abstract base gateway
+
+Extend `WC_Payment_Gateway`, NOT `WC_Payment_Gateway_CC`. Both PAY.JP gateways
+fully override `payment_fields()` (payments.js widgets render the form), so the
+only thing `_CC` adds — the default classic-checkout card form via
+`payment_fields()`/`form()`/`field_name()` — is never used. The tokenization
+helpers the card gateway needs (`tokenization_script()`, `saved_payment_methods()`,
+`save_payment_method_checkbox()`) are defined on `WC_Payment_Gateway` itself
+(since WC 2.6), so nothing is lost. Extending `_CC` would also make PayPay a
+"card gateway" for any `instanceof WC_Payment_Gateway_CC` check.
 
 ```php
 abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
@@ -282,7 +296,7 @@ class WC_Gateway_Payjp_Card extends WC_Gateway_Payjp {
         }
 
         try {
-            $this->api_post( '/refunds', $body );
+            $this->api_post( '/payment_refunds', $body );
             return true;
         } catch ( \Exception $e ) {
             return new \WP_Error( 'payjp_refund', $e->getMessage() );
@@ -301,7 +315,7 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
         $this->has_fields         = true;
         $this->method_title       = 'PAY.JP PayPay';
         $this->method_description = 'PAY.JP v2 による PayPay 決済';
-        $this->supports           = [ 'products' ]; // No refunds via WC UI for PayPay
+        $this->supports           = [ 'products', 'refunds' ]; // PayPay refunds are async: API returns 'pending', final result via refund.created webhook
 
         $this->init_form_fields();
         $this->init_settings();

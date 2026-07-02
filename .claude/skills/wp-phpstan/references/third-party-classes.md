@@ -21,6 +21,11 @@ composer require --dev php-stubs/woocommerce-stubs
 composer require --dev php-stubs/acf-pro-stubs
 ```
 
+Notes on `szepeviktor/phpstan-wordpress` (current 2.x, requires PHPStan 2.x):
+
+- It already depends on `php-stubs/wordpress-stubs`, so you do not need to require both.
+- It is a PHPStan *extension*: register it via `phpstan/extension-installer` (Composer plugin) or add `vendor/szepeviktor/phpstan-wordpress/extension.neon` under `includes:` in `phpstan.neon`.
+
 When stubs are useful (and sometimes necessary):
 
 - Running PHPStan in a plugin/theme repo without a full WordPress checkout.
@@ -64,6 +69,7 @@ parameters:
 
 Pattern creation rules:
 
+- On PHPStan 2.x, combining a message pattern with an `identifier:` (e.g. `class.notFound`) makes ignores more precise than message regexes alone.
 - Cover error variations: `unknown class`, `invalid type`, `call to method .* on an unknown class`.
 - Keep patterns specific enough to target only intended classes.
 - Add a short comment naming the plugin/theme.

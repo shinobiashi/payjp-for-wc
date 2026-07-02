@@ -89,6 +89,34 @@ class WC_Gateway_My_Payment extends WC_Payment_Gateway {
 }
 ```
 
+## Base Class: WC_Payment_Gateway vs WC_Payment_Gateway_CC
+
+Choose the base class by whether you want WooCommerce's default classic-checkout
+card form — that is the only thing `WC_Payment_Gateway_CC` adds:
+
+- `WC_Payment_Gateway_CC` adds exactly three methods: `payment_fields()`,
+  `form()`, and `field_name()` — all render the default card number / expiry /
+  CVC form on the classic checkout. It contains no card-specific validation or
+  processing logic.
+- **Common misconception**: the tokenization helpers `tokenization_script()`,
+  `saved_payment_methods()`, `save_payment_method_checkbox()`, and `get_tokens()`
+  are NOT CC-specific — they are defined on the abstract `WC_Payment_Gateway`
+  base since WC 2.6 (verified in WC 8.0.0 and trunk). A gateway extending plain
+  `WC_Payment_Gateway` can use all of them.
+- WooCommerce core (including Blocks) never checks `instanceof
+  WC_Payment_Gateway_CC` — the choice does not affect core behavior.
+
+Rules of thumb:
+
+- Gateway fully overrides `payment_fields()` (embedded JS widgets, redirect
+  flows, non-card methods like wallets/BNPL) → extend `WC_Payment_Gateway`.
+- Gateway wants the stock card form rendered for it → extend
+  `WC_Payment_Gateway_CC` and let its `payment_fields()` run.
+- Avoid extending `_CC` for non-card gateways even though it "works": a future
+  loss of the `payment_fields()` override silently renders a card form, and
+  third-party code may use `instanceof WC_Payment_Gateway_CC` to classify
+  gateways as card gateways.
+
 ## Gateway Registration
 
 ```php
@@ -230,3 +258,10 @@ To be grouped under "Offline payments" in the new React-based settings:
 // an external service. WooCommerce 10.6+ automatically groups these.
 // New gateways are placed above the offline group by default.
 ```
+
+## React-based Payments Settings Page
+
+WooCommerce > Settings > Payments has been rebuilt in React. Gateways that use the
+standard Settings API (`init_form_fields()` / `process_admin_options()`) continue to
+work without code changes — the React UI only affects the core payments list page,
+not individual gateway settings screens.

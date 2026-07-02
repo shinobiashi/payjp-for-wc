@@ -6,13 +6,18 @@ The product name is the first element visitors see in marketplace search. Follow
 
 **Do:**
 - Use a name that clearly describes the feature (e.g., "Appointments", "Advanced Shipping")
+- Aim for 1 to 5 words — the fewer the better (official guidance)
 - Include keywords that users are likely to search for
 - Choose a distinctive name
+- If referencing WooCommerce, use the "Product Name for WooCommerce" format
 
 **Do not:**
 - Lead with a brand name (❌ "VendorXYZ Bookings Plugin for WooCommerce")
+- Lead with the WooCommerce trademark (❌ "WooCommerce Product Name")
+- Use superlative adjectives such as "best" or "amazing"
 - Choose a name that closely resembles an existing marketplace product
 - Use a name that violates WooCommerce trademark guidelines
+  (https://woocommerce.com/trademark-guidelines/)
 - Use the product description itself as the name
 
 Changing the name after launch requires a request to the marketplace team.
@@ -95,8 +100,9 @@ Leave technical details to the documentation; provide only an overview here.]
 
 ### AI Optimization Tips (2026 Recommendation)
 
-WooCommerce's latest guidelines recommend writing in a way that makes it easy for AI/generative
-engines to cite the content:
+Writing so that AI/generative engines can easily cite the content is increasingly
+effective for discoverability (general best practice — not an official marketplace
+requirement; the official Content Style Guide does not cover AI optimization):
 
 - Use a **direct, factual tone** ("it does X", not "it might do X")
 - Format headings as "what is" / "how to" questions
@@ -168,6 +174,9 @@ The image displayed at the top of the product page. A screenshot of the frontend
 shoppers see) is ideal.
 
 ### Recommended Gallery Image Set
+
+Gallery images must be 896×550px or larger. One embeddable video per product
+(YouTube or Vimeo) is also supported.
 
 1. **Frontend main screen** — The screen shoppers actually see
 2. **Admin settings page** — The primary screen merchants interact with

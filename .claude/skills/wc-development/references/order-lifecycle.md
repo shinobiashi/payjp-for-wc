@@ -190,3 +190,14 @@ add_filter( 'woocommerce_order_item_get_formatted_meta_data', function( $formatt
     return $formatted_meta;
 }, 10, 2 );
 ```
+
+## Fulfillments API (WC 10.7+)
+
+WooCommerce core includes a Fulfillments system for shipment tracking. As of 10.7 it
+exposes typed PHP methods (`get_tracking_number()`, `set_tracking_number()`,
+`get_shipping_provider()`), logs fulfillment lifecycle events as order notes, and
+registers its data store via `woocommerce_data_stores` so extensions can swap in a
+custom implementation. Classes live under
+`Automattic\WooCommerce\Admin\Features\Fulfillments` (moved from
+`Automattic\WooCommerce\Internal\Fulfillments` in 10.7 — update old references).
+WC 10.8 added custom shipping provider definitions.

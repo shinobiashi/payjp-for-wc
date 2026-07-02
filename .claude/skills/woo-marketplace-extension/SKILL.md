@@ -63,19 +63,22 @@ Keep the directory name, main filename, and text domain all identical (hyphen-se
  * License URI:          https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:          my-extension
  * Domain Path:          /languages
- * Requires at least:    6.7
- * Tested up to:         6.7
+ * Requires at least:    6.9
+ * Tested up to:         7.0
  * Requires PHP:         8.2
- * WC requires at least: 9.0
- * WC tested up to:      9.6
+ * WC requires at least: 10.0
+ * WC tested up to:      10.9
  * Requires Plugins:     woocommerce
- *
- * Woo: 12345:abcdef1234567890abcdef1234567890
  */
 ```
 
 The `Author` / `Developer` field is required. Plugin names should clearly describe the feature
 (e.g., "Appointments" rather than "VendorXYZ Bookings Plugin for WooCommerce").
+
+Do **not** add the `Woo: 12345:...` header manually — WooCommerce.com adds it automatically
+upon deployment for marketplace products, and it should not appear in products distributed
+outside the marketplace. Keep `WC requires at least` / `WC tested up to` current (WooCommerce
+stable is 10.9 as of mid-2026); the QIT Validation test checks these headers at submission.
 
 ### Initialization Pattern
 
@@ -144,6 +147,8 @@ add_action( 'before_woocommerce_init', function() {
 ```
 
 Without this declaration in the main plugin file, WooCommerce will display an incompatibility warning.
+The QIT Validation test verifies that both the HPOS and Cart/Checkout Blocks compatibility
+declarations are present.
 
 ### Order Data Access Rules
 

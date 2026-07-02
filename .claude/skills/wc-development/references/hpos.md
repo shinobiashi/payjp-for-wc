@@ -69,7 +69,7 @@ $type = OrderUtil::get_order_type( $order_id );
 ### Storage Type Detection
 
 ```php
-use Automatic\WooCommerce\Utilities\OrderUtil;
+use Automattic\WooCommerce\Utilities\OrderUtil;
 
 if ( OrderUtil::custom_orders_table_usage_is_enabled() ) {
     // HPOS is active
@@ -138,3 +138,8 @@ $sync = get_option( 'woocommerce_custom_orders_table_data_sync_enabled' );
 // Are tables in sync?
 $in_sync = OrderUtil::is_custom_order_tables_in_sync();
 ```
+
+Note: since WooCommerce 10.7, HPOS "sync on read" (on-the-fly backfill when order data
+was written directly to `wp_posts` bypassing the CRUD API) is **disabled by default**,
+and may be removed entirely in a future version. Never write order data directly to
+`wp_posts`/`wp_postmeta` — with sync on read off, HPOS tables silently stay stale.

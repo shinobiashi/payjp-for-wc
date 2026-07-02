@@ -41,6 +41,9 @@ Recommended:
 
 ### Recommended Gallery Image Set
 
+Gallery image minimum size: 896×550px or larger (official requirement).
+One embeddable video per product (YouTube or Vimeo) is also supported in the gallery.
+
 Prepare 5–8 images in the following order:
 
 ```
@@ -86,7 +89,7 @@ Prepare 5–8 images in the following order:
 **Post-processing:**
 - Mask personal information (email addresses, names, etc.)
 - Mask the test environment URL
-- Maintain consistent image size (1200px wide recommended)
+- Maintain consistent image size (1200px wide recommended; never below the 896×550px gallery minimum)
 - Optimize file size (compress with tinypng, etc.)
 - Always set alt text
 
@@ -146,6 +149,7 @@ Prepare a staging environment with Basic Auth + a demo administrator account.
 
 A video embedded on the product page can be highly effective:
 
+- One embeddable video per product is supported
 - A short demo video of 1–3 minutes
 - Covers setup through basic operation
 - Subtle background music; narration or subtitles included
@@ -159,7 +163,7 @@ Verification of all assets before product launch:
 - [ ] Product icon (160×160px)
 - [ ] Highlight card background color (HEX)
 - [ ] Featured image (555×416px or larger)
-- [ ] Gallery images (5–8 images)
+- [ ] Gallery images (5–8 images, each 896×550px or larger)
 - [ ] Alt text set on all images
 - [ ] No personal information in screenshots
 - [ ] Demo environment URL + login credentials

@@ -1,7 +1,7 @@
 ---
 name: wp-plugin-development
 description: "Use when developing WordPress plugins: architecture and hooks, activation/deactivation/uninstall, admin UI and Settings API, data storage, cron/tasks, security (nonces/capabilities/sanitization/escaping), and release packaging."
-compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
+compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+; current stable: WordPress 7.0, WooCommerce 10.x). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
 ---
 
 # WP Plugin Development
@@ -94,6 +94,7 @@ See:
 - Settings save and read correctly (capability + nonce enforced).
 - Uninstall removes intended data (and nothing else).
 - Run repo lint/tests (PHPUnit/PHPCS if present) and any JS build steps if the plugin ships assets.
+- For wordpress.org releases: run the Plugin Check (PCP) plugin (`wp plugin check <slug>`). Passing it is mandatory for new directory submissions (since October 2024), and it also scans plugin updates.
 
 ## Failure modes / debugging
 

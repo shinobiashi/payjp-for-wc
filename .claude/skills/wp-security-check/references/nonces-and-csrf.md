@@ -61,6 +61,6 @@ add_action( 'woocommerce_checkout_process', function() {
 
 ## Nonce lifetime
 
-WordPress nonces are valid for 12 hours. For long-running admin pages:
+WordPress nonces have a default lifetime of 24 hours; the two-tick mechanism makes the effective validity 12–24 hours (customizable via the `nonce_life` filter). For long-running admin pages:
 - Use `wp_create_nonce()` fresh at page load via `wp_localize_script`
 - Handle nonce expiry gracefully in JS (re-fetch or reload)

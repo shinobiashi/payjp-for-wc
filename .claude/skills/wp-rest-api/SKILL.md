@@ -1,7 +1,7 @@
 ---
 name: wp-rest-api
 description: "Use when building, extending, or debugging WordPress REST API endpoints/routes: register_rest_route, WP_REST_Controller/controller classes, schema/argument validation, permission_callback/authentication, response shaping, register_rest_field/register_meta, or exposing CPTs/taxonomies via show_in_rest."
-compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
+compatibility: "Targets WordPress 6.7+ / WooCommerce 9.0+ (PHP 8.2+; current stable: WordPress 7.0, WooCommerce 10.x). Filesystem-based agent with bash + node. Some workflows require WP-CLI."
 ---
 
 # WP REST API
@@ -22,7 +22,7 @@ Use this skill when you need to:
 - Repo root + target plugin/theme/mu-plugin (path to entrypoint).
 - Desired namespace + version (e.g. `my-plugin/v1`) and routes.
 - Authentication mode (cookie + nonce vs application passwords vs auth plugin).
-- Target WordPress version constraints (if below 6.9, call out).
+- Target WordPress version constraints (current stable is 7.0; if below 6.9, call out).
 
 ## Procedure
 
@@ -48,6 +48,8 @@ If this is a full site repo, pick the specific plugin/theme before changing code
   - Use `register_rest_route()` on `rest_api_init`.
   - Prefer a controller class (`WP_REST_Controller` subclass) for anything non-trivial.
   - Read `references/routes-and-endpoints.md` and `references/schema.md`.
+- **Machine-readable capabilities (WP 6.9+):**
+  - The Abilities API auto-exposes registered abilities under `wp-abilities/v1`; consider it instead of bespoke endpoints when exposing plugin capabilities to AI/automation clients (see the wp-abilities-api skill).
 
 ### 2) Register routes safely (namespaces, methods, permissions)
 

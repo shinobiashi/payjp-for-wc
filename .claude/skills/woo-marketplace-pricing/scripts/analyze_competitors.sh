@@ -8,11 +8,15 @@
 # matching the given keyword and extracts pricing information.
 # Designed to be used by Claude Code as part of the pricing skill.
 #
-# Note: This script uses curl to fetch public marketplace pages.
+# Note: This script uses the public wccom-extensions search API
+# (the same API used by the in-dashboard marketplace browser).
+# The HTML search page at woocommerce.com/search/ is client-side
+# rendered and cannot be scraped with curl.
 # Results should be verified manually on woocommerce.com.
 
 KEYWORD="${1:?Usage: bash analyze_competitors.sh \"keyword\"}"
-ENCODED=$(echo "$KEYWORD" | sed 's/ /+/g')
+ENCODED=$(echo "$KEYWORD" | sed 's/ /%20/g')
+API_URL="https://woocommerce.com/wp-json/wccom-extensions/1.0/search?term=${ENCODED}"
 
 echo "============================================"
 echo "WooCommerce Marketplace Competitor Analysis"
@@ -20,19 +24,19 @@ echo "Search: $KEYWORD"
 echo "Date: $(date +%Y-%m-%d)"
 echo "============================================"
 echo ""
-echo "Searching woocommerce.com/product-category/woocommerce-extensions/?s=${ENCODED}"
+echo "Querying ${API_URL}"
 echo ""
 
-# Fetch search results page
-RESULT=$(curl -sL "https://woocommerce.com/product-category/woocommerce-extensions/?s=${ENCODED}" \
+# Fetch search results from the public API
+RESULT=$(curl -sL "$API_URL" \
   -H "User-Agent: Mozilla/5.0" \
   --max-time 15 2>/dev/null)
 
-if [ -z "$RESULT" ]; then
-  echo "ERROR: Could not fetch marketplace data."
+if [ -z "$RESULT" ] || ! command -v python3 >/dev/null 2>&1; then
+  echo "ERROR: Could not fetch marketplace data (or python3 unavailable)."
   echo ""
   echo "Manual research required. Visit:"
-  echo "  https://woocommerce.com/product-category/woocommerce-extensions/?s=${ENCODED}"
+  echo "  https://woocommerce.com/search/?q=${ENCODED}"
   echo ""
   echo "For each competitor, collect:"
   echo "  1. Product name"
@@ -43,21 +47,42 @@ if [ -z "$RESULT" ]; then
   exit 1
 fi
 
-# Extract product names and prices (basic HTML parsing)
-echo "Found products (raw extraction — verify on woocommerce.com):"
+echo "Found products (verify details on woocommerce.com):"
 echo "-----------------------------------------------------------"
 
-# Try to extract product titles
-echo "$RESULT" | grep -oP '(?<=<h2 class="woocommerce-loop-product__title">)[^<]+' | head -20 | while read -r title; do
-  echo "  - $title"
-done
+echo "$RESULT" | python3 -c '
+import json, sys
+
+try:
+    data = json.load(sys.stdin)
+except json.JSONDecodeError:
+    print("  ERROR: API response was not valid JSON.")
+    sys.exit(1)
+
+products = data.get("products", [])
+if not products:
+    print("  No products found for this keyword.")
+    sys.exit(0)
+
+print("  {:<45} {:>9} {:>7} {:>8}  {}".format("Product", "Price/yr", "Rating", "Reviews", "Vendor"))
+for p in products[:20]:
+    title = (p.get("title") or "")[:44]
+    price = p.get("raw_price")
+    price_s = f"${price}" if price is not None else "n/a"
+    rating = p.get("rating")
+    rating_s = f"{rating}" if rating is not None else "-"
+    reviews = p.get("reviews_count")
+    reviews_s = f"{reviews}" if reviews is not None else "-"
+    vendor = p.get("vendor_name") or ""
+    print(f"  {title:<45} {price_s:>9} {rating_s:>7} {reviews_s:>8}  {vendor}")
+'
 
 echo ""
 echo "-----------------------------------------------------------"
 echo ""
-echo "NOTE: Price extraction from HTML is unreliable."
-echo "Please verify prices directly at:"
-echo "  https://woocommerce.com/product-category/woocommerce-extensions/?s=${ENCODED}"
+echo "NOTE: \$0 usually means a free/provider-subsidized extension."
+echo "Verify features and current prices directly at:"
+echo "  https://woocommerce.com/search/?q=${ENCODED}"
 echo ""
 echo "Recommended analysis template:"
 echo ""

@@ -8,6 +8,8 @@ Use this file when debugging background jobs or “changes not visible”.
   - `wp cron event list`
 - Run a specific event now:
   - `wp cron event run <hook>`
+- Run only events that are due (safer than running everything):
+  - `wp cron event run --due-now`
 
 ## Cache + rewrite
 

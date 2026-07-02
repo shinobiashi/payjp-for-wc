@@ -122,8 +122,11 @@ See: `references/documentation.md`
 WooCommerce.comが対応するHTML/Markdownフォーマットに準拠する:
 
 - 見出し: h2, h3（h1は使わない — 製品名が自動的にh1になる）
+- 見出しはセンテンスケース（先頭語と固有名詞のみ大文字）— 公式 Content Style Guide
 - リスト: 箇条書き（`*` or `-`）と番号付きリスト
 - 太字/イタリック: `**bold**`, `*italic*`
+- 強調のための ALL CAPS は使用しない
+- 3項目以上の列挙には Oxford comma を使用（例: "Track orders, manage inventory, and process refunds"）
 - リンク: `[text](url)`
 - コードブロック: バッククォート
 - 画像: Vendor Dashboard のエディタで別途アップロード
@@ -153,6 +156,7 @@ WooCommerceの公式ボイスに合わせる:
 ## 検証
 
 - 製品名が機能を説明しているか（ブランド名だけでないか）
+- 製品名が1〜5語に収まっているか（"best" 等の最上級形容詞を使っていないか）
 - 短い説明が簡潔で検索に最適化されているか
 - 長い説明がベネフィット→機能→ユースケースの順か
 - FAQが購入前の疑問を解消しているか

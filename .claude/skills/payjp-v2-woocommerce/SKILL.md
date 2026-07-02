@@ -1,8 +1,8 @@
 ---
 name: payjp-v2-woocommerce
 description: "Use when developing WooCommerce payment gateway plugins using PAY.JP v2 API: credit card payments, PayPay payments, Payment Flow API, Checkout Session, payments.js integration, webhook handling, and WooCommerce gateway class implementation."
-compatibility: "Targets WooCommerce 8.0+, WordPress 6.4+, PHP 8.0+. Requires PAY.JP v2 API keys."
-last_updated: "2026-04-24"
+compatibility: "Targets WooCommerce 8.0+ (current stable 10.9), WordPress 6.4+, PHP 8.0+. Requires PAY.JP v2 API keys (v2 is beta; account enablement required)."
+last_updated: "2026-07-02"
 docs_source: "https://docs.pay.jp/v2/guide"
 ---
 
@@ -112,7 +112,7 @@ function payjp_create_payment_flow( int $amount, array $method_types = ['card'] 
         throw new RuntimeException( $body['error']['message'] ?? 'PAY.JP error' );
     }
 
-    return $body; // ['id' => 'pflw_xxx', 'client_secret' => '...', 'status' => 'requires_payment_method']
+    return $body; // ['id' => 'pfw_xxx', 'client_secret' => '...', 'status' => 'requires_payment_method']
 }
 ```
 
@@ -215,23 +215,25 @@ add_action( 'rest_api_init', function() {
 } );
 
 function payjp_webhook_handler( WP_REST_Request $request ): WP_REST_Response {
+    // Token is the account-specific "発信元トークン" (whook_xxx) shown in the dashboard
     $token = $request->get_header( 'x-payjp-webhook-token' );
-    if ( $token !== get_option( 'payjp_webhook_secret' ) ) {
+    if ( ! $token || ! hash_equals( (string) get_option( 'payjp_webhook_secret' ), $token ) ) {
         return new WP_REST_Response( [ 'error' => 'Unauthorized' ], 401 );
     }
 
     $event = $request->get_json_params();
     $type  = $event['type'] ?? '';
 
+    // NOTE: event 'data' IS the resource object itself (not data.object like Stripe)
     switch ( $type ) {
         case 'payment_flow.succeeded':
-            payjp_handle_payment_succeeded( $event['data']['object'] );
+            payjp_handle_payment_succeeded( $event['data'] );
             break;
         case 'payment_flow.payment_failed':
-            payjp_handle_payment_failed( $event['data']['object'] );
+            payjp_handle_payment_failed( $event['data'] );
             break;
         case 'refund.created':
-            payjp_handle_refund_created( $event['data']['object'] );
+            payjp_handle_refund_created( $event['data'] );
             break;
     }
 
@@ -257,7 +259,7 @@ public function process_refund( $order_id, $amount = null, $reason = '' ): bool 
         $body['reason'] = 'requested_by_customer';
     }
 
-    $response = wp_remote_post( 'https://api.pay.jp/v2/refunds', [
+    $response = wp_remote_post( 'https://api.pay.jp/v2/payment_refunds', [
         'headers' => [
             'Authorization' => 'Bearer ' . $this->secret_key,
             'Content-Type'  => 'application/json',
@@ -284,21 +286,23 @@ public function process_refund( $order_id, $amount = null, $reason = '' ): bool 
 
 ## Error handling patterns
 
-PAY.JP v2 errors follow RFC 9457:
+PAY.JP v2 errors follow RFC 9457 (`application/problem+json`):
 ```json
-{"status": 400, "code": "invalid_status", "detail": "...", "errors": [...]}
+{"status": 400, "code": "invalid_status", "title": "...", "detail": "...", "type": "...", "errors": [...]}
 ```
 
-- HTTP 4xx → log and show user-friendly message, do NOT retry
-- HTTP 5xx → exponential backoff, max 3 retries
+- HTTP 4xx (400/401/402/404/422) → log and show user-friendly message, do NOT retry
+- HTTP 500/503/504 → exponential backoff, max 3 retries (use `Idempotency-Key`)
 - `result.error` from payments.js → display `result.error.message` in payment form
 
 ## Testing
 
-- Test API keys: `pk_test_xxx` / `sk_test_xxx`
-- PayPay test accounts: phone 080-1111-5912 to 080-1111-5921 (10 accounts)
+- Test API keys: `pk_test_xxx` / `sk_test_xxx` (same API keys as v1)
+- Test cards: `4242 4242 4242 4242` (Visa), `5555 5555 5555 4444` (Mastercard), `3530 1113 3330 0000` (JCB); error cards e.g. `4000 0000 0000 0002` → `card_declined`
+- PayPay test accounts: phone 080-1111-5912 to 080-1111-5921 (10 accounts, password `Pay2test`, SMS code `1234`)
 - PayPay test limit: ¥100 per transaction; must fully refund after each test
-- 3DS test: use test cards provided in PAY.JP dashboard
+- 3DS test: test mode shows a dedicated auth screen where you choose the outcome (success/failure)
+- Local webhook testing: `payjp-cli listen --forward-to http://localhost:8888/wp-json/payjp/v1/webhook`
 
 ## Docs refresh
 

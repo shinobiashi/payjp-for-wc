@@ -13,8 +13,8 @@ Use this file when you’re editing `block.json` fields or choosing between scri
 **WordPress 6.9+ requires apiVersion 3.** The block.json schema now only validates blocks with `apiVersion: 3`. Older versions (1 or 2) trigger console warnings when `SCRIPT_DEBUG` is enabled.
 
 **Why apiVersion 3 matters:**
-- The post editor will be iframed if all registered blocks have apiVersion 3+.
-- WordPress 7.0 will always use the iframe editor regardless of apiVersion.
+- WordPress 6.9 iframes the post editor if all *registered* blocks have apiVersion 3+; WordPress 7.0 (released May 2026) relaxes this to check only blocks *inserted in the post*.
+- The iframe is not yet enforced in core: any apiVersion ≤ 2 block in the content drops the editor out of the iframe (the Gutenberg plugin 22.6+ already enforces it; core enforcement is planned for a future release).
 - Benefits: style isolation (admin CSS won't affect editor content), correct viewport units (vw, vh), native media queries.
 
 **Migration checklist:**
@@ -37,8 +37,8 @@ This is not a full schema; it’s a “what matters in practice” list:
 - `editorScript` / `editorStyle`: editor-only assets.
 - `script` / `style`: shared assets.
 - `viewScript` / `viewStyle`: frontend view assets.
-- `viewScriptModule`: module-based frontend scripts (newer WP).
-- `render`: points to a PHP render file for dynamic blocks (newer WP).
+- `viewScriptModule`: module-based frontend scripts (stable since WP 6.5; required for Interactivity API view code).
+- `render`: points to a PHP render file for dynamic blocks (WP 6.1+).
 
 ## Helpful upstream references
 

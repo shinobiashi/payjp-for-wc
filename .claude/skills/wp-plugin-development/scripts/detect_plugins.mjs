@@ -76,10 +76,14 @@ function parsePluginHeader(contents) {
     ["Author URI", "authorUri"],
     ["Text Domain", "textDomain"],
     ["Domain Path", "domainPath"],
+    ["Requires at least", "requiresWp"],
+    ["Requires PHP", "requiresPhp"],
+    ["Requires Plugins", "requiresPlugins"],
   ];
   for (const [label, key] of pairs) {
-    const m = contents.match(new RegExp(`^\\s*${label}:\\s*(.+)\\s*$`, "im"));
-    if (m) header[key] = m[1].trim();
+    // Match WP core get_file_data(): headers may be prefixed with comment chars (e.g. " * Plugin Name:").
+    const m = contents.match(new RegExp(`^[ \\t/*#@]*${label}:\\s*(.+)\\s*$`, "im"));
+    if (m) header[key] = m[1].replace(/\s*\*\/\s*$/, "").trim();
   }
   if (!header.name) return null;
   return header;

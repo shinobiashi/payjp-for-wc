@@ -10,6 +10,7 @@
 
 - Available in WordPress 5.6+.
 - Use HTTPS + Basic Auth with the application password.
+- Disabled by default on non-HTTPS sites (`wp_is_application_passwords_available()`).
 - Recommended over the legacy Basic Auth plugin.
 
 ## Auth plugins

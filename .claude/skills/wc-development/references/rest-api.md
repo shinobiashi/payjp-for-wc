@@ -181,6 +181,18 @@ woocommerce_store_api_register_endpoint_data( [
 ] );
 ```
 
+## API Versions: v3 vs v4
+
+`wc/v3` is the primary stable version. Since WC 10.7, `wc/v4` endpoints are rolling out
+incrementally (products, suggested-products, customers, orders) with modern architecture,
+expanded sorting, and stricter permission handling (sensitive product fields stripped for
+unauthorized users). Replaced API versions are kept for ~2 years before removal.
+
+Behavior changes to note (WC 10.8):
+
+- `PUT /wc/v(2|3)/orders/{id}` now rejects requests against non-`shop_order` records
+- `checkout-draft` orders are excluded from default order queries; request them explicitly
+
 ## WC 10.5+: Experimental REST API Caching
 
 WooCommerce 10.5 introduced experimental REST API caching.

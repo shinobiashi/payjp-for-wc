@@ -6,6 +6,7 @@ Use this file when deciding what commands to run and what â€œgood verificationâ€
 
 - `@wordpress/scripts` for build/lint/test:
   - https://developer.wordpress.org/block-editor/reference-guides/packages/packages-scripts/
+  - `wp-scripts build --blocks-manifest` (or `build-blocks-manifest`) generates `build/blocks-manifest.php` for single-call block registration on WP 6.8+.
 - `@wordpress/create-block` to scaffold new blocks:
   - https://developer.wordpress.org/block-editor/reference-guides/packages/packages-create-block/
 - Interactivity API template for `create-block`:

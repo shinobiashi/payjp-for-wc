@@ -1,7 +1,7 @@
 # Webhook Handling
 
-Source: https://docs.pay.jp/v2/guide
-Last updated: 2026-04-24
+Source: https://docs.pay.jp/v2/guide/developers/event-webhook
+Last updated: 2026-07-02
 
 ## Overview
 
@@ -9,9 +9,9 @@ PAY.JP v2 sends webhooks for payment state changes. In WooCommerce, webhooks are
 
 ## Authentication
 
-Every webhook request includes:
+Every webhook request includes the account-specific token ID (shown as「発信元トークン」when registering the endpoint in the PAY.JP dashboard):
 ```
-X-Payjp-Webhook-Token: <your-registered-secret>
+X-Payjp-Webhook-Token: whook_xxxxxxxxxxxxx
 ```
 
 Always validate with timing-safe comparison:
@@ -23,8 +23,24 @@ if ( ! hash_equals( get_option( 'payjp_webhook_secret' ), $token ) ) {
 
 ## Retry Policy
 
-- 3 retries at 3-minute intervals on non-2xx response
-- Return 2xx immediately; process asynchronously if needed
+- 3 retries at 3-minute intervals on non-2xx response, timeout (10 s), or connection error
+- Respond within **10 seconds** with 2xx; process asynchronously if needed
+- Local testing: `payjp-cli listen --forward-to <local URL>` (test mode events only)
+
+## Event Payload Structure
+
+`data` contains the resource object **directly** — there is no `data.object` wrapper (unlike Stripe):
+
+```json
+{
+  "id": "evt_xxx",
+  "object": "event",
+  "livemode": true,
+  "type": "payment_flow.succeeded",
+  "pending_webhooks": 1,
+  "data": { "id": "pfw_xxx", "object": "payment_flow", "status": "succeeded", ... }
+}
+```
 
 ## Key Events
 
@@ -32,8 +48,11 @@ if ( ! hash_equals( get_option( 'payjp_webhook_secret' ), $token ) ) {
 |-------|------|
 | `payment_flow.succeeded` | Payment fully completed |
 | `payment_flow.payment_failed` | Payment rejected/failed |
-| `refund.created` | Refund initiated |
-| `checkout.session.completed` | Checkout v2 session completed |
+| `payment_flow.requires_action` | Customer action needed (3DS etc.) |
+| `payment_flow.canceled` | Payment Flow canceled |
+| `refund.created` / `refund.updated` / `refund.failed` | Refund lifecycle (PayPay refunds start as `pending`) |
+| `checkout.session.completed` / `checkout.session.expired` | Checkout v2 session completed / expired |
+| `setup_flow.succeeded` / `setup_flow.setup_failed` | Payment method registration result |
 
 ## WordPress REST API Endpoint
 
@@ -59,13 +78,13 @@ function payjp_webhook_handler( WP_REST_Request $request ): WP_REST_Response {
         return new WP_REST_Response( [ 'error' => 'Unauthorized' ], 401 );
     }
 
-    // 2. Parse event
+    // 2. Parse event — 'data' IS the resource object itself
     $event = $request->get_json_params();
-    if ( ! isset( $event['type'], $event['data']['object'] ) ) {
+    if ( ! isset( $event['type'], $event['data'] ) ) {
         return new WP_REST_Response( [ 'error' => 'Invalid payload' ], 400 );
     }
 
-    $object = $event['data']['object'];
+    $object = $event['data'];
 
     // 3. Route to handler
     switch ( $event['type'] ) {
@@ -121,16 +140,20 @@ function payjp_on_payment_failed( array $payment_flow ): void {
 }
 
 function payjp_on_refund_created( array $refund ): void {
+    // PayPay refunds are async: status may be 'pending' at first — only act on 'succeeded'
+    if ( 'succeeded' !== ( $refund['status'] ?? '' ) ) {
+        return;
+    }
+
     $flow_id  = sanitize_text_field( $refund['payment_flow'] );
     $order    = payjp_find_order_by_flow_id( $flow_id );
 
     if ( ! $order ) return;
 
-    // WooCommerce refund record creation
-    $refund_amount = (int) $refund['amount'] / 100; // PAY.JP amounts in yen (integer)
+    // WooCommerce refund record creation — PAY.JP amounts are already in yen (integer)
     wc_create_refund( [
         'order_id' => $order->get_id(),
-        'amount'   => $refund_amount,
+        'amount'   => (int) $refund['amount'],
         'reason'   => sanitize_text_field( $refund['reason'] ?? '' ),
     ] );
 }

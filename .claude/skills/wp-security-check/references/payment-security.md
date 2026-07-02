@@ -7,6 +7,14 @@
 3. **NEVER transmit card data through your server** — use tokenization
 4. **NEVER disable SSL** for payment pages
 
+## PCI DSS v4.0.1 (current standard)
+
+- PCI DSS v4.0.1 (June 2024) is the current version; v3.2.1 and v4.0 are retired.
+- All formerly future-dated v4.x requirements became mandatory on **March 31, 2025**, notably:
+  - **Req 6.4.3** — every script on the payment page must be authorized, integrity-checked (e.g. SRI / CSP), and inventoried with written justification
+  - **Req 11.6.1** — tamper/change detection for payment page HTTP headers and content
+- For gateway plugins: keep checkout-page scripts minimal, load the gateway JS only from its official origin, and document all scripts the plugin injects so merchants can maintain their script inventory.
+
 ## Token-based payment flow
 
 ```
@@ -34,7 +42,7 @@ $token = sanitize_text_field( wp_unslash( $_POST['payment_token'] ?? '' ) );
 // Always verify webhook signatures
 add_action( 'woocommerce_api_plugin_name', function() {
     $raw_body  = file_get_contents( 'php://input' );
-    $signature = sanitize_text_field( $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '' );
+    $signature = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_WEBHOOK_SIGNATURE'] ?? '' ) );
     $secret    = get_option( 'plugin_name_webhook_secret' );
 
     $expected = hash_hmac( 'sha256', $raw_body, $secret );
@@ -65,8 +73,10 @@ $logger->info( "Payment completed for order #{$order_id}, txn: {$transaction_id}
 ## HTTPS enforcement
 
 ```php
-// Ensure checkout is always HTTPS
-add_filter( 'woocommerce_force_ssl_checkout', '__return_true' );
+// Serve the entire site over HTTPS (PCI DSS requires TLS end to end).
+// WooCommerce's "Force secure checkout" is an option, not a filter:
+// WooCommerce > Settings > Advanced (stored as the woocommerce_force_ssl_checkout option);
+// it is hidden when the site URL is already https.
 
 // Enqueue payment scripts only on secure pages
 add_action( 'wp_enqueue_scripts', function() {

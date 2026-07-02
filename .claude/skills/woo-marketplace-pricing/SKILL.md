@@ -41,8 +41,9 @@ Collect the information needed to make a pricing recommendation:
 ### 2) Competitor Research
 
 Research the price range of existing products in the same category. You can use
-`scripts/analyze_competitors.sh` to retrieve competitor product information from the
-WooCommerce.com marketplace.
+`scripts/analyze_competitors.sh` to retrieve competitor product information
+(title, price, rating, review count, vendor) from the WooCommerce.com marketplace's
+public search API.
 
 For manual research, collect the following:
 - Product names and annual prices in the same category
@@ -62,15 +63,19 @@ to determine your price.
 | Category | Annual Price Range | Representative Products |
 |----------|--------------------|------------------------|
 | Payment gateways | $0–$79/year | Most are free (provider subsidized) |
-| Shipping extensions | $49–$149/year | Table Rate Shipping $99, Distance Rate $79 |
-| Product management | $49–$149/year | Product Add-Ons $49, Bundles $49 |
-| Subscriptions | $199–$249/year | Subscriptions $199, Memberships $199 |
-| Marketing | $49–$179/year | Affiliate $179, Smart Coupons $99 |
-| Analytics/reporting | $49–$149/year | Analytics Pro $79 |
-| Inventory management | $79–$199/year | Stock Manager $79 |
-| Bookings/appointments | $199–$249/year | Bookings $249 |
+| Shipping extensions | $49–$149/year | Table Rate Shipping $119, Distance Rate Shipping $99 |
+| Product management | $49–$149/year | Product Add-Ons $79, Product Bundles $79 |
+| Subscriptions | $99–$279/year | WooCommerce Subscriptions $279, Memberships $199 |
+| Marketing | $49–$179/year | Affiliate $179, Smart Coupons $129 |
+| Analytics/reporting | $49–$149/year | Google Analytics Pro $79, Customer Analytics $79 |
+| Inventory management | $49–$149/year | Stock Manager $49, Bulk Stock Management $49 |
+| Bookings/appointments | $59–$249/year | WooCommerce Bookings $249 (third-party $59–$79) |
 | Compliance | $49–$99/year | GDPR $49 |
-| Integrations/connections | $79–$199/year | QuickBooks $79, Zapier $99 |
+| Integrations/connections | $29–$149/year | QuickBooks Integration $99, Zapier Integration $129 |
+
+Prices verified against the live marketplace (woocommerce.com) in mid-2026 via the
+public search API: `https://woocommerce.com/wp-json/wccom-extensions/1.0/search?term=...`.
+Always re-verify before making a recommendation — prices change frequently.
 
 ### Pricing Guidelines by Complexity
 
@@ -184,7 +189,11 @@ break-even point.
 
 ### Monthly Subscriptions
 
-If offering a monthly option, implementing the SaaS Billing API is required.
+If offering a monthly option (or selling a SaaS product), implementing the
+Billing API for SaaS products (SaaS Billing API) is required. The API supports
+both monthly and annual billing intervals with upgrade/downgrade flows.
+Sandbox access is granted after your product passes business review, and
+credentials (API key and secret) are issued via the Vendor Dashboard.
 
 ```
 Monthly → Annual pricing conversion:
@@ -201,12 +210,14 @@ Annual subscriptions produce a higher LTV (lifetime value).
 
 ### Price Alignment with Other Sales Channels
 
-Marketplace price ≤ price on other channels (required rule)
+The marketplace sells single-site licenses only. Official rule: your marketplace
+price should closely match your existing single-site license fee on other
+channels — and must never be higher.
 
 Strategy when also selling on your own site:
-- **Identical pricing**: Simple and easy to manage
-- **Lower on marketplace**: Leverage marketplace traffic for acquisition
-- **Higher on own site**: Satisfies marketplace rules while offering premium support on your own site
+- **Identical pricing**: Simple, easy to manage, and matches the official expectation
+- **Multi-site / tiered packages on your own site**: Allowed, but the marketplace
+  listing must align with your single-site license price
 
 ### Pricing for the Japanese Market
 

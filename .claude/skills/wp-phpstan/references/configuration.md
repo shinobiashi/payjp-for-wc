@@ -29,6 +29,7 @@ parameters:
 
 Guidelines:
 
+- Levels range from 0 to 10 (level 10 — strictest `mixed` handling — was added in PHPStan 2.0). Level 5 is a common WordPress starting point; ratchet up over time.
 - Prefer analyzing first-party code only.
 - Exclude anything generated or vendored.
 - Keep `ignoreErrors` patterns narrow and grouped by dependency.
@@ -66,6 +67,9 @@ vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.neon
 
 # Update an existing baseline (defaults)
 vendor/bin/phpstan analyse --generate-baseline
+
+# Large baselines: PHP format parses faster and uses less memory
+vendor/bin/phpstan analyse --generate-baseline phpstan-baseline.php
 ```
 
 Best practices:
@@ -73,3 +77,4 @@ Best practices:
 - Avoid adding new errors to the baseline; fix the new code instead.
 - Treat baseline changes like code changes: review in PRs.
 - Chip away at the baseline gradually (remove entries as you fix root causes).
+- PHPStan 2.x errors carry identifiers (e.g. `class.notFound`, shown with `-v`); prefer `identifier:` over message regexes for targeted `ignoreErrors` entries.

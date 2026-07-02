@@ -1,6 +1,6 @@
 <?php
 /**
- * Minimal WC_Payment_Gateway and WC_Payment_Gateway_CC stubs for unit tests.
+ * Minimal WC_Payment_Gateway stub for unit tests.
  *
  * @package Payjp_For_WooCommerce
  */
@@ -82,6 +82,35 @@ abstract class WC_Payment_Gateway {
 	 */
 	public function supports( string $feature ): bool {
 		return in_array( $feature, $this->supports, true );
+	}
+
+	/**
+	 * Enqueue tokenization scripts (no-op in stub).
+	 */
+	public function tokenization_script(): void {}
+
+	/**
+	 * Output saved payment methods HTML (no-op in stub).
+	 */
+	public function saved_payment_methods(): void {}
+
+	/**
+	 * Output the save-payment-method checkbox HTML (no-op in stub).
+	 */
+	public function save_payment_method_checkbox(): void {}
+
+	/**
+	 * @return WC_Payment_Token[]
+	 */
+	public function get_tokens(): array {
+		return [];
+	}
+
+	/**
+	 * @return string
+	 */
+	public function get_title(): string {
+		return $this->title;
 	}
 }
 
@@ -171,33 +200,4 @@ class WC_Payment_Token_CC extends WC_Payment_Token {
 	 * @param string $year Expiry year (4 digits).
 	 */
 	public function set_expiry_year( string $year ): void {}
-}
-
-/**
- * Stub for WC_Payment_Gateway_CC used in PHPUnit tests.
- * Extends WC_Payment_Gateway and adds tokenization-related no-op methods.
- */
-abstract class WC_Payment_Gateway_CC extends WC_Payment_Gateway {
-
-	/**
-	 * Enqueue tokenization scripts (no-op in stub).
-	 */
-	public function tokenization_script(): void {}
-
-	/**
-	 * Output saved payment methods HTML (no-op in stub).
-	 */
-	public function saved_payment_methods(): void {}
-
-	/**
-	 * Output the save-payment-method checkbox HTML (no-op in stub).
-	 */
-	public function save_payment_method_checkbox(): void {}
-
-	/**
-	 * @return WC_Payment_Token[]
-	 */
-	public function get_tokens(): array {
-		return [];
-	}
 }

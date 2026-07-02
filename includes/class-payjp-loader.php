@@ -90,6 +90,16 @@ class Payjp_Loader {
 		// Suppressing is_default in StoreAPI context forces the fallback to the session value
 		// (set by update_order_from_request to the user's actual selection).
 		add_filter( 'woocommerce_payment_methods_list_item', array( self::class, 'suppress_payjp_token_default_in_storeapi' ), 5, 2 );
+
+		// Guard against WooCommerce Blocks Hydration service overwriting payment_method.
+		// On the order-pay page, the Hydration service (AssetDataRegistry) makes an internal
+		// fake GET request to /wc/store/v1/checkout. This runs update_order_from_cart(), which
+		// calls set_payment_method(PaymentUtils::get_default_payment_method()). Because the
+		// fake request does not set REST_REQUEST, the suppress_payjp_token_default_in_storeapi
+		// filter may not fire, so the default saved card token wins and overwrites the PayPay
+		// payment_method that process_payment() already persisted.
+		// This hook intercepts the save and restores the authoritative value from meta.
+		add_action( 'woocommerce_before_order_object_save', array( self::class, 'correct_payment_method_before_save' ) );
 	}
 
 	/**
@@ -105,24 +115,90 @@ class Payjp_Loader {
 	}
 
 	/**
-	 * Suppress is_default on payjp_card tokens during StoreAPI requests.
+	 * Suppress is_default on payjp_card tokens outside My Account > Payment Methods.
 	 *
 	 * Without this, PaymentUtils::get_default_payment_method() returns 'payjp_card'
 	 * whenever a saved card exists, ignoring the user's actual selection (e.g. PayPay).
-	 * Suppressing is_default in REST context forces the method to fall through to the
-	 * session value, which update_order_from_request() sets to the chosen gateway.
+	 * Suppressing is_default forces the method to fall through to the session value,
+	 * which update_order_from_request() sets to the chosen gateway.
 	 *
-	 * My Account > Payment Methods is unaffected (not a REST_REQUEST).
+	 * The WooCommerce Blocks Hydration service issues an internal fake GET request to
+	 * /wc/store/v1/checkout during order-pay page rendering. Because that fake request
+	 * does not set REST_REQUEST, checking REST_REQUEST alone is insufficient — the
+	 * filter must suppress in non-My-Account contexts regardless of request type.
 	 *
 	 * @param array<string, mixed> $list_item Saved payment method list item.
 	 * @param \WC_Payment_Token    $token     The WooCommerce payment token.
 	 * @return array<string, mixed>
 	 */
 	public static function suppress_payjp_token_default_in_storeapi( array $list_item, \WC_Payment_Token $token ): array {
-		if ( 'payjp_card' === $token->get_gateway_id() && defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		if ( 'payjp_card' === $token->get_gateway_id() && ! is_wc_endpoint_url( 'payment-methods' ) ) {
 			$list_item['is_default'] = false;
 		}
 		return $list_item;
+	}
+
+	/**
+	 * Prevent update_order_from_cart() from overwriting payment_method for PAY.JP orders.
+	 *
+	 * WooCommerce Block Checkout's update_order_from_cart() calls
+	 * set_payment_method(PaymentUtils::get_default_payment_method()) on every cart sync.
+	 * This can set 'payjp_card' even on a PayPay order if the session or token default
+	 * resolves to 'payjp_card'. This hook fires before each save and corrects the
+	 * payment_method to match the authoritative _payjp_payment_method meta, which is
+	 * written by process_payment() and never overwritten by WooCommerce internals.
+	 *
+	 * Also corrects payment_method_title: passing only a string ID to
+	 * set_payment_method() skips the title update entirely (see
+	 * fix_payment_method_after_complete()), so without this the order could keep a
+	 * stale title (e.g. "Credit Card") that Blocks' cart-sync code wrote alongside
+	 * the wrong gateway ID.
+	 *
+	 * Skipped in wp-admin: the Hydration bug this guards against only occurs on the
+	 * frontend order-pay page. woocommerce_before_order_object_save fires for every
+	 * order save, so without this guard a merchant intentionally changing
+	 * payment_method from the Edit Order screen (or an admin-side integration) would
+	 * have that change silently reverted.
+	 *
+	 * @param \WC_Order $order Order being saved.
+	 */
+	public static function correct_payment_method_before_save( \WC_Order $order ): void {
+		if ( is_admin() ) {
+			return;
+		}
+
+		$changes = $order->get_changes();
+		if ( ! isset( $changes['payment_method'] ) ) {
+			return;
+		}
+
+		$payjp_method = (string) $order->get_meta( '_payjp_payment_method' );
+		if ( '' === $payjp_method ) {
+			return;
+		}
+
+		$gateway_map = array(
+			'card'   => 'payjp_card',
+			'paypay' => 'payjp_paypay',
+		);
+
+		if ( ! isset( $gateway_map[ $payjp_method ] ) ) {
+			return;
+		}
+
+		$correct_gateway = $gateway_map[ $payjp_method ];
+
+		if ( $correct_gateway === $changes['payment_method'] ) {
+			return;
+		}
+
+		$order->set_payment_method( $correct_gateway );
+
+		$all_gateways = WC()->payment_gateways()->payment_gateways();
+		$gateway      = isset( $all_gateways[ $correct_gateway ] ) ? $all_gateways[ $correct_gateway ] : null;
+		if ( $gateway instanceof WC_Payment_Gateway ) {
+			$order->set_payment_method_title( $gateway->get_title() );
+		}
 	}
 
 	/**
@@ -132,7 +208,8 @@ class Payjp_Loader {
 	 * available gateway before our process_payment() runs. Even though
 	 * update_order_from_request() corrects it, a later save can revert the value.
 	 * This hook uses the authoritative _payjp_payment_method meta (set by our own
-	 * process_payment()) to ensure payment_method always reflects the actual gateway.
+	 * process_payment()) to ensure both the payment_method ID and payment_method_title
+	 * always reflect the actual gateway used.
 	 *
 	 * @param int $order_id WooCommerce order ID.
 	 */
@@ -159,7 +236,15 @@ class Payjp_Loader {
 			return;
 		}
 
+		// Look up the gateway instance to also fix payment_method_title. Passing only a
+		// string ID to set_payment_method() skips the title update entirely.
+		$all_gateways = WC()->payment_gateways()->payment_gateways();
+		$gateway      = isset( $all_gateways[ $correct_gateway ] ) ? $all_gateways[ $correct_gateway ] : null;
+
 		$order->set_payment_method( $correct_gateway );
+		if ( $gateway instanceof WC_Payment_Gateway ) {
+			$order->set_payment_method_title( $gateway->get_title() );
+		}
 		$order->save();
 	}
 }

@@ -30,3 +30,4 @@ require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-webhook-
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-card.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-paypay.php';
+require_once dirname( __DIR__ ) . '/includes/class-payjp-loader.php';

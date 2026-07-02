@@ -25,8 +25,12 @@ if ( class_exists( 'WC_Gateway_Payjp' ) ) {
  *   - get_script_i18n()
  *   - receipt_page()
  *   - process_payment()
+ *
+ * Extends WC_Payment_Gateway (not _CC): tokenization helpers live on
+ * WC_Payment_Gateway since WC 2.6; WC_Payment_Gateway_CC only adds the
+ * classic-checkout card form renderer, which both gateways override.
  */
-abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
+abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 
 	/**
 	 * PAY.JP payment method slug: 'card' or 'paypay'.
@@ -352,12 +356,23 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway_CC {
 		}
 
 		// Payment methods such as PayPay confirm asynchronously: the user is redirected
-		// back while PAY.JP's backend is still processing. "requires_action" at this
-		// point means the customer completed the off-site flow and the payment is
-		// pending server-side confirmation. Redirect to the thank-you page and let
-		// the payment_flow.succeeded webhook call payment_complete() a few seconds later.
-		if ( 'requires_action' === $status ) {
-			$logger->log_event( 'payment_pending_confirmation', $order_id, array( 'flow_id' => $flow_id ) );
+		// back while PAY.JP's backend is still processing. Both 'requires_action' and
+		// 'processing' mean the payment is still in flight on the PAY.JP side —
+		// redirect to the thank-you page and let the payment_flow.succeeded webhook
+		// call payment_complete() a few seconds later.
+		// NOTE: 'processing' must be handled here explicitly; without it, a flow that
+		// transitions requires_action → processing before the customer returns would
+		// fall through to the error path below, showing a false "payment failed" UX
+		// and risking duplicate orders while PAY.JP still settles the payment.
+		if ( in_array( $status, array( 'requires_action', 'processing' ), true ) ) {
+			$logger->log_event(
+				'payment_pending_confirmation',
+				$order_id,
+				array(
+					'flow_id'     => $flow_id,
+					'flow_status' => $status,
+				)
+			);
 			$order->add_order_note(
 				__( 'PAY.JP payment is awaiting confirmation. Order will be updated automatically via webhook.', 'payjp-for-wc' )
 			);

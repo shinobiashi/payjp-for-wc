@@ -161,14 +161,12 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			return array( 'result' => 'failure' );
 		}
 
-		// Correct payment_method on the order object before saving. Block Checkout creates
-		// a draft order with the first available gateway; a stale WP object cache may
-		// still carry that value when process_payment() is called after the StoreAPI
-		// updates the DB. Explicitly setting it here ensures our save() writes the
-		// correct gateway ID.
-		if ( $this->id !== $order->get_payment_method() ) {
-			$order->set_payment_method( $this->id );
-		}
+		// Always overwrite payment_method and payment_method_title to guarantee the
+		// correct values are persisted. Block Checkout's update_order_from_request()
+		// may fix the gateway ID (string call) without updating payment_method_title,
+		// leaving a stale "Credit Card" title even though the ID is already 'payjp_paypay'.
+		$order->set_payment_method( $this->id );
+		$order->set_payment_method_title( $this->get_title() );
 
 		$amount         = (int) round( $order->get_total() );
 		$capture_method = $this->get_capture_method();

@@ -5,7 +5,9 @@
  * Covers the woocommerce_before_order_object_save guard that restores
  * payment_method (and, per Copilot review feedback on PR #20, the matching
  * payment_method_title) when WooCommerce Blocks' Hydration service overwrites
- * the gateway selection during an internal cart-sync request.
+ * the gateway selection during an internal cart-sync request. Also covers the
+ * is_admin() scoping added in response to further Copilot feedback, so that
+ * legitimate wp-admin changes to payment_method are never reverted.
  *
  * @package Payjp_For_WooCommerce
  */
@@ -31,6 +33,7 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
+		Functions\when( 'is_admin' )->justReturn( false );
 	}
 
 	/**
@@ -40,6 +43,24 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		Monkey\tearDown();
 		Mockery::close();
 		parent::tearDown();
+	}
+
+	/**
+	 * Does nothing in wp-admin, even when payment_method would otherwise be
+	 * corrected — the Hydration bug this guards against is frontend-only, so
+	 * a deliberate admin-side payment_method change must not be reverted.
+	 */
+	#[Test]
+	public function does_nothing_in_wp_admin(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'is_admin' )->justReturn( true );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldNotReceive( 'get_changes' );
+		$order->shouldNotReceive( 'set_payment_method' );
+
+		Payjp_Loader::correct_payment_method_before_save( $order );
 	}
 
 	/**

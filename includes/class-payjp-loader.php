@@ -154,9 +154,19 @@ class Payjp_Loader {
 	 * stale title (e.g. "Credit Card") that Blocks' cart-sync code wrote alongside
 	 * the wrong gateway ID.
 	 *
+	 * Skipped in wp-admin: the Hydration bug this guards against only occurs on the
+	 * frontend order-pay page. woocommerce_before_order_object_save fires for every
+	 * order save, so without this guard a merchant intentionally changing
+	 * payment_method from the Edit Order screen (or an admin-side integration) would
+	 * have that change silently reverted.
+	 *
 	 * @param \WC_Order $order Order being saved.
 	 */
 	public static function correct_payment_method_before_save( \WC_Order $order ): void {
+		if ( is_admin() ) {
+			return;
+		}
+
 		$changes = $order->get_changes();
 		if ( ! isset( $changes['payment_method'] ) ) {
 			return;

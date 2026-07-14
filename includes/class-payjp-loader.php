@@ -160,6 +160,14 @@ class Payjp_Loader {
 	 * payment_method from the Edit Order screen (or an admin-side integration) would
 	 * have that change silently reverted.
 	 *
+	 * A pending order started with PAY.JP (e.g. PayPay) is reused when the customer
+	 * clicks "Change payment method" and re-submits checkout with a different gateway
+	 * (e.g. Cash on Delivery). Without checking the customer's actual selection, this
+	 * guard would wrongly revert that legitimate switch back to PAY.JP. The session's
+	 * chosen_payment_method (set by WooCommerce before create_order()/update_order_from_request()
+	 * run, for both classic and Block checkout) is the authoritative signal of what the
+	 * customer actually picked.
+	 *
 	 * @param \WC_Order $order Order being saved.
 	 */
 	public static function correct_payment_method_before_save( \WC_Order $order ): void {
@@ -192,6 +200,15 @@ class Payjp_Loader {
 			return;
 		}
 
+		if ( self::is_customers_actual_selection( $changes['payment_method'] ) ) {
+			// The customer genuinely switched away from PAY.JP. Clear the stale meta
+			// so it can't resurface later, e.g. a delayed payment_flow.succeeded webhook
+			// for the abandoned flow completing this order via Payjp_Webhook_Handler's
+			// fallback lookup by _payjp_payment_flow_id.
+			self::clear_stale_payjp_meta( $order );
+			return;
+		}
+
 		$order->set_payment_method( $correct_gateway );
 
 		$all_gateways = WC()->payment_gateways()->payment_gateways();
@@ -199,6 +216,48 @@ class Payjp_Loader {
 		if ( $gateway instanceof WC_Payment_Gateway ) {
 			$order->set_payment_method_title( $gateway->get_title() );
 		}
+	}
+
+	/**
+	 * Whether $new_method matches the customer's actual checkout selection.
+	 *
+	 * WooCommerce records the chosen gateway in the session under 'chosen_payment_method'
+	 * before the order is saved with that payment method, for both classic checkout
+	 * (WC_Checkout::update_session(), and the update_order_review AJAX call fired on
+	 * radio-button change) and Block Checkout (update_order_from_request()). This is
+	 * distinct from internal cart-sync saves (e.g. the Blocks Hydration service's fake
+	 * GET request) that reset payment_method without any corresponding session update.
+	 *
+	 * @param string $new_method Payment method ID being saved.
+	 * @return bool
+	 */
+	private static function is_customers_actual_selection( string $new_method ): bool {
+		$chosen = WC()->session->get( 'chosen_payment_method' );
+
+		return is_string( $chosen ) && '' !== $chosen && $chosen === $new_method;
+	}
+
+	/**
+	 * Delete PAY.JP-specific order meta left over from an abandoned payment attempt.
+	 *
+	 * Called when the customer switches away from PAY.JP to a different gateway on a
+	 * reused pending order. Without this, the stale _payjp_payment_flow_id would let
+	 * Payjp_Webhook_Handler::find_order_by_flow_id() match this order if the abandoned
+	 * flow later completes asynchronously, incorrectly marking it paid via PAY.JP.
+	 *
+	 * Also clears transaction_id: find_order_by_flow_id() checks it before falling
+	 * back to the meta query, so a manual-capture attempt that already reached
+	 * requires_capture (which sets transaction_id to the flow ID) would otherwise
+	 * still let a delayed webhook match this order even with the meta above cleared.
+	 *
+	 * @param \WC_Order $order Order being saved.
+	 */
+	private static function clear_stale_payjp_meta( \WC_Order $order ): void {
+		$order->delete_meta_data( '_payjp_payment_flow_id' );
+		$order->delete_meta_data( '_payjp_client_secret' );
+		$order->delete_meta_data( '_payjp_payment_method' );
+		$order->delete_meta_data( '_payjp_capture_method' );
+		$order->set_transaction_id( '' );
 	}
 
 	/**

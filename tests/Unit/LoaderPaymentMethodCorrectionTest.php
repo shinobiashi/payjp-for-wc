@@ -12,8 +12,9 @@
  * Also covers the session-based legitimate-selection check: a customer who
  * switches away from PAY.JP to a different gateway on a reused pending order
  * (e.g. PayPay -> Cash on Delivery via "Change payment method") must not have
- * that change reverted, and the stale PAY.JP meta must be cleared so it can't
- * be picked up later by a delayed webhook.
+ * that change reverted, and the stale PAY.JP meta (including transaction_id,
+ * which Payjp_Webhook_Handler::find_order_by_flow_id() checks before its meta
+ * fallback) must be cleared so it can't be picked up later by a delayed webhook.
  *
  * @package Payjp_For_WooCommerce
  */
@@ -130,6 +131,7 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$order->shouldReceive( 'set_payment_method' )->once()->with( 'payjp_paypay' );
 		$order->shouldReceive( 'set_payment_method_title' )->once()->with( 'PayPay' );
 		$order->shouldNotReceive( 'delete_meta_data' );
+		$order->shouldNotReceive( 'set_transaction_id' );
 
 		$paypay_gateway        = Mockery::mock( 'WC_Payment_Gateway' );
 		$paypay_gateway->title = 'PayPay';
@@ -162,6 +164,7 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$order->shouldReceive( 'set_payment_method' )->once()->with( 'payjp_paypay' );
 		$order->shouldNotReceive( 'set_payment_method_title' );
 		$order->shouldNotReceive( 'delete_meta_data' );
+		$order->shouldNotReceive( 'set_transaction_id' );
 
 		$payment_gateways = Mockery::mock();
 		$payment_gateways->shouldReceive( 'payment_gateways' )->andReturn( array() );
@@ -195,6 +198,7 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_client_secret' );
 		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_payment_method' );
 		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_capture_method' );
+		$order->shouldReceive( 'set_transaction_id' )->once()->with( '' );
 
 		$wc          = Mockery::mock();
 		$wc->session = Mockery::mock();

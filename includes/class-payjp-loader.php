@@ -245,6 +245,11 @@ class Payjp_Loader {
 	 * Payjp_Webhook_Handler::find_order_by_flow_id() match this order if the abandoned
 	 * flow later completes asynchronously, incorrectly marking it paid via PAY.JP.
 	 *
+	 * Also clears transaction_id: find_order_by_flow_id() checks it before falling
+	 * back to the meta query, so a manual-capture attempt that already reached
+	 * requires_capture (which sets transaction_id to the flow ID) would otherwise
+	 * still let a delayed webhook match this order even with the meta above cleared.
+	 *
 	 * @param \WC_Order $order Order being saved.
 	 */
 	private static function clear_stale_payjp_meta( \WC_Order $order ): void {
@@ -252,6 +257,7 @@ class Payjp_Loader {
 		$order->delete_meta_data( '_payjp_client_secret' );
 		$order->delete_meta_data( '_payjp_payment_method' );
 		$order->delete_meta_data( '_payjp_capture_method' );
+		$order->set_transaction_id( '' );
 	}
 
 	/**

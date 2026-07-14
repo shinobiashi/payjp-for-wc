@@ -30,6 +30,7 @@ composer.json
 composer.lock
 
 # Project documentation (dev-only)
+docs/
 CLAUDE.md
 CONTRACT.md
 DEVELOPMENT_PLAN.md

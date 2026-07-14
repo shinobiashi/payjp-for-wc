@@ -347,6 +347,7 @@ class Payjp_Webhook_Handler {
 
 		$voided         = false;
 		$void_attempted = false;
+		$void_error     = null;
 		if ( $order->has_status( array( 'cancelled', 'failed' ) ) ) {
 			$api = self::get_api_for_flow( $flow );
 			if ( null !== $api ) {
@@ -358,8 +359,9 @@ class Payjp_Webhook_Handler {
 						$order->get_id()
 					);
 					$voided = true;
-				} catch ( RuntimeException ) {
-					$voided = false;
+				} catch ( RuntimeException $e ) {
+					$voided     = false;
+					$void_error = $e;
 				}
 			}
 		}
@@ -436,7 +438,7 @@ class Payjp_Webhook_Handler {
 				)
 			);
 		} elseif ( $void_attempted ) {
-			self::logger()->log_error( 'late capturable webhook: automatic void failed (flow_id=' . $flow_id . ')', $order->get_id(), null );
+			self::logger()->log_error( 'late capturable webhook: automatic void failed (flow_id=' . $flow_id . ')', $order->get_id(), $void_error );
 		} else {
 			self::logger()->log_event(
 				'late_capturable_void_skipped',
@@ -462,13 +464,13 @@ class Payjp_Webhook_Handler {
 
 	/**
 	 * Build an API client using the secret key matching the event's livemode flag.
-	 * Returns null when the payload does not carry a livemode flag (safer than
-	 * guessing an environment) or when the corresponding key is not configured.
+	 * Returns null when the payload does not carry a boolean livemode flag (safer
+	 * than guessing an environment) or when the corresponding key is not configured.
 	 *
 	 * @param array<string, mixed> $flow Payment Flow object from the webhook payload.
 	 */
 	private static function get_api_for_flow( array $flow ): ?Payjp_API {
-		if ( ! isset( $flow['livemode'] ) ) {
+		if ( ! isset( $flow['livemode'] ) || ! is_bool( $flow['livemode'] ) ) {
 			return null;
 		}
 		$key = $flow['livemode']

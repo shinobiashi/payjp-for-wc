@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PAY.JP for WooCommerce 0.9.2\n"
+"Project-Id-Version: PAY.JP for WooCommerce 0.9.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
-"POT-Creation-Date: 2026-07-14T09:09:08+00:00\n"
+"POT-Creation-Date: 2026-07-14T10:04:47+00:00\n"
 "PO-Revision-Date: 2026-05-30 00:00+0000\n"
 "Last-Translator: Shohei Tanaka <shohei.t@artws.info>\n"
 "Language-Team: Japanese <ja@li.org>\n"
@@ -336,7 +336,7 @@ msgstr "PAY.JP: 支払い後にカード %1$s の保存に失敗しました: %2
 
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:193
 msgid "PAY.JP: Payment confirmed via webhook."
-msgstr ""
+msgstr "PAY.JP: Webhook経由で決済が確認されました。"
 
 #. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:233
@@ -347,28 +347,28 @@ msgid ""
 "PAY.JP dashboard and either refund the payment or handle the order manually. "
 "(Payment Flow ID: %2$s)"
 msgstr ""
-"PAY.JP: この注文が既に %1$s になった後で決済確定が確認されました。PAY.JP 側"
-"では決済が完了していますが、この注文には反映されていません。PAY.JP ダッシュ"
-"ボードを確認のうえ、返金するか注文を手動で処理してください。（Payment Flow "
-"ID: %2$s）"
+"PAY.JP: この注文が既に %1$s になった後で決済確定が確認されました。PAY.JP 側で"
+"は決済が完了していますが、この注文には反映されていません。PAY.JP ダッシュボー"
+"ドを確認のうえ、返金するか注文を手動で処理してください。（Payment Flow ID: "
+"%2$s）"
 
 #. translators: %s: WooCommerce order number.
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:242
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:388
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:407
 #, php-format
 msgid "Order: #%s"
 msgstr "注文: #%s"
 
 #. translators: %s: WooCommerce order status (e.g. "cancelled").
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:247
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:393
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:412
 #, php-format
 msgid "Current order status: %s"
 msgstr "現在の注文ステータス: %s"
 
 #. translators: %s: PAY.JP Payment Flow ID.
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:252
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:398
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:417
 #, php-format
 msgid "Payment Flow ID: %s"
 msgstr "Payment Flow ID: %s"
@@ -384,8 +384,8 @@ msgid ""
 "Review the payment on the PAY.JP dashboard and either refund it or handle "
 "the order manually."
 msgstr ""
-"PAY.JP ダッシュボードで該当の決済を確認のうえ、返金するか注文を手動で処理し"
-"てください。"
+"PAY.JP ダッシュボードで該当の決済を確認のうえ、返金するか注文を手動で処理して"
+"ください。"
 
 #: includes/gateways/payjp/class-payjp-webhook-handler.php:267
 msgid "PAY.JP payment confirmed for a closed order — action required"
@@ -397,20 +397,22 @@ msgid ""
 "PAY.JP authorised via webhook. Payment will be captured when the order is "
 "marked Completed."
 msgstr ""
+"PAY.JP Webhook経由でオーソリが完了しました。注文を「完了」に変更するとキャプ"
+"チャが実行されます。"
 
 #. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:369
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:371
 #, php-format
 msgid ""
 "PAY.JP: A PayPay authorization completed for this order after it was already "
 "%1$s. The authorization has been automatically voided. (Payment Flow ID: "
 "%2$s)"
 msgstr ""
-"PAY.JP: この注文が既に %1$s になった後で PayPay のオーソリが完了しました。オ"
-"ーソリは自動的に取り消されました。（Payment Flow ID: %2$s）"
+"PAY.JP: この注文が既に %1$s になった後で PayPay のオーソリが完了しました。"
+"オーソリは自動的に取り消されました。（Payment Flow ID: %2$s）"
 
 #. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:378
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:380
 #, php-format
 msgid ""
 "PAY.JP: A PayPay authorization completed for this order after it was already "
@@ -421,11 +423,23 @@ msgstr ""
 "動取り消しに失敗しました — 顧客の与信枠は確保されたままです。PAY.JP ダッシュ"
 "ボードで決済を取り消してください。（Payment Flow ID: %2$s）"
 
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:402
+#. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:389
+#, php-format
+msgid ""
+"PAY.JP: A PayPay authorization completed for this order after it was already "
+"%1$s. Automatic void was not attempted for this order — cancel the payment "
+"manually on the PAY.JP dashboard if needed. (Payment Flow ID: %2$s)"
+msgstr ""
+"PAY.JP: この注文が既に %1$s になった後で PayPay のオーソリが完了しました。自"
+"動取り消しは実行されませんでした — 必要に応じて PAY.JP ダッシュボードで決済"
+"を手動で取り消してください。（Payment Flow ID: %2$s）"
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:397
 msgid "The uncaptured authorization has been automatically voided."
 msgstr "未キャプチャのオーソリは自動的に取り消されました。"
 
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:403
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:399
 msgid ""
 "Automatic void FAILED — the customer's funds remain reserved. Cancel the "
 "payment on the PAY.JP dashboard."
@@ -433,17 +447,25 @@ msgstr ""
 "自動取り消しに失敗しました — 顧客の与信枠は確保されたままです。PAY.JP ダッ"
 "シュボードで決済を取り消してください。"
 
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:408
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:401
+msgid ""
+"Automatic void was not attempted for this order. Cancel the payment manually "
+"on the PAY.JP dashboard if needed."
+msgstr ""
+"この注文では自動取り消しは実行されませんでした。必要に応じて PAY.JP ダッシュ"
+"ボードで決済を手動で取り消してください。"
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:425
 msgid "PAY.JP authorization received for a closed order"
 msgstr "PAY.JP: 確定済み注文へのオーソリ受信"
 
 #. translators: PAY.JP failed payment note shown in WooCommerce admin
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:478
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:504
 msgid "PAY.JP payment failed (webhook)."
 msgstr "PAY.JP 決済が失敗しました（Webhook）。"
 
 #. translators: 1: PAY.JP refund ID, 2: refund amount in JPY
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:520
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:546
 #, php-format
 msgid "PAY.JP refund created (webhook). Refund ID: %1$s. Amount: ¥%2$s."
 msgstr "PAY.JP 返金が作成されました（Webhook）。返金 ID: %1$s。金額: ¥%2$s。"
@@ -651,7 +673,7 @@ msgstr ""
 
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:322
 msgid "This order can no longer be paid."
-msgstr ""
+msgstr "この注文はお支払いいただけません。"
 
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:330
 msgid "Payment verification failed. Please contact support."

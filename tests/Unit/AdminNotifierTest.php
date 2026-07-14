@@ -150,4 +150,59 @@ class AdminNotifierTest extends TestCase {
 
 		$this->assertTrue( $result );
 	}
+
+	// ── Copilot review fix: recipient filter validation ──────────────────────
+
+	#[Test]
+	public function invalid_recipient_from_filter_falls_back_to_configured_alert_email(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'alert_email' => 'ops@example.com' ] );
+		Functions\when( 'apply_filters' )->alias(
+			static function ( string $tag, mixed $value, mixed ...$args ): mixed {
+				// Simulate a misbehaving third-party filter returning a non-address value.
+				return 'payjp_for_wc_alert_email_recipient' === $tag ? 'not-an-email' : $value;
+			}
+		);
+		Functions\when( 'is_email' )->alias(
+			static fn( string $email ): bool => (bool) strpos( $email, '@' )
+		);
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/1' );
+
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( 'ops@example.com', Mockery::type( 'string' ), Mockery::type( 'string' ) )
+			->andReturn( true );
+
+		$result = Payjp_Admin_Notifier::send_alert( $order, 'Subject', [ 'line' ] );
+
+		$this->assertTrue( $result );
+	}
+
+	#[Test]
+	public function array_recipient_keeps_only_valid_addresses(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'alert_email' => 'ops@example.com' ] );
+		Functions\when( 'apply_filters' )->alias(
+			static function ( string $tag, mixed $value, mixed ...$args ): mixed {
+				return 'payjp_for_wc_alert_email_recipient' === $tag
+					? [ 'valid-one@example.com', 'not-an-email', 'valid-two@example.com' ]
+					: $value;
+			}
+		);
+		Functions\when( 'is_email' )->alias(
+			static fn( string $email ): bool => (bool) strpos( $email, '@' )
+		);
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/1' );
+
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( [ 'valid-one@example.com', 'valid-two@example.com' ], Mockery::type( 'string' ), Mockery::type( 'string' ) )
+			->andReturn( true );
+
+		$result = Payjp_Admin_Notifier::send_alert( $order, 'Subject', [ 'line' ] );
+
+		$this->assertTrue( $result );
+	}
 }

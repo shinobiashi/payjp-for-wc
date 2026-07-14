@@ -35,6 +35,7 @@ class Payjp_Admin_Notifier {
 		}
 
 		$recipient = apply_filters( 'payjp_for_wc_alert_email_recipient', Payjp_Settings::get_alert_email(), $order );
+		$recipient = self::sanitize_recipient( $recipient );
 
 		$full_subject = sprintf(
 			'[%s] %s',
@@ -48,5 +49,29 @@ class Payjp_Admin_Notifier {
 		$body         = implode( "\n", $body_lines );
 
 		return wp_mail( $recipient, $full_subject, $body );
+	}
+
+	/**
+	 * Validate a filtered recipient value, keeping only well-formed email addresses.
+	 * Falls back to the configured alert email when the filtered value contains
+	 * no valid address (e.g. a misbehaving `payjp_for_wc_alert_email_recipient` filter).
+	 *
+	 * @param mixed $recipient Raw value returned by the recipient filter (string or string[] expected).
+	 * @return string|string[]
+	 */
+	private static function sanitize_recipient( mixed $recipient ): string|array {
+		$candidates = is_array( $recipient ) ? $recipient : array( $recipient );
+		$valid      = array_values(
+			array_filter(
+				$candidates,
+				static fn( $address ): bool => is_string( $address ) && is_email( $address )
+			)
+		);
+
+		if ( ! $valid ) {
+			return Payjp_Settings::get_alert_email();
+		}
+
+		return 1 === count( $valid ) ? $valid[0] : $valid;
 	}
 }

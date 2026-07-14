@@ -345,10 +345,12 @@ class Payjp_Webhook_Handler {
 		$order->update_meta_data( '_payjp_alerted_late_capturable', '1' );
 		$order->save();
 
-		$voided = false;
+		$voided         = false;
+		$void_attempted = false;
 		if ( $order->has_status( array( 'cancelled', 'failed' ) ) ) {
 			$api = self::get_api_for_flow( $flow );
 			if ( null !== $api ) {
+				$void_attempted = true;
 				try {
 					$api->post(
 						'/payment_flows/' . rawurlencode( $flow_id ) . '/cancel',
@@ -371,7 +373,7 @@ class Payjp_Webhook_Handler {
 					esc_html( $flow_id )
 				)
 			);
-		} else {
+		} elseif ( $void_attempted ) {
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
@@ -380,6 +382,23 @@ class Payjp_Webhook_Handler {
 					esc_html( $flow_id )
 				)
 			);
+		} else {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
+					__( 'PAY.JP: A PayPay authorization completed for this order after it was already %1$s. Automatic void was not attempted for this order — cancel the payment manually on the PAY.JP dashboard if needed. (Payment Flow ID: %2$s)', 'payjp-for-wc' ),
+					esc_html( $order->get_status() ),
+					esc_html( $flow_id )
+				)
+			);
+		}
+
+		if ( $voided ) {
+			$void_summary_line = __( 'The uncaptured authorization has been automatically voided.', 'payjp-for-wc' );
+		} elseif ( $void_attempted ) {
+			$void_summary_line = __( "Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard.", 'payjp-for-wc' );
+		} else {
+			$void_summary_line = __( 'Automatic void was not attempted for this order. Cancel the payment manually on the PAY.JP dashboard if needed.', 'payjp-for-wc' );
 		}
 
 		$lines = array(
@@ -398,9 +417,7 @@ class Payjp_Webhook_Handler {
 				__( 'Payment Flow ID: %s', 'payjp-for-wc' ),
 				$flow_id
 			),
-			$voided
-				? __( 'The uncaptured authorization has been automatically voided.', 'payjp-for-wc' )
-				: __( "Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard.", 'payjp-for-wc' ),
+			$void_summary_line,
 		);
 
 		Payjp_Admin_Notifier::send_alert(
@@ -418,8 +435,17 @@ class Payjp_Webhook_Handler {
 					'source'  => 'webhook',
 				)
 			);
-		} else {
+		} elseif ( $void_attempted ) {
 			self::logger()->log_error( 'late capturable webhook: automatic void failed', $order->get_id(), null );
+		} else {
+			self::logger()->log_event(
+				'late_capturable_void_skipped',
+				$order->get_id(),
+				array(
+					'flow_id' => $flow_id,
+					'source'  => 'webhook',
+				)
+			);
 		}
 	}
 

@@ -349,13 +349,18 @@ class WebhookHandlerTest extends TestCase {
 		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
-		$order->shouldReceive( 'add_order_note' )->once();
+		// Copilot review fix: skipped (no API key) must not be worded as "FAILED" —
+		// that phrasing is reserved for an attempted-and-failed void.
+		$order->shouldReceive( 'add_order_note' )->once()->with( Mockery::pattern( '/not attempted/' ) );
 		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
 		$order->shouldReceive( 'get_order_number' )->andReturn( '202' );
 		$order->shouldReceive( 'get_id' )->andReturn( 1 );
 		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/202' );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
-		Functions\expect( 'wp_mail' )->once()->andReturn( true );
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( Mockery::any(), Mockery::any(), Mockery::pattern( '/not attempted/' ) )
+			->andReturn( true );
 
 		$payload = [
 			'type' => 'payment_flow.amount_capturable_updated',

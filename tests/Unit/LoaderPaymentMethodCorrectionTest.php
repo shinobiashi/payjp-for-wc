@@ -12,9 +12,11 @@
  * Also covers the session-based legitimate-selection check: a customer who
  * switches away from PAY.JP to a different gateway on a reused pending order
  * (e.g. PayPay -> Cash on Delivery via "Change payment method") must not have
- * that change reverted, and the stale PAY.JP meta (including transaction_id,
- * which Payjp_Webhook_Handler::find_order_by_flow_id() checks before its meta
- * fallback) must be cleared so it can't be picked up later by a delayed webhook.
+ * that change reverted. Both the stale PAY.JP meta and the order's
+ * transaction_id field (a separate order property that
+ * Payjp_Webhook_Handler::find_order_by_flow_id() checks before falling back
+ * to the meta) must be cleared so neither can be picked up later by a
+ * delayed webhook.
  *
  * @package Payjp_For_WooCommerce
  */

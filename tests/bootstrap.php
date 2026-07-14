@@ -27,6 +27,7 @@ require_once __DIR__ . '/stubs/class-payjp-api.php';
 // Plugin classes under test.
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-settings.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-webhook-handler.php';
+require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-admin-notifier.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-card.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-paypay.php';

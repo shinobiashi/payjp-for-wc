@@ -18,6 +18,7 @@ includes/
     class-wc-gateway-payjp-card.php  ← カード決済ゲートウェイ
     class-wc-gateway-payjp-paypay.php← PayPay 決済ゲートウェイ
     class-payjp-webhook-handler.php  ← Webhook 受信・検証・ルーティング
+    class-payjp-admin-notifier.php   ← 管理者向け異常通知メール送信
     class-payjp-blocks-integration.php        ← Block Checkout 統合の抽象基底
     class-payjp-blocks-integration-card.php   ← Block Checkout 統合（カード）
     class-payjp-blocks-integration-paypay.php ← Block Checkout 統合（PayPay）
@@ -64,6 +65,8 @@ defined( 'PAYJP_API_BASE' )       || define( 'PAYJP_API_BASE',       'https://ap
 | `_payjp_cancel_refund_processed` | string `'1'` | 注文キャンセル時の自動返金済みフラグ（二重返金防止）|
 | `_payjp_customer_id` | string | PAY.JP Customer ID（トークン保存・Subscriptions 用）|
 | `_payjp_payment_method_id` | string | 保存カードの PaymentMethod ID |
+| `_payjp_alerted_late_succeeded` | string `'1'` | 確定済み注文への遅延 `payment_flow.succeeded` webhook 通知済みフラグ（メール二重送信防止）|
+| `_payjp_alerted_late_capturable` | string `'1'` | 同上（`payment_flow.amount_capturable_updated` イベント用）|
 
 **HPOS 必須**: オーダーメタは `$order->get_meta()` / `$order->update_meta_data()` + `$order->save()` を使う。`get_post_meta()` / `update_post_meta()` は禁止。
 
@@ -71,8 +74,8 @@ defined( 'PAYJP_API_BASE' )       || define( 'PAYJP_API_BASE',       'https://ap
 
 ### 共有設定 (`class-payjp-settings.php`)
 
-API キー・テストモード・Webhook シークレットは **全決済手段で共有**。
-`Payjp_Settings::OPTION_KEY = 'payjp_settings'` に一元管理。
+API キー・テストモード・Webhook シークレット・異常通知メールアドレス（`alert_email`）は
+**全決済手段で共有**。`Payjp_Settings::OPTION_KEY = 'payjp_settings'` に一元管理。
 個別ゲートウェイの設定画面はタイトル・説明文などの表示設定のみ。
 
 ### payments.js の CDN 読み込み
@@ -116,3 +119,29 @@ WooCommerce コアの `payment_complete()` はデフォルトで `cancelled` も
 （#22）。`payment_complete()` を呼ぶ前は必ず
 `$order->has_status( array( 'pending', 'failed', 'on-hold' ) )` の
 明示的な許可リストで守ること。
+
+### 遅延 Webhook はステータスを変えず通知する（#23）
+
+`payment_flow.succeeded` / `payment_flow.amount_capturable_updated` が
+確定済み（`cancelled` 等）の注文に届いた場合、上記ガードにより無言で
+破棄されると PAY.JP 側は課金・オーソリ済みなのに WC 側の記録が
+食い違ったまま管理者に気づかれない。そのため
+`Payjp_Webhook_Handler::alert_succeeded_after_final()` /
+`alert_capturable_after_final()` が注文メモ・管理者メール（`Payjp_Admin_Notifier`）・
+ログで可視化する。要点:
+
+- **注文ステータスは変更しない**（`processing` 復活は過剰販売リスク、`refunded`
+  遷移は `wc_create_refund()` の帳簿と矛盾するため）。返金や手動対応の判断は
+  管理者に委ねる
+- `_payjp_cancel_refund_processed` フラグが立っている注文（キャンセル時に
+  既に自動返金済み）は誤報として扱い通知しない
+- 通知メールは `wp_mail()` 直送（`WC_Email` サブクラス化しない）。宛先は
+  PAY.JP 設定ページの `alert_email` に一元管理し、WooCommerce > 設定 > メール
+  との二重管理を避ける
+- `amount_capturable_updated`（未キャプチャの PayPay オーソリ）のみ、
+  対象注文が `cancelled`/`failed` の場合に限り自動 void を実行する
+  （金銭移動を伴わないため自動化リスクが低い）
+- Webhook イベントの `livemode` フラグに応じて live/test の API シークレット
+  キーを選択する（プラグインの現在のテストモード設定とは独立）
+
+詳細な設計判断（D-1〜D-5）は `docs/plans/issue-23-late-webhook-alert.md` を参照。

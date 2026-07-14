@@ -25,6 +25,7 @@ if ( class_exists( 'Payjp_Settings' ) ) {
  *   'live_secret_key' => string,
  *   'webhook_secret'  => string,
  *   'enabled_methods' => string[], // e.g. ['card', 'paypay']
+ *   'alert_email'     => string,
  * ]
  */
 class Payjp_Settings {
@@ -146,5 +147,17 @@ class Payjp_Settings {
 	 */
 	public static function get_webhook_secret(): string {
 		return (string) self::get( 'webhook_secret' );
+	}
+
+	/**
+	 * Get the alert notification email address.
+	 * Falls back to the site administrator email when unset or invalid.
+	 */
+	public static function get_alert_email(): string {
+		$email = (string) self::get( 'alert_email' );
+		if ( $email && is_email( $email ) ) {
+			return $email;
+		}
+		return (string) get_option( 'admin_email' );
 	}
 }

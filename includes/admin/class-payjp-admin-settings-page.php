@@ -152,6 +152,25 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 					'type' => 'sectionend',
 					'id'   => 'payjp_methods_settings',
 				),
+				// ── Notifications ─────────────────────────────────────────────
+				array(
+					'title' => __( 'Notifications', 'payjp-for-wc' ),
+					'type'  => 'title',
+					'id'    => 'payjp_notification_settings',
+				),
+				array(
+					'title'       => __( 'Alert Email Address', 'payjp-for-wc' ),
+					'type'        => 'email',
+					'id'          => 'payjp_alert_email',
+					'default'     => '',
+					'placeholder' => get_option( 'admin_email' ),
+					'desc_tip'    => false,
+					'desc'        => __( 'Receives alerts when a payment anomaly is detected, such as a PAY.JP payment confirmed for an already-cancelled order. Leave blank to use the site administrator email address.', 'payjp-for-wc' ),
+				),
+				array(
+					'type' => 'sectionend',
+					'id'   => 'payjp_notification_settings',
+				),
 				// ── Debug ─────────────────────────────────────────────────────
 				array(
 					'title' => __( 'Debug', 'payjp-for-wc' ),
@@ -215,6 +234,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'payjp_live_secret_key' => (string) ( $current['live_secret_key'] ?? '' ),
 			'payjp_webhook_secret'  => (string) ( $current['webhook_secret'] ?? '' ),
 			'payjp_debug_log'       => ! empty( $current['debug_log'] ) ? 'yes' : 'no',
+			'payjp_alert_email'     => (string) ( $current['alert_email'] ?? '' ),
 		);
 
 		$closures = array();
@@ -447,6 +467,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			'live_secret_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_live_secret_key'] ?? '' ) ? $_POST['payjp_live_secret_key'] : '' ) ),
 			'webhook_secret'  => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_webhook_secret'] ?? '' ) ? $_POST['payjp_webhook_secret'] : '' ) ),
 			'debug_log'       => ! empty( $_POST['payjp_debug_log'] ) && is_scalar( $_POST['payjp_debug_log'] ),
+			'alert_email'     => sanitize_email( wp_unslash( is_string( $_POST['payjp_alert_email'] ?? '' ) ? $_POST['payjp_alert_email'] : '' ) ),
 			'enabled_methods' => array_values(
 				array_intersect(
 					array_map(

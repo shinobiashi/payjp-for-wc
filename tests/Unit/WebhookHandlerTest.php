@@ -111,6 +111,7 @@ class WebhookHandlerTest extends TestCase {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( true );
 		$order->shouldReceive( 'payment_complete' )->once()->with( 'pflw_abc123' );
 		$order->shouldReceive( 'add_order_note' )->once();
 		$order->shouldReceive( 'get_id' )->andReturn( 1 );
@@ -140,6 +141,31 @@ class WebhookHandlerTest extends TestCase {
 		$payload = [
 			'type' => 'payment_flow.succeeded',
 			'data' => [ 'id' => 'pflw_paid', 'status' => 'succeeded' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	#[Test]
+	public function payment_flow_succeeded_skips_cancelled_order(): void {
+		// Regression test: a Payment Flow that already succeeded stays 'succeeded'
+		// even after do_refund()/cancel_payment_flow() refunds it on order cancellation
+		// (see class-wc-gateway-payjp.php). A delayed/retried webhook for such a flow
+		// must not revive the order via payment_complete(), since WooCommerce's default
+		// payment-complete status list includes 'cancelled'.
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( false );
+		$order->shouldNotReceive( 'payment_complete' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+
+		$payload = [
+			'type' => 'payment_flow.succeeded',
+			'data' => [ 'id' => 'pflw_cancelled', 'status' => 'succeeded' ],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );

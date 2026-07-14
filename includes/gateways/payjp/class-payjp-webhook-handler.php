@@ -172,6 +172,15 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
+		// Only orders still awaiting payment may be advanced by this webhook.
+		// A delayed/retried 'succeeded' event for an order that was since cancelled
+		// (and possibly refunded — the PAY.JP Payment Flow itself stays 'succeeded'
+		// after a refund) must not revive it, since WooCommerce's default
+		// payment-complete status list includes 'cancelled'.
+		if ( ! $order->has_status( array( 'pending', 'failed', 'on-hold' ) ) ) {
+			return;
+		}
+
 		$order->payment_complete( $flow_id );
 		$order->add_order_note( __( 'PAY.JP: Payment confirmed via webhook.', 'payjp-for-wc' ) );
 		self::logger()->log_event(

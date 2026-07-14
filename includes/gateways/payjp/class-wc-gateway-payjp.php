@@ -311,6 +311,19 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			exit;
 		}
 
+		// Only orders still awaiting payment may be advanced by this handler.
+		// Without this allow-list, revisiting this URL for an order that was since
+		// cancelled (and possibly refunded via do_refund()/cancel_payment_flow(),
+		// which cannot change the PAY.JP Payment Flow status away from 'succeeded')
+		// would fall through to payment_complete() below — reviving a cancelled
+		// order to 'processing', since WooCommerce's default payment-complete
+		// status list includes 'cancelled'.
+		if ( ! $order->has_status( array( 'pending', 'failed', 'on-hold' ) ) ) {
+			wc_add_notice( __( 'This order can no longer be paid.', 'payjp-for-wc' ), 'error' );
+			wp_safe_redirect( wc_get_checkout_url() );
+			exit;
+		}
+
 		// Authoritative flow ID comes from order meta, not the URL.
 		$flow_id = (string) $order->get_meta( '_payjp_payment_flow_id' );
 		if ( ! $flow_id ) {

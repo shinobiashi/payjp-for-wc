@@ -268,7 +268,7 @@ class Payjp_Webhook_Handler {
 			$lines
 		);
 
-		self::logger()->log_error( 'late succeeded webhook for closed order', $order->get_id(), null );
+		self::logger()->log_error( 'late succeeded webhook for closed order (flow_id=' . $flow_id . ')', $order->get_id(), null );
 	}
 
 	/**
@@ -436,7 +436,7 @@ class Payjp_Webhook_Handler {
 				)
 			);
 		} elseif ( $void_attempted ) {
-			self::logger()->log_error( 'late capturable webhook: automatic void failed', $order->get_id(), null );
+			self::logger()->log_error( 'late capturable webhook: automatic void failed (flow_id=' . $flow_id . ')', $order->get_id(), null );
 		} else {
 			self::logger()->log_event(
 				'late_capturable_void_skipped',

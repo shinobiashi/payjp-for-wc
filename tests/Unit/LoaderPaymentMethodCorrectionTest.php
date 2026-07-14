@@ -9,6 +9,12 @@
  * is_admin() scoping added in response to further Copilot feedback, so that
  * legitimate wp-admin changes to payment_method are never reverted.
  *
+ * Also covers the session-based legitimate-selection check: a customer who
+ * switches away from PAY.JP to a different gateway on a reused pending order
+ * (e.g. PayPay -> Cash on Delivery via "Change payment method") must not have
+ * that change reverted, and the stale PAY.JP meta must be cleared so it can't
+ * be picked up later by a delayed webhook.
+ *
  * @package Payjp_For_WooCommerce
  */
 
@@ -111,7 +117,8 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 
 	/**
 	 * Restores both payment_method and payment_method_title when Blocks Hydration
-	 * has overwritten the gateway selection with a different one.
+	 * has overwritten the gateway selection with a different one (no matching
+	 * session selection — this is not a legitimate customer-driven change).
 	 */
 	#[Test]
 	public function restores_payment_method_and_title_when_overwritten(): void {
@@ -122,6 +129,7 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_method' )->andReturn( 'paypay' );
 		$order->shouldReceive( 'set_payment_method' )->once()->with( 'payjp_paypay' );
 		$order->shouldReceive( 'set_payment_method_title' )->once()->with( 'PayPay' );
+		$order->shouldNotReceive( 'delete_meta_data' );
 
 		$paypay_gateway        = Mockery::mock( 'WC_Payment_Gateway' );
 		$paypay_gateway->title = 'PayPay';
@@ -130,7 +138,9 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$payment_gateways = Mockery::mock();
 		$payment_gateways->shouldReceive( 'payment_gateways' )->andReturn( array( 'payjp_paypay' => $paypay_gateway ) );
 
-		$wc = Mockery::mock();
+		$wc          = Mockery::mock();
+		$wc->session = Mockery::mock();
+		$wc->session->shouldReceive( 'get' )->with( 'chosen_payment_method' )->andReturn( null );
 		$wc->shouldReceive( 'payment_gateways' )->andReturn( $payment_gateways );
 
 		Functions\when( 'WC' )->justReturn( $wc );
@@ -151,12 +161,44 @@ class LoaderPaymentMethodCorrectionTest extends TestCase {
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_method' )->andReturn( 'paypay' );
 		$order->shouldReceive( 'set_payment_method' )->once()->with( 'payjp_paypay' );
 		$order->shouldNotReceive( 'set_payment_method_title' );
+		$order->shouldNotReceive( 'delete_meta_data' );
 
 		$payment_gateways = Mockery::mock();
 		$payment_gateways->shouldReceive( 'payment_gateways' )->andReturn( array() );
 
-		$wc = Mockery::mock();
+		$wc          = Mockery::mock();
+		$wc->session = Mockery::mock();
+		$wc->session->shouldReceive( 'get' )->with( 'chosen_payment_method' )->andReturn( null );
 		$wc->shouldReceive( 'payment_gateways' )->andReturn( $payment_gateways );
+
+		Functions\when( 'WC' )->justReturn( $wc );
+
+		Payjp_Loader::correct_payment_method_before_save( $order );
+	}
+
+	/**
+	 * Does not revert, and clears the stale PAY.JP meta, when the customer
+	 * legitimately switched away from PAY.JP to a different gateway (e.g.
+	 * selected PayPay, clicked "Change payment method", then paid with Cash
+	 * on Delivery on a reused pending order).
+	 */
+	#[Test]
+	public function clears_stale_meta_and_skips_revert_when_customer_switched_gateway(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_changes' )->andReturn( array( 'payment_method' => 'cod' ) );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_method' )->andReturn( 'paypay' );
+		$order->shouldNotReceive( 'set_payment_method' );
+		$order->shouldNotReceive( 'set_payment_method_title' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_payment_flow_id' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_client_secret' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_payment_method' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_capture_method' );
+
+		$wc          = Mockery::mock();
+		$wc->session = Mockery::mock();
+		$wc->session->shouldReceive( 'get' )->with( 'chosen_payment_method' )->andReturn( 'cod' );
 
 		Functions\when( 'WC' )->justReturn( $wc );
 

@@ -710,6 +710,8 @@ msgid ""
 "Partial refunds are not available for uncaptured payments. Complete the "
 "order first to capture the payment, then issue a partial refund."
 msgstr ""
+"未キャプチャの決済に対して部分返金はできません。先に注文を「完了」にしてキャ"
+"プチャを実行してから、部分返金を行ってください。"
 
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:481
 msgid "PAY.JP returned an incomplete refund response."
@@ -719,13 +721,13 @@ msgstr "PAY.JP から不完全な返金レスポンスが返されました。"
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:492
 #, php-format
 msgid "%1$s refund processed. Refund ID: %2$s."
-msgstr ""
+msgstr "%1$s の返金処理が完了しました。返金 ID: %2$s。"
 
 #. translators: %s: Gateway label (e.g. "PAY.JP").
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:527
 #, php-format
 msgid "%s payment authorization voided (payment was not yet captured)."
-msgstr ""
+msgstr "%s の決済オーソリを取り消しました（決済は未キャプチャでした）。"
 
 #. translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message.
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:568
@@ -733,6 +735,7 @@ msgstr ""
 msgid ""
 "%1$s: Could not retrieve payment status during order cancellation — %2$s"
 msgstr ""
+"%1$s: 注文キャンセル時に決済ステータスを取得できませんでした — %2$s"
 
 #. translators: %s: Gateway label (e.g. "PAY.JP").
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:583
@@ -741,24 +744,26 @@ msgid ""
 "%s: Could not determine payment status during order cancellation. Please "
 "check the PAY.JP dashboard."
 msgstr ""
+"%s: 注文キャンセル時に決済ステータスを判定できませんでした。PAY.JP ダッシュ"
+"ボードをご確認ください。"
 
 #. translators: 1: Gateway label (e.g. "PAY.JP"), 2: error message.
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:613
 #, php-format
 msgid "%1$s: Automatic refund on cancellation failed — %2$s"
-msgstr ""
+msgstr "%1$s: キャンセル時の自動返金に失敗しました — %2$s"
 
 #. translators: %s: Gateway label (e.g. "PAY.JP").
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:640
 #, php-format
 msgid "%s payment cancelled successfully."
-msgstr ""
+msgstr "%s の決済を正常にキャンセルしました。"
 
 #. translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message.
 #: includes/gateways/payjp/class-wc-gateway-payjp.php:656
 #, php-format
 msgid "%1$s: Payment cancellation failed — %2$s"
-msgstr ""
+msgstr "%1$s: 決済のキャンセルに失敗しました — %2$s"
 
 #. translators: %s: WooCommerce plugin name
 #: payjp-for-wc.php:110

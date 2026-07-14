@@ -45,6 +45,13 @@ class Payjp_Webhook_Handler {
 	const REST_ROUTE = '/webhook';
 
 	/**
+	 * Test seam: when set, used instead of constructing Payjp_API directly.
+	 *
+	 * @var callable(string):Payjp_API|null
+	 */
+	private static $api_factory = null;
+
+	/**
 	 * Register webhook-related hooks.
 	 */
 	public static function init(): void {
@@ -178,6 +185,7 @@ class Payjp_Webhook_Handler {
 		// after a refund) must not revive it, since WooCommerce's default
 		// payment-complete status list includes 'cancelled'.
 		if ( ! $order->has_status( array( 'pending', 'failed', 'on-hold' ) ) ) {
+			self::alert_succeeded_after_final( $order, $flow_id, $flow );
 			return;
 		}
 
@@ -191,6 +199,76 @@ class Payjp_Webhook_Handler {
 				'source'  => 'webhook',
 			)
 		);
+	}
+
+	/**
+	 * Alert the store administrator that a 'succeeded' webhook arrived for an
+	 * order that is no longer payable (e.g. cancelled). The Payment Flow is
+	 * captured on PAY.JP but the order was never marked paid, so the two
+	 * systems disagree and a human must reconcile them (see Issue #23).
+	 *
+	 * @param WC_Order             $order   Order the webhook targets.
+	 * @param string               $flow_id Payment Flow ID.
+	 * @param array<string, mixed> $flow    Payment Flow object from the webhook payload.
+	 */
+	private static function alert_succeeded_after_final( WC_Order $order, string $flow_id, array $flow ): void {
+		// Not an anomaly: cancel_payment_flow() already auto-refunded this succeeded
+		// flow when the order was cancelled, so a delayed/retried webhook is expected.
+		if ( '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' ) ) {
+			return;
+		}
+
+		// Idempotency: PAY.JP retries non-2xx responses up to 3 times and allows
+		// manual redelivery from the dashboard; only alert once per order.
+		if ( $order->get_meta( '_payjp_alerted_late_succeeded' ) ) {
+			return;
+		}
+
+		$order->update_meta_data( '_payjp_alerted_late_succeeded', '1' );
+		$order->save();
+
+		$order->add_order_note(
+			sprintf(
+				/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
+				__( 'PAY.JP: Payment was confirmed for this order after it was already %1$s. The payment is captured on PAY.JP but is NOT reflected on this order. Review the PAY.JP dashboard and either refund the payment or handle the order manually. (Payment Flow ID: %2$s)', 'payjp-for-wc' ),
+				esc_html( $order->get_status() ),
+				esc_html( $flow_id )
+			)
+		);
+
+		$lines = array(
+			sprintf(
+				/* translators: %s: WooCommerce order number. */
+				__( 'Order: #%s', 'payjp-for-wc' ),
+				$order->get_order_number()
+			),
+			sprintf(
+				/* translators: %s: WooCommerce order status (e.g. "cancelled"). */
+				__( 'Current order status: %s', 'payjp-for-wc' ),
+				$order->get_status()
+			),
+			sprintf(
+				/* translators: %s: PAY.JP Payment Flow ID. */
+				__( 'Payment Flow ID: %s', 'payjp-for-wc' ),
+				$flow_id
+			),
+		);
+		if ( isset( $flow['amount'] ) && is_numeric( $flow['amount'] ) ) {
+			$lines[] = sprintf(
+				/* translators: %s: Payment amount in JPY, formatted with thousands separators. */
+				__( 'Amount: ¥%s', 'payjp-for-wc' ),
+				number_format( (int) $flow['amount'] )
+			);
+		}
+		$lines[] = __( 'Review the payment on the PAY.JP dashboard and either refund it or handle the order manually.', 'payjp-for-wc' );
+
+		Payjp_Admin_Notifier::send_alert(
+			$order,
+			__( 'PAY.JP payment confirmed for a closed order — action required', 'payjp-for-wc' ),
+			$lines
+		);
+
+		self::logger()->log_error( 'late succeeded webhook for closed order (flow_id=' . $flow_id . ')', $order->get_id(), null );
 	}
 
 	/**
@@ -220,6 +298,7 @@ class Payjp_Webhook_Handler {
 		}
 
 		if ( ! $order->has_status( array( 'pending', 'on-hold' ) ) ) {
+			self::alert_capturable_after_final( $order, $flow_id, $flow );
 			return;
 		}
 
@@ -238,6 +317,172 @@ class Payjp_Webhook_Handler {
 				'source'  => 'webhook',
 			)
 		);
+	}
+
+	/**
+	 * Alert the store administrator that an 'amount_capturable_updated' webhook
+	 * arrived for an order that is no longer payable, and automatically void the
+	 * uncaptured authorization when the order was cancelled or failed (see D-4
+	 * in the Issue #23 implementation plan: voiding only releases the customer's
+	 * credit limit and moves no money, so it is safe to automate).
+	 *
+	 * @param WC_Order             $order   Order the webhook targets.
+	 * @param string               $flow_id Payment Flow ID.
+	 * @param array<string, mixed> $flow    Payment Flow object from the webhook payload.
+	 */
+	private static function alert_capturable_after_final( WC_Order $order, string $flow_id, array $flow ): void {
+		// Not an anomaly: a retried delivery of the same event for an order that
+		// this webhook already advanced to processing/completed successfully.
+		if ( $flow_id === $order->get_transaction_id() && $order->has_status( array( 'processing', 'completed' ) ) ) {
+			return;
+		}
+
+		// Idempotency: only alert/void once per order.
+		if ( $order->get_meta( '_payjp_alerted_late_capturable' ) ) {
+			return;
+		}
+
+		$order->update_meta_data( '_payjp_alerted_late_capturable', '1' );
+		$order->save();
+
+		$voided         = false;
+		$void_attempted = false;
+		$void_error     = null;
+		if ( $order->has_status( array( 'cancelled', 'failed' ) ) ) {
+			$api = self::get_api_for_flow( $flow );
+			if ( null !== $api ) {
+				$void_attempted = true;
+				try {
+					$api->post(
+						'/payment_flows/' . rawurlencode( $flow_id ) . '/cancel',
+						array( 'cancellation_reason' => 'requested_by_customer' ),
+						$order->get_id()
+					);
+					$voided = true;
+				} catch ( RuntimeException $e ) {
+					$voided     = false;
+					$void_error = $e;
+				}
+			}
+		}
+
+		if ( $voided ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
+					__( 'PAY.JP: A PayPay authorization completed for this order after it was already %1$s. The authorization has been automatically voided. (Payment Flow ID: %2$s)', 'payjp-for-wc' ),
+					esc_html( $order->get_status() ),
+					esc_html( $flow_id )
+				)
+			);
+		} elseif ( $void_attempted ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
+					__( "PAY.JP: A PayPay authorization completed for this order after it was already %1\$s. Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard. (Payment Flow ID: %2\$s)", 'payjp-for-wc' ),
+					esc_html( $order->get_status() ),
+					esc_html( $flow_id )
+				)
+			);
+		} else {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID. */
+					__( 'PAY.JP: A PayPay authorization completed for this order after it was already %1$s. Automatic void was not attempted for this order — cancel the payment manually on the PAY.JP dashboard if needed. (Payment Flow ID: %2$s)', 'payjp-for-wc' ),
+					esc_html( $order->get_status() ),
+					esc_html( $flow_id )
+				)
+			);
+		}
+
+		if ( $voided ) {
+			$void_summary_line = __( 'The uncaptured authorization has been automatically voided.', 'payjp-for-wc' );
+		} elseif ( $void_attempted ) {
+			$void_summary_line = __( "Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard.", 'payjp-for-wc' );
+		} else {
+			$void_summary_line = __( 'Automatic void was not attempted for this order. Cancel the payment manually on the PAY.JP dashboard if needed.', 'payjp-for-wc' );
+		}
+
+		$lines = array(
+			sprintf(
+				/* translators: %s: WooCommerce order number. */
+				__( 'Order: #%s', 'payjp-for-wc' ),
+				$order->get_order_number()
+			),
+			sprintf(
+				/* translators: %s: WooCommerce order status (e.g. "cancelled"). */
+				__( 'Current order status: %s', 'payjp-for-wc' ),
+				$order->get_status()
+			),
+			sprintf(
+				/* translators: %s: PAY.JP Payment Flow ID. */
+				__( 'Payment Flow ID: %s', 'payjp-for-wc' ),
+				$flow_id
+			),
+			$void_summary_line,
+		);
+
+		Payjp_Admin_Notifier::send_alert(
+			$order,
+			__( 'PAY.JP authorization received for a closed order', 'payjp-for-wc' ),
+			$lines
+		);
+
+		if ( $voided ) {
+			self::logger()->log_event(
+				'late_capturable_voided',
+				$order->get_id(),
+				array(
+					'flow_id' => $flow_id,
+					'source'  => 'webhook',
+				)
+			);
+		} elseif ( $void_attempted ) {
+			self::logger()->log_error( 'late capturable webhook: automatic void failed (flow_id=' . $flow_id . ')', $order->get_id(), $void_error );
+		} else {
+			self::logger()->log_event(
+				'late_capturable_void_skipped',
+				$order->get_id(),
+				array(
+					'flow_id' => $flow_id,
+					'source'  => 'webhook',
+				)
+			);
+		}
+	}
+
+	/**
+	 * Override the API factory used by get_api_for_flow().
+	 *
+	 * @internal Unit tests only.
+	 *
+	 * @param callable|null $factory Receives the secret key, returns a Payjp_API.
+	 */
+	public static function set_api_factory( ?callable $factory ): void {
+		self::$api_factory = $factory;
+	}
+
+	/**
+	 * Build an API client using the secret key matching the event's livemode flag.
+	 * Returns null when the payload does not carry a boolean livemode flag (safer
+	 * than guessing an environment) or when the corresponding key is not configured.
+	 *
+	 * @param array<string, mixed> $flow Payment Flow object from the webhook payload.
+	 */
+	private static function get_api_for_flow( array $flow ): ?Payjp_API {
+		if ( ! isset( $flow['livemode'] ) || ! is_bool( $flow['livemode'] ) ) {
+			return null;
+		}
+		$key = $flow['livemode']
+			? (string) Payjp_Settings::get( 'live_secret_key' )
+			: (string) Payjp_Settings::get( 'test_secret_key' );
+		if ( '' === $key ) {
+			return null;
+		}
+		if ( null !== self::$api_factory ) {
+			return ( self::$api_factory )( $key );
+		}
+		return new Payjp_API( $key, self::logger() );
 	}
 
 	/**

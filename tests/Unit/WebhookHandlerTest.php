@@ -34,9 +34,17 @@ class WebhookHandlerTest extends TestCase {
 		// Stub WordPress translation/escape functions used inside the handler.
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'esc_html' )->returnArg( 1 );
+
+		// Stub functions used by Payjp_Admin_Notifier::send_alert(), called from the
+		// late-webhook alert paths below.
+		Functions\when( 'apply_filters' )->returnArg( 2 );
+		Functions\when( 'get_bloginfo' )->justReturn( 'Test Store' );
+		Functions\when( 'wp_specialchars_decode' )->returnArg( 1 );
+		Functions\when( 'is_email' )->justReturn( true );
 	}
 
 	protected function tearDown(): void {
+		Payjp_Webhook_Handler::set_api_factory( null );
 		Monkey\tearDown();
 		Mockery::close();
 		parent::tearDown();
@@ -161,11 +169,326 @@ class WebhookHandlerTest extends TestCase {
 		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( false );
 		$order->shouldNotReceive( 'payment_complete' );
+		// This order was already auto-refunded on cancellation, so the late-webhook
+		// alert path (Issue #23) also stays silent — see alert_succeeded_after_final().
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_cancel_refund_processed' )->andReturn( '1' );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [
 			'type' => 'payment_flow.succeeded',
 			'data' => [ 'id' => 'pflw_cancelled', 'status' => 'succeeded' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	// ── payment_flow.succeeded: late webhook alert (#23) ─────────────────────
+
+	#[Test]
+	public function payment_flow_succeeded_alerts_on_cancelled_order(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( false );
+		$order->shouldNotReceive( 'payment_complete' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_cancel_refund_processed' )->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_succeeded' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_succeeded', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'add_order_note' )->once();
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '100' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/100' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->once()->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.succeeded',
+			'data' => [ 'id' => 'pflw_late', 'status' => 'succeeded', 'amount' => 1000 ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_succeeded_skips_alert_when_already_refunded_on_cancel(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_cancel_refund_processed' )->andReturn( '1' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'save' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->never();
+
+		$payload = [
+			'type' => 'payment_flow.succeeded',
+			'data' => [ 'id' => 'pflw_refunded', 'status' => 'succeeded' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	#[Test]
+	public function payment_flow_succeeded_skips_alert_when_already_notified(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'failed', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_cancel_refund_processed' )->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_succeeded' )->andReturn( '1' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'save' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->never();
+
+		$payload = [
+			'type' => 'payment_flow.succeeded',
+			'data' => [ 'id' => 'pflw_already_alerted', 'status' => 'succeeded' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	// ── payment_flow.amount_capturable_updated: late webhook alert (#23) ─────
+
+	#[Test]
+	public function payment_flow_capturable_voids_authorization_on_cancelled_order(): void {
+		Functions\when( 'get_option' )->justReturn(
+			[ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com', 'test_secret_key' => 'sk_test_xxx' ]
+		);
+
+		$api = Mockery::mock( \Payjp_API::class );
+		$api->shouldReceive( 'post' )
+			->once()
+			->with( '/payment_flows/pflw_cap/cancel', [ 'cancellation_reason' => 'requested_by_customer' ], 1 )
+			->andReturn( [] );
+		Payjp_Webhook_Handler::set_api_factory( static fn( string $key ) => $api );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		$order->shouldReceive( 'add_order_note' )->once();
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '200' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/200' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->once()->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_cap', 'status' => 'requires_capture', 'livemode' => false ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_alerts_when_void_api_call_fails(): void {
+		Functions\when( 'get_option' )->justReturn(
+			[ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com', 'test_secret_key' => 'sk_test_xxx' ]
+		);
+
+		$api = Mockery::mock( \Payjp_API::class );
+		$api->shouldReceive( 'post' )->once()->andThrow( new \RuntimeException( 'invalid_status' ) );
+		Payjp_Webhook_Handler::set_api_factory( static fn( string $key ) => $api );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		$order->shouldReceive( 'add_order_note' )->once();
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '201' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/201' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->once()->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_cap_fail', 'status' => 'requires_capture', 'livemode' => false ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_alerts_without_void_when_secret_key_missing(): void {
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		// Copilot review fix: skipped (no API key) must not be worded as "FAILED" —
+		// that phrasing is reserved for an attempted-and-failed void.
+		$order->shouldReceive( 'add_order_note' )->once()->with( Mockery::pattern( '/not attempted/' ) );
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '202' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/202' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( Mockery::any(), Mockery::any(), Mockery::pattern( '/not attempted/' ) )
+			->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_cap_nokey', 'status' => 'requires_capture', 'livemode' => false ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_skips_void_when_livemode_missing(): void {
+		// Copilot review fix: a payload without a livemode flag must not silently
+		// guess "test" — get_api_for_flow() should bail out (skip the void) rather
+		// than risk operating against the wrong PAY.JP environment.
+		Functions\when( 'get_option' )->justReturn(
+			[ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com', 'test_secret_key' => 'sk_test_xxx', 'live_secret_key' => 'sk_live_xxx' ]
+		);
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		$order->shouldReceive( 'add_order_note' )->once()->with( Mockery::pattern( '/not attempted/' ) );
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '203' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/203' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( Mockery::any(), Mockery::any(), Mockery::pattern( '/not attempted/' ) )
+			->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			// livemode intentionally omitted.
+			'data' => [ 'id' => 'pflw_cap_no_livemode', 'status' => 'requires_capture' ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_skips_void_when_livemode_not_boolean(): void {
+		// Copilot review fix: a non-boolean livemode (e.g. the string "false", which
+		// PHP treats as truthy) must not be coerced into picking the live secret key.
+		Functions\when( 'get_option' )->justReturn(
+			[ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com', 'test_secret_key' => 'sk_test_xxx', 'live_secret_key' => 'sk_live_xxx' ]
+		);
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		$order->shouldReceive( 'add_order_note' )->once()->with( Mockery::pattern( '/not attempted/' ) );
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '204' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/204' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( Mockery::any(), Mockery::any(), Mockery::pattern( '/not attempted/' ) )
+			->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_cap_string_livemode', 'status' => 'requires_capture', 'livemode' => 'false' ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_retry_on_processed_order_is_noop(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( 'pflw_processed' );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'processing', 'completed' ] )->andReturn( true );
+		$order->shouldNotReceive( 'get_meta' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->never();
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_processed', 'status' => 'requires_capture' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	#[Test]
+	public function payment_flow_capturable_skips_alert_when_already_notified(): void {
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '1' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'save' );
+		$order->shouldNotReceive( 'add_order_note' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )->never();
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			'data' => [ 'id' => 'pflw_cap_already', 'status' => 'requires_capture' ],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );

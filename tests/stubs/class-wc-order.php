@@ -51,4 +51,34 @@ abstract class WC_Order {
 	 * @param string $transaction_id
 	 */
 	abstract public function payment_complete( string $transaction_id = '' ): void;
+
+	/**
+	 * @return int
+	 */
+	abstract public function get_id(): int;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_status(): string;
+
+	/**
+	 * @param string $transaction_id
+	 */
+	abstract public function set_transaction_id( string $transaction_id ): void;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_transaction_id(): string;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_order_number(): string;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_edit_order_url(): string;
 }

@@ -2,14 +2,14 @@
 # This file is distributed under the GPL-2.0-or-later.
 msgid ""
 msgstr ""
-"Project-Id-Version: PAY.JP for WooCommerce 0.9.2\n"
+"Project-Id-Version: PAY.JP for WooCommerce 0.9.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-31T22:14:56+00:00\n"
+"POT-Creation-Date: 2026-07-14T10:04:47+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: payjp-for-wc\n"
@@ -100,97 +100,109 @@ msgid "Payment Methods"
 msgstr ""
 
 #: includes/admin/class-payjp-admin-settings-page.php:157
+msgid "Notifications"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:162
+msgid "Alert Email Address"
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:168
+msgid "Receives alerts when a payment anomaly is detected, such as a PAY.JP payment confirmed for an already-cancelled order. Leave blank to use the site administrator email address."
+msgstr ""
+
+#: includes/admin/class-payjp-admin-settings-page.php:176
 msgid "Debug"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:160
+#: includes/admin/class-payjp-admin-settings-page.php:179
 msgid "Useful for diagnosing payment issues during development. Do not leave enabled in production."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:163
+#: includes/admin/class-payjp-admin-settings-page.php:182
 msgid "Debug Log"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:167
+#: includes/admin/class-payjp-admin-settings-page.php:186
 msgid "Enable logging"
 msgstr ""
 
 #. translators: 1: Opening <a> tag linking to WooCommerce log viewer, 2: Closing </a> tag
-#: includes/admin/class-payjp-admin-settings-page.php:171
+#: includes/admin/class-payjp-admin-settings-page.php:190
 #, php-format
 msgid "Logs PAY.JP API requests, responses, payment events, and received webhooks. Enable only when debugging; keep off in production. Logs are available at %1$sWooCommerce &gt; Status &gt; Logs%2$s."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:182
+#: includes/admin/class-payjp-admin-settings-page.php:201
 msgid "Webhook"
 msgstr ""
 
 #. translators: %s: URL to PAY.JP test mode documentation
-#: includes/admin/class-payjp-admin-settings-page.php:262
+#: includes/admin/class-payjp-admin-settings-page.php:282
 #, php-format
 msgid "Test mode is active. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View test card numbers and test accounts &rarr;</a>"
 msgstr ""
 
 #. translators: %s: URL to PAY.JP PayPay test documentation
-#: includes/admin/class-payjp-admin-settings-page.php:275
+#: includes/admin/class-payjp-admin-settings-page.php:295
 #, php-format
 msgid "PayPay is enabled. <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">View PayPay test accounts and instructions &rarr;</a>"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:300
+#: includes/admin/class-payjp-admin-settings-page.php:320
 msgid "Open PAY.JP Dashboard"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:301
+#: includes/admin/class-payjp-admin-settings-page.php:321
 msgid "Manage API keys, webhooks, and payments on the PAY.JP Dashboard."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:305
+#: includes/admin/class-payjp-admin-settings-page.php:325
 msgid "Create a PAY.JP Account"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:306
+#: includes/admin/class-payjp-admin-settings-page.php:326
 msgid "You need a PAY.JP account to accept payments. Sign up for free."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:337
+#: includes/admin/class-payjp-admin-settings-page.php:357
 #: src/blocks/checkout/payment-method-card.js:23
 msgid "Credit Card (PAY.JP)"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:338
+#: includes/admin/class-payjp-admin-settings-page.php:358
 #: src/blocks/checkout/payment-method-paypay.js:13
 msgid "PayPay (PAY.JP)"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:342
+#: includes/admin/class-payjp-admin-settings-page.php:362
 msgid "Payment Method"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:346
+#: includes/admin/class-payjp-admin-settings-page.php:366
 msgid "Enable Payment Methods"
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:361
+#: includes/admin/class-payjp-admin-settings-page.php:381
 msgid "Checked payment methods will appear on the checkout page. API keys must also be configured for them to be available."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:380
+#: includes/admin/class-payjp-admin-settings-page.php:400
 msgid "Webhook URL"
 msgstr ""
 
 #. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
-#: includes/admin/class-payjp-admin-settings-page.php:396
+#: includes/admin/class-payjp-admin-settings-page.php:416
 #, php-format
 msgid "Register the URL above in %1$sPAY.JP Dashboard &gt; Webhooks%2$s."
 msgstr ""
 
-#: includes/admin/class-payjp-admin-settings-page.php:403
+#: includes/admin/class-payjp-admin-settings-page.php:423
 msgid "Enable the following events:"
 msgstr ""
 
 #. translators: 1: Opening <strong> tag, 2: Closing </strong> tag
-#: includes/admin/class-payjp-admin-settings-page.php:415
+#: includes/admin/class-payjp-admin-settings-page.php:435
 #, php-format
 msgid "Set the %1$sWebhook Secret%2$s from PAY.JP Dashboard into the \"Webhook Secret\" field above and save."
 msgstr ""
@@ -252,13 +264,97 @@ msgstr ""
 msgid "PAY.JP: Failed to save card %1$s after payment: %2$s"
 msgstr ""
 
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:193
+msgid "PAY.JP: Payment confirmed via webhook."
+msgstr ""
+
+#. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:233
+#, php-format
+msgid "PAY.JP: Payment was confirmed for this order after it was already %1$s. The payment is captured on PAY.JP but is NOT reflected on this order. Review the PAY.JP dashboard and either refund the payment or handle the order manually. (Payment Flow ID: %2$s)"
+msgstr ""
+
+#. translators: %s: WooCommerce order number.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:242
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:407
+#, php-format
+msgid "Order: #%s"
+msgstr ""
+
+#. translators: %s: WooCommerce order status (e.g. "cancelled").
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:247
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:412
+#, php-format
+msgid "Current order status: %s"
+msgstr ""
+
+#. translators: %s: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:252
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:417
+#, php-format
+msgid "Payment Flow ID: %s"
+msgstr ""
+
+#. translators: %s: Payment amount in JPY, formatted with thousands separators.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:259
+#, php-format
+msgid "Amount: ¥%s"
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:263
+msgid "Review the payment on the PAY.JP dashboard and either refund it or handle the order manually."
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:267
+msgid "PAY.JP payment confirmed for a closed order — action required"
+msgstr ""
+
+#. translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders confirmed via webhook.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:310
+msgid "PAY.JP authorised via webhook. Payment will be captured when the order is marked Completed."
+msgstr ""
+
+#. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:371
+#, php-format
+msgid "PAY.JP: A PayPay authorization completed for this order after it was already %1$s. The authorization has been automatically voided. (Payment Flow ID: %2$s)"
+msgstr ""
+
+#. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:380
+#, php-format
+msgid "PAY.JP: A PayPay authorization completed for this order after it was already %1$s. Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard. (Payment Flow ID: %2$s)"
+msgstr ""
+
+#. translators: 1: WooCommerce order status the order already had (e.g. "cancelled"), 2: PAY.JP Payment Flow ID.
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:389
+#, php-format
+msgid "PAY.JP: A PayPay authorization completed for this order after it was already %1$s. Automatic void was not attempted for this order — cancel the payment manually on the PAY.JP dashboard if needed. (Payment Flow ID: %2$s)"
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:397
+msgid "The uncaptured authorization has been automatically voided."
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:399
+msgid "Automatic void FAILED — the customer's funds remain reserved. Cancel the payment on the PAY.JP dashboard."
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:401
+msgid "Automatic void was not attempted for this order. Cancel the payment manually on the PAY.JP dashboard if needed."
+msgstr ""
+
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:425
+msgid "PAY.JP authorization received for a closed order"
+msgstr ""
+
 #. translators: PAY.JP failed payment note shown in WooCommerce admin
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:202
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:504
 msgid "PAY.JP payment failed (webhook)."
 msgstr ""
 
 #. translators: 1: PAY.JP refund ID, 2: refund amount in JPY
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:244
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:546
 #, php-format
 msgid "PAY.JP refund created (webhook). Refund ID: %1$s. Amount: ¥%2$s."
 msgstr ""
@@ -271,129 +367,111 @@ msgstr ""
 msgid "Accept credit card payments via PAY.JP v2 Payment Widgets."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:89
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:90
 msgid "After clicking \"Place order\", you will be taken to a secure page to enter your card details."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:94
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:95
 msgid "Save payment methods"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:96
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:97
 msgid "Allow customers to save their card for future purchases"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:100
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:64
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:101
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:65
 msgid "Payment capture"
-msgstr ""
-
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:103
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:67
-msgid "Capture immediately (recommended)"
 msgstr ""
 
 #: includes/gateways/payjp/class-wc-gateway-payjp-card.php:104
 #: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:68
+msgid "Capture immediately (recommended)"
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:105
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:69
 msgid "Authorize only — capture when order is marked Completed"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:108
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:109
 msgid "Immediate: the card is charged at checkout. Authorize only: funds are reserved now and captured automatically when you set the order to Completed."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:146
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:626
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:147
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:599
 msgid "Pay now"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:147
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:201
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:111
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:148
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:202
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:112
 msgid "Processing…"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:200
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:201
 msgid "Add card"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:202
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:203
 msgid "An error occurred. Please try again."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:252
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:159
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:253
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:160
 msgid "Unable to load the order for payment."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:297
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:300
 msgid "The minimum order amount for PAY.JP card payments is ¥50."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:319
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:391
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:190
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:322
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:394
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:189
 msgid "PAY.JP returned an incomplete payment session. Please try again."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:357
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:588
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:360
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:561
 msgid "Invalid payment token. Please try again."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:411
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:414
 msgid "Payment failed. Please try a different card."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:449
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:452
 msgid "JavaScript is required to add a payment method. Please enable JavaScript and try again."
 msgstr ""
 
 #. translators: PAY.JP capture success note shown in WooCommerce order admin.
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:490
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:493
 msgid "PAY.JP: Payment captured successfully."
 msgstr ""
 
 #. translators: %s: PAY.JP error message
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:496
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:499
 #, php-format
 msgid "PAY.JP: Payment capture failed — %s"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:515
-msgid "Order not found."
-msgstr ""
-
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:522
-msgid "No PAY.JP Payment Flow ID found for this order."
-msgstr ""
-
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:543
-msgid "PAY.JP returned an incomplete refund response."
-msgstr ""
-
-#. translators: PAY.JP refund confirmation shown in WooCommerce order notes. %s: PAY.JP refund ID.
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:554
-#, php-format
-msgid "PAY.JP refund processed. Refund ID: %s."
-msgstr ""
-
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:576
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:549
 msgid "Please select a saved card to update your subscription payment method."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:616
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:276
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:589
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:303
 msgid "Payment session expired."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:618
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:278
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:591
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:305
 msgid "Return to checkout"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:630
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:290
+#: includes/gateways/payjp/class-wc-gateway-payjp-card.php:603
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:317
 msgid "Change payment method"
 msgstr ""
 
@@ -405,70 +483,132 @@ msgstr ""
 msgid "Accept PayPay payments via PAY.JP v2 Payment Widgets."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:59
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:60
 msgid "After clicking \"Place order\", you will be taken to a secure page to complete your PayPay payment."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:72
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:73
 msgid "Immediate: the payment is confirmed at checkout. Authorize only: funds are reserved now and captured automatically when you set the order to Completed."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:110
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:286
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:111
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:313
 msgid "Pay with PayPay"
 msgstr ""
 
 #. translators: PAY.JP PayPay capture success note shown in WooCommerce order admin.
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:245
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:244
 msgid "PAY.JP PayPay: Payment captured successfully."
 msgstr ""
 
 #. translators: %s: PAY.JP error message
-#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:251
+#: includes/gateways/payjp/class-wc-gateway-payjp-paypay.php:250
 #, php-format
 msgid "PAY.JP PayPay: Payment capture failed — %s"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:101
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:105
 msgid "Enable/Disable"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:103
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:107
 msgid "Enable this payment method"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:107
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:111
 msgid "Title"
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:109
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:113
 msgid "Payment method title shown to the customer at checkout."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:114
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:118
 msgid "Description"
 msgstr ""
 
 #. translators: Admin tooltip for payment method description field.
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:117
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:121
 msgid "Payment method description shown to the customer at checkout. Basic HTML tags are supported (e.g. &lt;strong&gt;, &lt;a&gt;, &lt;br&gt;)."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:313
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:322
+msgid "This order can no longer be paid."
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:330
 msgid "Payment verification failed. Please contact support."
 msgstr ""
 
 #. translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:348
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:365
 msgid "PAY.JP authorised. Payment will be captured when the order is marked Completed."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:362
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:390
 msgid "PAY.JP payment is awaiting confirmation. Order will be updated automatically via webhook."
 msgstr ""
 
-#: includes/gateways/payjp/class-wc-gateway-payjp.php:369
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:397
 msgid "Payment was not completed. Please try again."
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:430
+msgid "Order not found."
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:437
+msgid "No PAY.JP Payment Flow ID found for this order."
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:457
+msgid "Partial refunds are not available for uncaptured payments. Complete the order first to capture the payment, then issue a partial refund."
+msgstr ""
+
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:481
+msgid "PAY.JP returned an incomplete refund response."
+msgstr ""
+
+#. translators: 1: Gateway label (e.g. "PAY.JP" or "PAY.JP PayPay"), 2: PAY.JP refund ID.
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:492
+#, php-format
+msgid "%1$s refund processed. Refund ID: %2$s."
+msgstr ""
+
+#. translators: %s: Gateway label (e.g. "PAY.JP").
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:527
+#, php-format
+msgid "%s payment authorization voided (payment was not yet captured)."
+msgstr ""
+
+#. translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message.
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:568
+#, php-format
+msgid "%1$s: Could not retrieve payment status during order cancellation — %2$s"
+msgstr ""
+
+#. translators: %s: Gateway label (e.g. "PAY.JP").
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:583
+#, php-format
+msgid "%s: Could not determine payment status during order cancellation. Please check the PAY.JP dashboard."
+msgstr ""
+
+#. translators: 1: Gateway label (e.g. "PAY.JP"), 2: error message.
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:613
+#, php-format
+msgid "%1$s: Automatic refund on cancellation failed — %2$s"
+msgstr ""
+
+#. translators: %s: Gateway label (e.g. "PAY.JP").
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:640
+#, php-format
+msgid "%s payment cancelled successfully."
+msgstr ""
+
+#. translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message.
+#: includes/gateways/payjp/class-wc-gateway-payjp.php:656
+#, php-format
+msgid "%1$s: Payment cancellation failed — %2$s"
 msgstr ""
 
 #. translators: %s: WooCommerce plugin name

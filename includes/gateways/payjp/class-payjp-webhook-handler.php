@@ -462,13 +462,16 @@ class Payjp_Webhook_Handler {
 
 	/**
 	 * Build an API client using the secret key matching the event's livemode flag.
-	 * Returns null when the corresponding key is not configured.
+	 * Returns null when the payload does not carry a livemode flag (safer than
+	 * guessing an environment) or when the corresponding key is not configured.
 	 *
 	 * @param array<string, mixed> $flow Payment Flow object from the webhook payload.
 	 */
 	private static function get_api_for_flow( array $flow ): ?Payjp_API {
-		$livemode = ! empty( $flow['livemode'] );
-		$key      = $livemode
+		if ( ! isset( $flow['livemode'] ) ) {
+			return null;
+		}
+		$key = $flow['livemode']
 			? (string) Payjp_Settings::get( 'live_secret_key' )
 			: (string) Payjp_Settings::get( 'test_secret_key' );
 		if ( '' === $key ) {

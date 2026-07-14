@@ -373,6 +373,44 @@ class WebhookHandlerTest extends TestCase {
 	}
 
 	#[Test]
+	public function payment_flow_capturable_skips_void_when_livemode_missing(): void {
+		// Copilot review fix: a payload without a livemode flag must not silently
+		// guess "test" — get_api_for_flow() should bail out (skip the void) rather
+		// than risk operating against the wrong PAY.JP environment.
+		Functions\when( 'get_option' )->justReturn(
+			[ 'webhook_secret' => 'secret', 'alert_email' => 'ops@example.com', 'test_secret_key' => 'sk_test_xxx', 'live_secret_key' => 'sk_live_xxx' ]
+		);
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'pending', 'on-hold' ] )->andReturn( false );
+		$order->shouldReceive( 'get_transaction_id' )->once()->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_alerted_late_capturable' )->andReturn( '' );
+		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_alerted_late_capturable', '1' );
+		$order->shouldReceive( 'save' )->once();
+		$order->shouldReceive( 'has_status' )->once()->with( [ 'cancelled', 'failed' ] )->andReturn( true );
+		$order->shouldReceive( 'add_order_note' )->once()->with( Mockery::pattern( '/not attempted/' ) );
+		$order->shouldReceive( 'get_status' )->andReturn( 'cancelled' );
+		$order->shouldReceive( 'get_order_number' )->andReturn( '203' );
+		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$order->shouldReceive( 'get_edit_order_url' )->andReturn( 'https://example.com/order/203' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+		Functions\expect( 'wp_mail' )
+			->once()
+			->with( Mockery::any(), Mockery::any(), Mockery::pattern( '/not attempted/' ) )
+			->andReturn( true );
+
+		$payload = [
+			'type' => 'payment_flow.amount_capturable_updated',
+			// livemode intentionally omitted.
+			'data' => [ 'id' => 'pflw_cap_no_livemode', 'status' => 'requires_capture' ],
+		];
+		$request  = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		$response = Payjp_Webhook_Handler::handle_request( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+	}
+
+	#[Test]
 	public function payment_flow_capturable_retry_on_processed_order_is_noop(): void {
 		$this->expectNotToPerformAssertions();
 

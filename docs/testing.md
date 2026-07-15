@@ -23,6 +23,28 @@
 - ローカル環境は外部からの Webhook 着信を受けられないため、非同期完了の検証は
   実際の Payment Flow に対しイベントを REST 経由で手動発火させる。
 
+## i18n（.pot/.po 再生成）
+
+ローカルに `wp` コマンドが無くても、起動中の wp-env CLI コンテナ経由で `wp i18n` 系コマンドを実行できる。
+
+```bash
+# CLI コンテナ名を確認（末尾が -cli-1。-tests-cli-1 ではない方）
+docker ps --format '{{.Names}}' | grep -- '-cli-1$' | grep -v tests
+
+# プラグインディレクトリ内で .pot を再生成
+docker exec -w /var/www/html/wp-content/plugins/payjp-for-wc <cli-container-name> \
+  wp i18n make-pot . languages/payjp-for-wc.pot --domain=payjp-for-wc --exclude=vendor,node_modules,tests,build
+```
+
+続けてローカルで `.po` を更新し `.mo` を再コンパイルする（`msgmerge`/`msgfmt` は Homebrew の `gettext` に含まれる）:
+
+```bash
+msgmerge --update --backup=none --no-fuzzy-matching languages/payjp-for-wc-ja.po languages/payjp-for-wc.pot
+msgfmt -o languages/payjp-for-wc-ja.mo languages/payjp-for-wc-ja.po
+```
+
+`msgattrib --untranslated languages/payjp-for-wc-ja.po` で未翻訳エントリを確認できる。
+
 ## wp-env の注意点
 
 - 新規インストールは `woocommerce_coming_soon` が `yes` になっており

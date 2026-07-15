@@ -105,6 +105,11 @@ npm run lint:css     # CSS lint
   エラー表示は `role="alert" aria-live="polite"` 付き要素へ。`src/` を必ず同梱
 - i18n: テキストドメイン `payjp-for-wc`。`load_plugin_textdomain()` は `plugins_loaded` で。
   変数の直接結合禁止 → `sprintf()` / `printf()`
+- `JP4WC_Logger::log_error()` に構造化 context 引数はない（`log_event()` と違う）。
+  flow_id 等の識別子はメッセージ文字列に埋め込むこと（例: `'... (flow_id=' . $flow_id . ')'`）
+- Webhook ペイロードの値は truthy 判定に頼らず型を検証してから使う
+  （`livemode` 等の環境判定フィールドは `isset()` + `is_bool()` で必須化。
+  文字列 `"false"` は PHP では truthy になる点に注意）
 
 ---
 
@@ -124,6 +129,9 @@ npm run lint:css     # CSS lint
 5. **`payment_complete()` のステータス許可リストガード**: WC コアは `cancelled` からの
    payment_complete を許すため、呼ぶ前に必ず
    `$order->has_status( array( 'pending', 'failed', 'on-hold' ) )` で守る（#22 の教訓）
+6. **遅延 Webhook はステータスを変えず通知する**: 確定済み注文への `succeeded` /
+   `amount_capturable_updated` 到着時は `processing`/`refunded` へ遷移させず、
+   注文メモ + 管理者メール（`Payjp_Admin_Notifier`）+ ログで可視化する（#23 の教訓）
 
 ---
 

@@ -334,7 +334,8 @@ class GatewayCancelTest extends TestCase {
 	}
 
 	/**
-	 * Adds an error note when the cancel endpoint throws.
+	 * Adds an error note when the cancel endpoint throws and the re-fetch shows a
+	 * non-succeeded status (no race — genuine cancel failure).
 	 */
 	#[Test]
 	public function cancel_adds_error_note_when_cancel_api_throws(): void {
@@ -346,6 +347,7 @@ class GatewayCancelTest extends TestCase {
 
 		$this->api->shouldReceive( 'get' )
 			->once()
+			->with( '/payment_flows/pflw_throw', Mockery::any() )
 			->andReturn(
 				array(
 					'id'     => 'pflw_throw',
@@ -356,6 +358,152 @@ class GatewayCancelTest extends TestCase {
 		$this->api->shouldReceive( 'post' )
 			->once()
 			->andThrow( new \RuntimeException( 'cancel failed' ) );
+
+		// Race fallback re-fetch: still not succeeded → generic failure note only.
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_throw', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_throw',
+					'status' => 'requires_action',
+				)
+			);
+
+		$this->card->cancel_order( 1 );
+	}
+
+	// ── Cancel race fallback ─────────────────────────────────────────────────
+
+	/**
+	 * Falls back to the automatic refund when the cancel endpoint throws because the
+	 * flow raced to 'succeeded' in between the status fetch and the cancel call.
+	 */
+	#[Test]
+	public function cancel_falls_back_to_refund_when_flow_races_to_succeeded(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = $this->make_order( 'payjp_card', 'pflw_race' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_cancel_refund_processed' )->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( 'automatic' );
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_refund_processed_pyr_race', '1' )->once();
+		$order->shouldReceive( 'update_meta_data' )->with( '_payjp_cancel_refund_processed', '1' )->once();
+		$order->shouldReceive( 'save' )->twice();
+		$order->shouldReceive( 'add_order_note' )->twice();
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		// Initial status fetch: still cancelable.
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race',
+					'status' => 'processing',
+				)
+			);
+
+		// Cancel POST fails because the flow already succeeded.
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->with(
+				'/payment_flows/pflw_race/cancel',
+				array( 'cancellation_reason' => 'requested_by_customer' ),
+				Mockery::any()
+			)
+			->andThrow( new \RuntimeException( 'invalid_status' ) );
+
+		// Race fallback re-fetch: now succeeded.
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race',
+					'status' => 'succeeded',
+				)
+			);
+
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->with( '/payment_refunds', array( 'payment_flow_id' => 'pflw_race' ) )
+			->andReturn( array( 'id' => 'pyr_race' ) );
+
+		$this->card->cancel_order( 1 );
+	}
+
+	/**
+	 * Does not re-issue a refund via the race fallback when the auto-refund guard
+	 * meta is already set (idempotent even through the race path).
+	 */
+	#[Test]
+	public function cancel_race_fallback_skips_refund_when_already_processed(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = $this->make_order( 'payjp_card', 'pflw_race2' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_cancel_refund_processed' )->andReturn( '1' );
+		$order->shouldReceive( 'add_order_note' )->once();
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race2', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race2',
+					'status' => 'processing',
+				)
+			);
+
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->andThrow( new \RuntimeException( 'invalid_status' ) );
+
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race2', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race2',
+					'status' => 'succeeded',
+				)
+			);
+
+		$this->api->shouldNotReceive( 'post' )->with( '/payment_refunds', Mockery::any() );
+
+		$this->card->cancel_order( 1 );
+	}
+
+	/**
+	 * Keeps the generic cancel-failure note when the race fallback re-fetch itself
+	 * throws (e.g. a transient network error) — no refund is attempted.
+	 */
+	#[Test]
+	public function cancel_keeps_failure_note_when_race_refetch_throws(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = $this->make_order( 'payjp_card', 'pflw_race3' );
+		$order->shouldReceive( 'add_order_note' )->once();
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race3', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race3',
+					'status' => 'processing',
+				)
+			);
+
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->andThrow( new \RuntimeException( 'cancel failed' ) );
+
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race3', Mockery::any() )
+			->andThrow( new \RuntimeException( 'timeout' ) );
 
 		$this->card->cancel_order( 1 );
 	}

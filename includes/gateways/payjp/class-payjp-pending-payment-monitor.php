@@ -108,9 +108,24 @@ class Payjp_Pending_Payment_Monitor {
 			return $cancel;
 		}
 
+		if ( self::is_hold_active( $order ) ) {
+			return false;
+		}
+
+		return $cancel;
+	}
+
+	/**
+	 * Whether the order carries an awaiting-webhook flag that is still inside
+	 * the hold window.
+	 *
+	 * @param WC_Order $order Order being evaluated.
+	 * @return bool
+	 */
+	private static function is_hold_active( WC_Order $order ): bool {
 		$flagged_at = (string) $order->get_meta( '_payjp_awaiting_webhook' );
 		if ( '' === $flagged_at || ! is_numeric( $flagged_at ) ) {
-			return $cancel;
+			return false;
 		}
 
 		/**
@@ -122,11 +137,7 @@ class Payjp_Pending_Payment_Monitor {
 		 */
 		$hold = (int) apply_filters( 'payjp_for_wc_awaiting_webhook_hold', 30 * MINUTE_IN_SECONDS, $order );
 
-		if ( time() - (int) $flagged_at <= $hold ) {
-			return false;
-		}
-
-		return $cancel;
+		return time() - (int) $flagged_at <= $hold;
 	}
 
 	/**
@@ -135,11 +146,23 @@ class Payjp_Pending_Payment_Monitor {
 	 * Called by WC_Gateway_Payjp::handle_return() when the customer returns
 	 * while the Payment Flow is still requires_action / processing.
 	 *
+	 * Idempotent while a monitoring cycle is active: revisits of the return URL
+	 * (refresh/back button) must not push the flag timestamp forward — that
+	 * would extend the hold window indefinitely and desync the flag from the
+	 * already-scheduled poll jobs. A new cycle only begins when no flag exists
+	 * or the previous one has expired, and then the attempt counter left over
+	 * from the expired cycle is reset so the new cycle gets its full three polls.
+	 *
 	 * @param WC_Order $order Order awaiting confirmation.
 	 */
 	public static function start( WC_Order $order ): void {
+		if ( self::is_hold_active( $order ) ) {
+			return;
+		}
+
 		$flagged_at = time();
 
+		$order->delete_meta_data( '_payjp_flow_poll_attempts' );
 		$order->update_meta_data( '_payjp_awaiting_webhook', (string) $flagged_at );
 		$order->save();
 

@@ -130,6 +130,8 @@ class PendingPaymentMonitorTest extends TestCase {
 
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_id' )->andReturn( 42 );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_awaiting_webhook' )->andReturn( '' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_flow_poll_attempts' );
 		$order->shouldReceive( 'update_meta_data' )
 			->once()
 			->with( '_payjp_awaiting_webhook', Mockery::on( static fn( $value ) => is_string( $value ) && is_numeric( $value ) ) );
@@ -144,6 +146,44 @@ class PendingPaymentMonitorTest extends TestCase {
 				[ 'order_id' => 42 ],
 				'payjp-for-wc'
 			);
+
+		Payjp_Pending_Payment_Monitor::start( $order );
+	}
+
+	#[Test]
+	public function start_is_noop_while_previous_cycle_is_still_active(): void {
+		// A return-URL revisit (refresh/back) during an active cycle must not
+		// re-anchor the flag (extending the hold window) nor reschedule polls.
+		$this->expectNotToPerformAssertions();
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_awaiting_webhook' )->andReturn( (string) ( time() - 5 * MINUTE_IN_SECONDS ) );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldNotReceive( 'delete_meta_data' );
+		$order->shouldNotReceive( 'save' );
+
+		Functions\expect( 'as_schedule_single_action' )->never();
+
+		Payjp_Pending_Payment_Monitor::start( $order );
+	}
+
+	#[Test]
+	public function start_resets_attempts_and_rearms_after_previous_cycle_expired(): void {
+		// A revisit after the previous cycle expired starts a fresh cycle: the
+		// stale attempt counter must be reset so the new cycle gets all polls.
+		$this->expectNotToPerformAssertions();
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'get_id' )->andReturn( 42 );
+		$order->shouldReceive( 'get_meta' )->once()->with( '_payjp_awaiting_webhook' )->andReturn( (string) ( time() - 45 * MINUTE_IN_SECONDS ) );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_flow_poll_attempts' );
+		$order->shouldReceive( 'update_meta_data' )
+			->once()
+			->with( '_payjp_awaiting_webhook', Mockery::on( static fn( $value ) => is_string( $value ) && is_numeric( $value ) && abs( (int) $value - time() ) <= 5 ) );
+		$order->shouldReceive( 'save' )->once();
+
+		Functions\when( 'as_has_scheduled_action' )->justReturn( false );
+		Functions\expect( 'as_schedule_single_action' )->once();
 
 		Payjp_Pending_Payment_Monitor::start( $order );
 	}

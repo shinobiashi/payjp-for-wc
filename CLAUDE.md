@@ -105,7 +105,8 @@ npm run lint:css     # CSS lint
 - JS: `@wordpress/scripts` ESLint 準拠。payments.js はページ内で一度だけ初期化。
   エラー表示は `role="alert" aria-live="polite"` 付き要素へ。`src/` を必ず同梱
 - i18n: テキストドメイン `payjp-for-wc`。`load_plugin_textdomain()` は `plugins_loaded` で。
-  変数の直接結合禁止 → `sprintf()` / `printf()`
+  変数の直接結合禁止 → `sprintf()` / `printf()`。
+  ユーザー向け文字列を追加・変更したら同じ PR で `languages/`（POT / ja.po / ja.mo）も更新する
 - `JP4WC_Logger::log_error()` に構造化 context 引数はない（`log_event()` と違う）。
   flow_id 等の識別子はメッセージ文字列に埋め込むこと（例: `'... (flow_id=' . $flow_id . ')'`）
 - Webhook ペイロードの値は truthy 判定に頼らず型を検証してから使う
@@ -138,6 +139,14 @@ npm run lint:css     # CSS lint
    `refund_succeeded_flow_on_cancel()`（`_payjp_cancel_refund_processed` ガード共有）で
    自動返金へフォールバックする。呼び出し元の注文メモ文言は、このガードで返金が
    スキップされうる分岐も正しく表現すること（#24 の教訓）
+8. **処理中フローの注文は自動キャンセルを保留し、ポーリングで確定する**:
+   `Payjp_Pending_Payment_Monitor` が `_payjp_awaiting_webhook`（保留 30 分）で
+   WC の未払い自動キャンセルを抑止し、Action Scheduler（+5/10/15 分・最大 3 回）で
+   フロー状態を照合して確定する。**注文を確定させる経路（webhook / handle_return /
+   ポーラー）を追加・変更したら、確定成功後に必ず
+   `Payjp_Pending_Payment_Monitor::clear( $order )` を呼ぶこと**。`start()` は冪等
+   （ウィンドウ内の再訪問では再アンカーしない）。`woocommerce_cancel_unpaid_order`
+   フィルター内では API を呼ばずメタ参照のみで判定する（#25 の教訓）
 
 ---
 

@@ -14,6 +14,7 @@ define( 'PAYJP_FOR_WC_FILE', dirname( __DIR__ ) . '/payjp-for-wc.php' );
 define( 'PAYJP_FOR_WC_DIR', dirname( __DIR__ ) . '/' );
 define( 'PAYJP_FOR_WC_URL', 'https://example.com/wp-content/plugins/payjp-for-wc/' );
 define( 'PAYJP_API_BASE', 'https://api.pay.jp/v2' );
+define( 'MINUTE_IN_SECONDS', 60 );
 
 // Minimal WordPress / WooCommerce class stubs.
 require_once __DIR__ . '/stubs/class-jp4wc-logger.php';
@@ -27,6 +28,7 @@ require_once __DIR__ . '/stubs/class-payjp-api.php';
 // Plugin classes under test.
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-settings.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-webhook-handler.php';
+require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-pending-payment-monitor.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-admin-notifier.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-card.php';

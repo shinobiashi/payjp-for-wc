@@ -348,6 +348,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 
 		if ( 'succeeded' === $status ) {
 			$order->payment_complete( $flow_id );
+			Payjp_Pending_Payment_Monitor::clear( $order );
 			$logger->log_event( 'succeeded', $order_id, array( 'flow_id' => $flow_id ) );
 			$this->after_payment_complete( $order, $flow );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
@@ -363,6 +364,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			// which triggers capture_payment(). "on-hold" implies a problem to customers.
 			/* translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders */
 			$order->update_status( 'processing', __( 'PAY.JP authorised. Payment will be captured when the order is marked Completed.', 'payjp-for-wc' ) );
+			Payjp_Pending_Payment_Monitor::clear( $order );
 			$logger->log_event( 'authorized', $order_id, array( 'flow_id' => $flow_id ) );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;
@@ -389,6 +391,9 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			$order->add_order_note(
 				__( 'PAY.JP payment is awaiting confirmation. Order will be updated automatically via webhook.', 'payjp-for-wc' )
 			);
+			// Hold WooCommerce's unpaid-order auto-cancellation and start status
+			// polling as a fallback for undelivered webhooks (Issue #25).
+			Payjp_Pending_Payment_Monitor::start( $order );
 			wp_safe_redirect( $order->get_checkout_order_received_url() );
 			exit;
 		}

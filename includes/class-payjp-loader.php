@@ -39,6 +39,7 @@ class Payjp_Loader {
 		require_once $dir . 'class-wc-gateway-payjp-card.php';
 		require_once $dir . 'class-wc-gateway-payjp-paypay.php';
 		require_once $dir . 'class-payjp-webhook-handler.php';
+		require_once $dir . 'class-payjp-pending-payment-monitor.php';
 		require_once $dir . 'class-payjp-admin-notifier.php';
 		require_once $dir . 'class-payjp-token-manager.php';
 		require_once $dir . 'class-payjp-subscriptions.php';
@@ -74,6 +75,7 @@ class Payjp_Loader {
 		}
 
 		Payjp_Webhook_Handler::init();
+		Payjp_Pending_Payment_Monitor::init();
 		Payjp_Token_Manager::init();
 		Payjp_Subscriptions::init();
 

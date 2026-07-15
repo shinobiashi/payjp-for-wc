@@ -194,6 +194,9 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			$order->update_meta_data( '_payjp_client_secret', $client_secret );
 			$order->update_meta_data( '_payjp_payment_method', 'paypay' );
 			$order->update_meta_data( '_payjp_capture_method', $capture_method );
+			// Record the environment the flow was created in so the pending-payment
+			// poller can pick the matching secret key later (Issue #25).
+			$order->update_meta_data( '_payjp_flow_livemode', Payjp_Settings::is_test_mode() ? '0' : '1' );
 			$order->save();
 
 			return array(

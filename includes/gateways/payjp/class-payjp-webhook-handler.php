@@ -191,6 +191,9 @@ class Payjp_Webhook_Handler {
 
 		$order->payment_complete( $flow_id );
 		$order->add_order_note( __( 'PAY.JP: Payment confirmed via webhook.', 'payjp-for-wc' ) );
+		if ( class_exists( 'Payjp_Pending_Payment_Monitor' ) ) {
+			Payjp_Pending_Payment_Monitor::clear( $order );
+		}
 		self::logger()->log_event(
 			'succeeded',
 			$order->get_id(),
@@ -309,6 +312,9 @@ class Payjp_Webhook_Handler {
 			/* translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders confirmed via webhook. */
 			__( 'PAY.JP authorised via webhook. Payment will be captured when the order is marked Completed.', 'payjp-for-wc' )
 		);
+		if ( class_exists( 'Payjp_Pending_Payment_Monitor' ) ) {
+			Payjp_Pending_Payment_Monitor::clear( $order );
+		}
 		self::logger()->log_event(
 			'authorized',
 			$order->get_id(),
@@ -507,6 +513,9 @@ class Payjp_Webhook_Handler {
 
 		/* translators: PAY.JP failed payment note shown in WooCommerce admin */
 		$order->update_status( 'failed', __( 'PAY.JP payment failed (webhook).', 'payjp-for-wc' ) );
+		if ( class_exists( 'Payjp_Pending_Payment_Monitor' ) ) {
+			Payjp_Pending_Payment_Monitor::clear( $order );
+		}
 		self::logger()->log_event(
 			'failed',
 			$order->get_id(),

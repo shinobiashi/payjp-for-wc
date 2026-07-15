@@ -41,6 +41,24 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_bloginfo' )->justReturn( 'Test Store' );
 		Functions\when( 'wp_specialchars_decode' )->returnArg( 1 );
 		Functions\when( 'is_email' )->justReturn( true );
+
+		// The settlement paths call Payjp_Pending_Payment_Monitor::clear(), which
+		// unschedules the poll job when Action Scheduler is available. Stub the
+		// function so the behaviour is deterministic regardless of whether another
+		// test file already caused Brain Monkey to define it.
+		Functions\when( 'as_unschedule_action' )->justReturn( 0 );
+	}
+
+	/**
+	 * Add the expectations produced by Payjp_Pending_Payment_Monitor::clear(),
+	 * called by the webhook handler after each successful settlement.
+	 *
+	 * @param Mockery\MockInterface&WC_Order $order Order mock.
+	 */
+	private function expect_monitor_clear( $order ): void {
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_awaiting_webhook' );
+		$order->shouldReceive( 'delete_meta_data' )->once()->with( '_payjp_flow_poll_attempts' );
+		$order->shouldReceive( 'save' )->atLeast()->once();
 	}
 
 	protected function tearDown(): void {
@@ -123,6 +141,7 @@ class WebhookHandlerTest extends TestCase {
 		$order->shouldReceive( 'payment_complete' )->once()->with( 'pflw_abc123' );
 		$order->shouldReceive( 'add_order_note' )->once();
 		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$this->expect_monitor_clear( $order );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [
@@ -504,6 +523,7 @@ class WebhookHandlerTest extends TestCase {
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'failed', 'cancelled' ] )->andReturn( false );
 		$order->shouldReceive( 'update_status' )->once()->with( 'failed', Mockery::type( 'string' ) );
 		$order->shouldReceive( 'get_id' )->andReturn( 1 );
+		$this->expect_monitor_clear( $order );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
 
 		$payload = [

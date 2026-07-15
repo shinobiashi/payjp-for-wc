@@ -34,6 +34,16 @@ abstract class WC_Order {
 	 */
 	abstract public function update_meta_data( string $key, mixed $value ): void;
 
+	/**
+	 * @param string $key
+	 */
+	abstract public function delete_meta_data( string $key ): void;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_payment_method(): string;
+
 	abstract public function save(): void;
 
 	/**

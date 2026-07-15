@@ -62,7 +62,10 @@ class Payjp_Pending_Payment_Monitor {
 	const MAX_ATTEMPTS = 3;
 
 	/**
-	 * Delays (seconds) before each polling attempt: +5m, +10m, +15m.
+	 * Delays (seconds) of each polling attempt, measured from the moment the
+	 * awaiting-webhook flag was set: +5m, +10m, +15m. Keeping every attempt
+	 * relative to that fixed origin (rather than to the previous poll) ensures
+	 * the final attempt still runs well inside the 30-minute hold window.
 	 *
 	 * @var int[]
 	 */
@@ -135,10 +138,12 @@ class Payjp_Pending_Payment_Monitor {
 	 * @param WC_Order $order Order awaiting confirmation.
 	 */
 	public static function start( WC_Order $order ): void {
-		$order->update_meta_data( '_payjp_awaiting_webhook', (string) time() );
+		$flagged_at = time();
+
+		$order->update_meta_data( '_payjp_awaiting_webhook', (string) $flagged_at );
 		$order->save();
 
-		self::schedule_poll( $order->get_id(), 0 );
+		self::schedule_poll( $order->get_id(), 0, $flagged_at );
 	}
 
 	/**
@@ -309,19 +314,33 @@ class Payjp_Pending_Payment_Monitor {
 		$order->update_meta_data( '_payjp_flow_poll_attempts', (string) $attempts );
 		$order->save();
 
-		self::schedule_poll( $order->get_id(), $attempts );
+		// Anchor the next poll to the flag timestamp so attempts run at
+		// +5/+10/+15 minutes from the start, not relative to the previous poll
+		// (which would drift the final attempt onto the hold-window boundary).
+		$flagged_at = (int) $order->get_meta( '_payjp_awaiting_webhook' );
+		if ( $flagged_at <= 0 ) {
+			$flagged_at = time();
+		}
+
+		self::schedule_poll( $order->get_id(), $attempts, $flagged_at );
 	}
 
 	/**
 	 * Schedule a single Action Scheduler poll job for the order.
+	 *
+	 * The run time is $base + POLL_DELAYS[$attempt], where $base is the moment
+	 * the awaiting-webhook flag was set. A timestamp already in the past (e.g.
+	 * Action Scheduler ran the previous poll late) is fine: Action Scheduler
+	 * treats past-due single actions as immediately runnable.
 	 *
 	 * No-op when Action Scheduler is unavailable (the prevention filter still
 	 * operates and the flag expires naturally after the hold window).
 	 *
 	 * @param int $order_id WooCommerce order ID.
 	 * @param int $attempt  Zero-based attempt index selecting the delay.
+	 * @param int $base     Unix timestamp the delays are measured from.
 	 */
-	private static function schedule_poll( int $order_id, int $attempt ): void {
+	private static function schedule_poll( int $order_id, int $attempt, int $base ): void {
 		if ( ! function_exists( 'as_schedule_single_action' ) ) {
 			return;
 		}
@@ -334,7 +353,7 @@ class Payjp_Pending_Payment_Monitor {
 
 		$delay = self::POLL_DELAYS[ min( $attempt, count( self::POLL_DELAYS ) - 1 ) ];
 
-		as_schedule_single_action( time() + $delay, self::POLL_HOOK, $args, self::POLL_GROUP );
+		as_schedule_single_action( $base + $delay, self::POLL_HOOK, $args, self::POLL_GROUP );
 	}
 
 	/**

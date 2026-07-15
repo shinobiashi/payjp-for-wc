@@ -46,11 +46,13 @@ class PendingPaymentMonitorTest extends TestCase {
 	/**
 	 * Build a WC_Order mock representing a pending order with an in-flight flow.
 	 *
-	 * @param string $livemode Value of _payjp_flow_livemode meta.
-	 * @param string $attempts Value of _payjp_flow_poll_attempts meta.
+	 * @param string   $livemode   Value of _payjp_flow_livemode meta.
+	 * @param string   $attempts   Value of _payjp_flow_poll_attempts meta.
+	 * @param int|null $flagged_at Unix timestamp stored in _payjp_awaiting_webhook.
+	 *                             Defaults to 5 minutes ago (the first poll running on time).
 	 * @return WC_Order&Mockery\MockInterface
 	 */
-	private function pending_order_mock( string $livemode = '0', string $attempts = '' ): WC_Order {
+	private function pending_order_mock( string $livemode = '0', string $attempts = '', ?int $flagged_at = null ): WC_Order {
 		$order = Mockery::mock( WC_Order::class );
 		$order->shouldReceive( 'get_id' )->andReturn( 42 );
 		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
@@ -58,6 +60,7 @@ class PendingPaymentMonitorTest extends TestCase {
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_payment_flow_id' )->andReturn( 'pflw_poll' );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_flow_livemode' )->andReturn( $livemode );
 		$order->shouldReceive( 'get_meta' )->with( '_payjp_flow_poll_attempts' )->andReturn( $attempts );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_awaiting_webhook' )->andReturn( (string) ( $flagged_at ?? time() - 5 * MINUTE_IN_SECONDS ) );
 		return $order;
 	}
 
@@ -224,7 +227,10 @@ class PendingPaymentMonitorTest extends TestCase {
 		$api->shouldReceive( 'get' )->once()->andReturn( [ 'status' => 'processing' ] );
 		Payjp_Pending_Payment_Monitor::set_api_factory( static fn( string $key ) => $api );
 
-		$order = $this->pending_order_mock( '0', '' );
+		// Flag set 5 minutes ago (this first poll is running on schedule): the
+		// second attempt must be anchored to the flag timestamp, i.e. run at
+		// flag + POLL_DELAYS[1] (+10m from start = +5m from now) — not time() + 600.
+		$order = $this->pending_order_mock( '0', '', time() - 5 * MINUTE_IN_SECONDS );
 		$order->shouldReceive( 'update_meta_data' )->once()->with( '_payjp_flow_poll_attempts', '1' );
 		$order->shouldReceive( 'save' )->once();
 		$order->shouldNotReceive( 'delete_meta_data' );
@@ -234,7 +240,7 @@ class PendingPaymentMonitorTest extends TestCase {
 		Functions\expect( 'as_schedule_single_action' )
 			->once()
 			->with(
-				Mockery::on( static fn( $timestamp ) => is_int( $timestamp ) && abs( $timestamp - ( time() + 600 ) ) <= 5 ),
+				Mockery::on( static fn( $timestamp ) => is_int( $timestamp ) && abs( $timestamp - ( time() + 5 * MINUTE_IN_SECONDS ) ) <= 5 ),
 				'payjp_for_wc_poll_flow',
 				[ 'order_id' => 42 ],
 				'payjp-for-wc'

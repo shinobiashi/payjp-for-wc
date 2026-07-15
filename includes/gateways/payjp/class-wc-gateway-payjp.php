@@ -636,8 +636,11 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			try {
 				$refetched        = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
 				$refetched_status = isset( $refetched['status'] ) && is_string( $refetched['status'] ) ? $refetched['status'] : '';
-			} catch ( RuntimeException $refetch_e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- fall through to the generic failure note below.
+			} catch ( RuntimeException $refetch_e ) {
 				unset( $refetch_e );
+				// Distinguish "re-fetch itself failed" from "re-fetch succeeded but
+				// returned no status" in the log message below.
+				$refetched_status = 'refetch_failed';
 			}
 
 			if ( 'succeeded' === $refetched_status ) {

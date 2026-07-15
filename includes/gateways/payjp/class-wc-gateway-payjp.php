@@ -544,6 +544,8 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	 *     / processing / requires_capture → POST /payment_flows/{id}/cancel
 	 *   - succeeded → automatic full refund via do_refund() / PAY.JP /payment_refunds
 	 *   - canceled / payment_failed → skip (already terminal)
+	 *   - cancel failure → re-fetch once; if the flow raced to 'succeeded',
+	 *     fall back to the automatic full refund
 	 *
 	 * @param WC_Order $order      WooCommerce order object.
 	 * @param string   $note_label Gateway-specific label for order notes, e.g. "PAY.JP".
@@ -599,30 +601,7 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 		// refund record that triggers an automatic order status transition to 'refunded',
 		// overriding the 'cancelled' status the merchant just set.
 		if ( 'succeeded' === $status ) {
-			// Idempotency guard: a succeeded flow stays 'succeeded' even after a refund,
-			// so if the order is cancelled more than once (e.g. status toggled away and
-			// back) we must not issue a duplicate refund.
-			if ( '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' ) ) {
-				return;
-			}
-			$result = $this->do_refund( $order_id, null, $note_label );
-			if ( is_wp_error( $result ) ) {
-				$order->add_order_note(
-					sprintf(
-						/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: error message. */
-						__( '%1$s: Automatic refund on cancellation failed — %2$s', 'payjp-for-wc' ),
-						esc_html( $note_label ),
-						esc_html( $result->get_error_message() )
-					)
-				);
-				$logger->log_error( 'cancel_payment_flow: auto-refund failed', $order_id, new \RuntimeException( $result->get_error_message() ) );
-			} else {
-				// Persist the guard so a future cancellation of the same order does not
-				// trigger a second automatic refund.
-				$order->update_meta_data( '_payjp_cancel_refund_processed', '1' );
-				$order->save();
-			}
-			// On success: do_refund() already adds "PAY.JP refund processed. Refund ID: xxx." order note.
+			$this->refund_succeeded_flow_on_cancel( $order, $note_label );
 			return;
 		}
 
@@ -650,6 +629,47 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 				)
 			);
 		} catch ( RuntimeException $e ) {
+			// The flow may have transitioned to 'succeeded' between the status fetch and
+			// the cancel call (PayPay confirms asynchronously). Re-fetch once and fall
+			// back to the automatic refund so PAY.JP and WooCommerce stay consistent.
+			$refetched_status = '';
+			try {
+				$refetched        = $this->get_api()->get( '/payment_flows/' . rawurlencode( $flow_id ), $order_id );
+				$refetched_status = isset( $refetched['status'] ) && is_string( $refetched['status'] ) ? $refetched['status'] : '';
+			} catch ( RuntimeException ) {
+				// Distinguish "re-fetch itself failed" from "re-fetch succeeded but
+				// returned no status" in the log message below.
+				$refetched_status = 'refetch_failed';
+			}
+
+			if ( 'succeeded' === $refetched_status ) {
+				// Match the order note wording to what refund_succeeded_flow_on_cancel()
+				// will actually do: if its idempotency guard is already set, no refund is
+				// attempted here (it was already issued by an earlier cancellation), so
+				// the note must not claim one is being issued now.
+				$refund_already_processed = '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' );
+				$order->add_order_note(
+					$refund_already_processed
+						? sprintf(
+							/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+							__( '%s: Payment completed while the order was being cancelled; an automatic refund was already issued previously.', 'payjp-for-wc' ),
+							esc_html( $note_label )
+						)
+						: sprintf(
+							/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+							__( '%s: Payment completed while the order was being cancelled; issuing an automatic refund instead.', 'payjp-for-wc' ),
+							esc_html( $note_label )
+						)
+				);
+				$logger->log_event(
+					'cancel_race_refund_fallback',
+					$order_id,
+					array( 'flow_id' => $flow_id )
+				);
+				$this->refund_succeeded_flow_on_cancel( $order, $note_label );
+				return;
+			}
+
 			$order->add_order_note(
 				sprintf(
 					/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: API error message. */
@@ -658,8 +678,51 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 					esc_html( $e->getMessage() )
 				)
 			);
-			$logger->log_error( 'cancel_payment_flow: cancel API failed', $order_id, $e );
+			$logger->log_error(
+				'cancel_payment_flow: cancel API failed (refetched_status=' . $refetched_status . ')',
+				$order_id,
+				$e
+			);
 		}
+	}
+
+	/**
+	 * Issue the cancellation-time automatic full refund for a captured (succeeded) flow.
+	 *
+	 * Guarded by the `_payjp_cancel_refund_processed` order meta so repeated
+	 * cancellations (or the race fallback) never refund twice.
+	 *
+	 * @param WC_Order $order      WooCommerce order object.
+	 * @param string   $note_label Gateway-specific label for order notes, e.g. "PAY.JP".
+	 */
+	private function refund_succeeded_flow_on_cancel( WC_Order $order, string $note_label ): void {
+		$order_id = $order->get_id();
+		$logger   = $this->get_logger();
+
+		// Idempotency guard: a succeeded flow stays 'succeeded' even after a refund,
+		// so if the order is cancelled more than once (e.g. status toggled away and
+		// back) we must not issue a duplicate refund.
+		if ( '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' ) ) {
+			return;
+		}
+		$result = $this->do_refund( $order_id, null, $note_label );
+		if ( is_wp_error( $result ) ) {
+			$order->add_order_note(
+				sprintf(
+					/* translators: 1: Gateway label (e.g. "PAY.JP"), 2: error message. */
+					__( '%1$s: Automatic refund on cancellation failed — %2$s', 'payjp-for-wc' ),
+					esc_html( $note_label ),
+					esc_html( $result->get_error_message() )
+				)
+			);
+			$logger->log_error( 'cancel_payment_flow: auto-refund failed', $order_id, new \RuntimeException( $result->get_error_message() ) );
+		} else {
+			// Persist the guard so a future cancellation of the same order does not
+			// trigger a second automatic refund.
+			$order->update_meta_data( '_payjp_cancel_refund_processed', '1' );
+			$order->save();
+		}
+		// On success: do_refund() already adds "PAY.JP refund processed. Refund ID: xxx." order note.
 	}
 
 	/**

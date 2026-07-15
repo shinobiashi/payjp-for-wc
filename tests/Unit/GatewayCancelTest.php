@@ -475,6 +475,63 @@ class GatewayCancelTest extends TestCase {
 	}
 
 	/**
+	 * Adds an "automatic refund failed" note (not the generic cancel-failure note)
+	 * when the race-fallback re-fetch shows 'succeeded' but the subsequent refund
+	 * attempt itself fails (e.g. /payment_refunds throws).
+	 */
+	#[Test]
+	public function cancel_race_fallback_adds_failure_note_when_refund_attempt_fails(): void {
+		$this->expectNotToPerformAssertions();
+
+		$order = $this->make_order( 'payjp_card', 'pflw_race4' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_cancel_refund_processed' )->andReturn( '' );
+		$order->shouldReceive( 'get_meta' )->with( '_payjp_capture_method' )->andReturn( 'automatic' );
+		$order->shouldNotReceive( 'update_meta_data' );
+		$order->shouldReceive( 'add_order_note' )->twice();
+		Functions\when( 'wc_get_order' )->justReturn( $order );
+
+		// Initial status fetch: still cancelable.
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race4', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race4',
+					'status' => 'processing',
+				)
+			);
+
+		// Cancel POST fails because the flow already succeeded.
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->with(
+				'/payment_flows/pflw_race4/cancel',
+				array( 'cancellation_reason' => 'requested_by_customer' ),
+				Mockery::any()
+			)
+			->andThrow( new \RuntimeException( 'invalid_status' ) );
+
+		// Race fallback re-fetch: now succeeded.
+		$this->api->shouldReceive( 'get' )
+			->once()
+			->with( '/payment_flows/pflw_race4', Mockery::any() )
+			->andReturn(
+				array(
+					'id'     => 'pflw_race4',
+					'status' => 'succeeded',
+				)
+			);
+
+		// The automatic refund attempt itself fails.
+		$this->api->shouldReceive( 'post' )
+			->once()
+			->with( '/payment_refunds', array( 'payment_flow_id' => 'pflw_race4' ) )
+			->andThrow( new \RuntimeException( 'refund declined' ) );
+
+		$this->card->cancel_order( 1 );
+	}
+
+	/**
 	 * Keeps the generic cancel-failure note when the race fallback re-fetch itself
 	 * throws (e.g. a transient network error) — no refund is attempted.
 	 */

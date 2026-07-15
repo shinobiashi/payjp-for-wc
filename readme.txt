@@ -2,11 +2,11 @@
 Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
-Tested up to:      7.0
-Stable tag:        0.9.4
+Tested up to:      7.0.1
+Stable tag:        0.9.5
 Requires PHP:      8.3
 WC requires at least: 9.0
-WC tested up to:   10.8
+WC tested up to:   10.9.4
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,6 +171,13 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.5 =
+* Added: Orders paid with asynchronous methods such as PayPay now hold WooCommerce's automatic "unpaid order" cancellation while the payment is still in progress, and confirm automatically once the result is known — polling the PAY.JP API as a fallback if the confirmation webhook is delayed.
+* Fixed: Switching the payment method on a pending order (e.g. away from PayPay) could silently revert back to PayPay when the order was reloaded; legitimate payment method changes are now preserved correctly.
+* Fixed: A payment could be marked as completed on an already-cancelled order if its confirmation webhook arrived late.
+* Fixed: A payment confirmation webhook arriving after an order was already finalized (e.g. refunded or cancelled) no longer changes the order status; the late notification is now recorded as an order note and an admin email instead.
+* Fixed: If cancelling a PAY.JP payment failed because the payment had already succeeded moments earlier, the order is now automatically refunded instead of being left charged on a cancelled order.
+
 = 0.9.4 =
 * Added: PayPay refund processing via the PAY.JP API — full and partial refunds now work from the WooCommerce order screen for PayPay orders, not just credit card.
 * Added: The PAY.JP Payment Flow is automatically cancelled when a WooCommerce order is cancelled; already-captured payments are refunded automatically to prevent stuck charges.
@@ -220,6 +227,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.5 =
+Fixes several edge cases around PayPay and other asynchronous payments: pending orders no longer get auto-cancelled mid-payment, late webhooks no longer alter already-finalized orders, and cancel/payment-success races now fall back to an automatic refund. Recommended update.
 
 = 0.9.4 =
 Adds PayPay refunds and automatic payment cancellation on order cancel; fixes a false "payment failed" message for asynchronous payments and a Block Checkout issue that could mislabel the payment method on the order. Recommended update.

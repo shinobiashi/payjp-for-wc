@@ -94,7 +94,8 @@ npm run lint:css     # CSS lint
 ## コーディング規約（核心のみ・詳細はセルフレビュー 10 項目と重複）
 
 - WordPress Coding Standards + PHPStan level 5 でゼロエラー必須
-- PHP 8.3+（共変戻り値型など現代的な PHP 機能を積極的に使用）
+- PHP 8.3+（共変戻り値型など現代的な PHP 機能を積極的に使用）。未使用の catch 変数は
+  non-capturing catch（`catch ( RuntimeException )`）で省略可。`unset()` での回避は不要
 - HTTP リクエストは `wp_remote_*` のみ + `is_wp_error()` チェック。例外は `RuntimeException` で統一
 - 管理画面 AJAX: `wp_verify_nonce()` + `current_user_can( 'manage_woocommerce' )`
 - DB クエリ: `$wpdb->prepare()` 必須
@@ -132,6 +133,11 @@ npm run lint:css     # CSS lint
 6. **遅延 Webhook はステータスを変えず通知する**: 確定済み注文への `succeeded` /
    `amount_capturable_updated` 到着時は `processing`/`refunded` へ遷移させず、
    注文メモ + 管理者メール（`Payjp_Admin_Notifier`）+ ログで可視化する（#23 の教訓）
+7. **cancel と決済確定のレース**: `cancel_payment_flow()` の cancel API 呼び出しが失敗したら、
+   エラー種別を判定せず必ずフローを再取得する。`succeeded` に遷移していれば
+   `refund_succeeded_flow_on_cancel()`（`_payjp_cancel_refund_processed` ガード共有）で
+   自動返金へフォールバックする。呼び出し元の注文メモ文言は、このガードで返金が
+   スキップされうる分岐も正しく表現すること（#24 の教訓）
 
 ---
 

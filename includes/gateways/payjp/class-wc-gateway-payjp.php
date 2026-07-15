@@ -643,12 +643,23 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 			}
 
 			if ( 'succeeded' === $refetched_status ) {
+				// Match the order note wording to what refund_succeeded_flow_on_cancel()
+				// will actually do: if its idempotency guard is already set, no refund is
+				// attempted here (it was already issued by an earlier cancellation), so
+				// the note must not claim one is being issued now.
+				$refund_already_processed = '1' === (string) $order->get_meta( '_payjp_cancel_refund_processed' );
 				$order->add_order_note(
-					sprintf(
-						/* translators: %s: Gateway label (e.g. "PAY.JP"). */
-						__( '%s: Payment completed while the order was being cancelled; issuing an automatic refund instead.', 'payjp-for-wc' ),
-						esc_html( $note_label )
-					)
+					$refund_already_processed
+						? sprintf(
+							/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+							__( '%s: Payment completed while the order was being cancelled; an automatic refund was already issued previously.', 'payjp-for-wc' ),
+							esc_html( $note_label )
+						)
+						: sprintf(
+							/* translators: %s: Gateway label (e.g. "PAY.JP"). */
+							__( '%s: Payment completed while the order was being cancelled; issuing an automatic refund instead.', 'payjp-for-wc' ),
+							esc_html( $note_label )
+						)
 				);
 				$logger->log_event(
 					'cancel_race_refund_fallback',

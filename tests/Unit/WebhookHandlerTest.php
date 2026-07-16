@@ -520,6 +520,7 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
 		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'failed', 'cancelled' ] )->andReturn( false );
 		$order->shouldReceive( 'update_status' )->once()->with( 'failed', Mockery::type( 'string' ) );
 		$order->shouldReceive( 'get_id' )->andReturn( 1 );
@@ -543,6 +544,7 @@ class WebhookHandlerTest extends TestCase {
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
 
 		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( false );
 		$order->shouldReceive( 'has_status' )->once()->with( [ 'failed', 'cancelled' ] )->andReturn( true );
 		$order->shouldNotReceive( 'update_status' );
 		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
@@ -550,6 +552,28 @@ class WebhookHandlerTest extends TestCase {
 		$payload = [
 			'type' => 'payment_flow.payment_failed',
 			'data' => [ 'id' => 'pflw_already_failed', 'status' => 'payment_failed' ],
+		];
+		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
+		Payjp_Webhook_Handler::handle_request( $request );
+	}
+
+	#[Test]
+	public function payment_flow_payment_failed_skips_already_paid_order(): void {
+		// Regression test: a late (out-of-order) payment_failed webhook must not
+		// revert a paid order (first attempt failed, a retry on the same flow
+		// succeeded) back to failed.
+		$this->expectNotToPerformAssertions();
+
+		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );
+
+		$order = Mockery::mock( WC_Order::class );
+		$order->shouldReceive( 'is_paid' )->once()->andReturn( true );
+		$order->shouldNotReceive( 'update_status' );
+		Functions\when( 'wc_get_orders' )->justReturn( [ $order ] );
+
+		$payload = [
+			'type' => 'payment_flow.payment_failed',
+			'data' => [ 'id' => 'pflw_paid_then_failed', 'status' => 'payment_failed' ],
 		];
 		$request = new WP_REST_Request( [ 'x-payjp-webhook-token' => 'secret', 'content-type' => 'application/json' ], $payload );
 		Payjp_Webhook_Handler::handle_request( $request );

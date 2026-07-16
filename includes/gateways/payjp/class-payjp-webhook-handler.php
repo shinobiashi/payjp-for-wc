@@ -507,7 +507,12 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
-		if ( $order->has_status( array( 'failed', 'cancelled' ) ) ) {
+		// Guard against a late (or out-of-order) payment_failed reverting a paid
+		// order to failed. When the first attempt fails and a retry on the same
+		// flow succeeds, PAY.JP redelivers undelivered webhooks, so the stale
+		// failure event can arrive after the success was processed. Mirrors the
+		// is_paid() guard in handle_payment_succeeded().
+		if ( $order->is_paid() || $order->has_status( array( 'failed', 'cancelled' ) ) ) {
 			return;
 		}
 

@@ -147,6 +147,10 @@ npm run lint:css     # CSS lint
    `Payjp_Pending_Payment_Monitor::clear( $order )` を呼ぶこと**。`start()` は冪等
    （ウィンドウ内の再訪問では再アンカーしない）。`woocommerce_cancel_unpaid_order`
    フィルター内では API を呼ばずメタ参照のみで判定する（#25 の教訓）
+9. **失敗 Webhook も入金済み注文を差し戻さない**: 同一フローで「1 回目失敗 → 再試行で成功」
+   の後、PAY.JP のリトライ配信で古い `payment_failed` が成功処理より後に届き得る。
+   `handle_payment_failed()` は `is_paid()` ガード必須（成功側 `is_paid()` ガードと対称。
+   #30 の教訓）
 
 ---
 

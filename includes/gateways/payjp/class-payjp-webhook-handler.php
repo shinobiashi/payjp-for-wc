@@ -507,11 +507,11 @@ class Payjp_Webhook_Handler {
 			return;
 		}
 
-		// 入金済みの注文を、遅れて（または順序が逆転して）届いた payment_failed で
-		// failed に差し戻さないためのガード。1 回目の試行が失敗し、同じフローの再試行で
-		// 成功した場合、PAY.JP は Webhook をリトライ配信するため、最初の失敗イベントが
-		// 成功処理より後に届くことがある。成功側 handle_payment_succeeded() の is_paid()
-		// ガードと対称に揃え、古い失敗イベントで入金済み注文が失敗に戻るのを防ぐ。
+		// Guard against a late (or out-of-order) payment_failed reverting a paid
+		// order to failed. When the first attempt fails and a retry on the same
+		// flow succeeds, PAY.JP redelivers undelivered webhooks, so the stale
+		// failure event can arrive after the success was processed. Mirrors the
+		// is_paid() guard in handle_payment_succeeded().
 		if ( $order->is_paid() || $order->has_status( array( 'failed', 'cancelled' ) ) ) {
 			return;
 		}

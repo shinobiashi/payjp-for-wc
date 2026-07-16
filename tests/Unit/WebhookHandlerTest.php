@@ -559,8 +559,9 @@ class WebhookHandlerTest extends TestCase {
 
 	#[Test]
 	public function payment_flow_payment_failed_skips_already_paid_order(): void {
-		// 入金済み（1 回目失敗 → 同じフローの再試行で成功）の注文に、遅れて（順序が逆転して）
-		// 届いた payment_failed が failed に差し戻さないことを保証する回帰テスト。
+		// Regression test: a late (out-of-order) payment_failed webhook must not
+		// revert a paid order (first attempt failed, a retry on the same flow
+		// succeeded) back to failed.
 		$this->expectNotToPerformAssertions();
 
 		Functions\when( 'get_option' )->justReturn( [ 'webhook_secret' => 'secret' ] );

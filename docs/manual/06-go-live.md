@@ -52,8 +52,7 @@
 
 1. PAY.JP ダッシュボードを**本番環境の表示**に切り替えます。
 2. 「Webhook」設定ページで、プラグイン設定画面に表示されている Webhook URL（`https://あなたのサイト/wp-json/payjp/v2/webhook`）を登録します。
-3. イベントは同じく `payment_flow.succeeded` / `payment_flow.payment_failed` / `refund.created` を有効にします。
-4. 本番環境の「Webhook Secret」をコピーし、プラグイン設定画面の「**Webhook シークレット**」欄に貼り付けて保存します（テスト用のシークレットから置き換えます）。
+3. 本番環境の「Webhook Secret」をコピーし、プラグイン設定画面の「**Webhook シークレット**」欄に貼り付けて保存します（テスト用のシークレットから置き換えます）。
 
 ## 6-4. ★特別料率の申請（重要・忘れずに！）
 

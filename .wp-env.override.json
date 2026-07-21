@@ -1,8 +1,0 @@
-{
-    "port": 8894,
-    "testsPort": 8895,
-    "config": {
-        "WP_SITEURL": "http://localhost:8894",
-        "WP_HOME": "http://localhost:8894"
-    }
-}

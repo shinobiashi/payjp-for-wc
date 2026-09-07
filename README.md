@@ -76,7 +76,7 @@ composer install
 ### Start the local WordPress environment
 
 ```bash
-npm run env:start   # Starts WordPress + WooCommerce at http://localhost:8888
+npm run env:start   # Starts WordPress + WooCommerce at http://localhost:8892
 ```
 
 Default credentials: `admin` / `password`

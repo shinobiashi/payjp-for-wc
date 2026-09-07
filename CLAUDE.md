@@ -81,7 +81,7 @@ HPOS / `wp_remote_*` / Yoda 条件 / `class_exists()` ガード）。
 ## 開発コマンド
 
 ```bash
-npm run env:start    # WordPress + WooCommerce 起動（localhost:8888）
+npm run env:start    # WordPress + WooCommerce 起動（localhost:8892）
 npm run env:stop     # 停止
 npm run start        # JS ウォッチビルド
 npm run build        # JS 本番ビルド

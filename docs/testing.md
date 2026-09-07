@@ -47,9 +47,14 @@ msgfmt -o languages/payjp-for-wc-ja.mo languages/payjp-for-wc-ja.po
 
 ## wp-env の注意点
 
+- 開発環境は `http://localhost:8892`（テスト環境は `:8893`）。
 - 新規インストールは `woocommerce_coming_soon` が `yes` になっており
   フロントエンドがブロックされる。
   `wp option update woocommerce_coming_soon no` で解除する。
+- 開発補助プラグインを同梱している（`.wp-env.json` で自動インストール・有効化）:
+  Plugin Check / WP Mail Logging / WP Crontrol / Debug Bar / Query Monitor。
+  メール送信は WP Mail Logging、cron ジョブは WP Crontrol、
+  クエリ・フックのデバッグは Query Monitor で確認できる。
 
 ## PAY.JP v2 ドキュメント
 

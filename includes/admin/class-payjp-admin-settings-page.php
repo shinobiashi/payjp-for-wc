@@ -476,6 +476,7 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 							'sanitize_text_field',
 							array_filter(
 								isset( $_POST['payjp_enabled_methods'] ) && is_array( $_POST['payjp_enabled_methods'] )
+									// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Elements are filtered to strings, run through sanitize_text_field() + sanitize_key(), and whitelisted via array_intersect() below.
 									? wp_unslash( $_POST['payjp_enabled_methods'] )
 									: array(),
 								'is_string'

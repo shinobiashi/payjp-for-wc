@@ -2,11 +2,11 @@
 Contributors:      shohei1978
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
-Tested up to:      7.0.1
-Stable tag:        0.9.5
+Tested up to:      7.1
+Stable tag:        0.9.6
 Requires PHP:      8.3
 WC requires at least: 9.0
-WC tested up to:   10.9.4
+WC tested up to:   11.1.0
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,6 +171,12 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.6 =
+* Added: WooCommerce is now declared as a required plugin, so WordPress prevents activating this plugin when WooCommerce is not installed.
+* Fixed: A stale payment-failure notification delivered by PAY.JP after the payment had already succeeded on a retry no longer affects the paid order.
+* Fixed: WordPress.org Plugin Check compliance — development-only files are now fully excluded from the distribution package.
+* Changed: Confirmed compatibility with WordPress 7.1 and WooCommerce 11.1.
+
 = 0.9.5 =
 * Added: Orders paid with asynchronous methods such as PayPay now hold WooCommerce's automatic "unpaid order" cancellation while the payment is still in progress, and confirm automatically once the result is known — polling the PAY.JP API as a fallback if the confirmation webhook is delayed.
 * Fixed: Switching the payment method on a pending order (e.g. away from PayPay) could silently revert back to PayPay when the order was reloaded; legitimate payment method changes are now preserved correctly.
@@ -227,6 +233,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.6 =
+Compatibility release for WordPress 7.1 and WooCommerce 11.1, plus a fix so late payment-failure notifications never affect already-paid orders. Recommended update.
 
 = 0.9.5 =
 Fixes several edge cases around PayPay and other asynchronous payments: pending orders no longer get auto-cancelled mid-payment, late webhooks no longer alter already-finalized orders, and cancel/payment-success races now fall back to an automatic refund. Recommended update.

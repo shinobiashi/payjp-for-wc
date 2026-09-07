@@ -49,6 +49,14 @@ TEST_CHECKLIST.md
 # WP.org directory assets (banners/icons go to SVN /assets/, not plugin ZIP)
 .wordpress-org/
 
+# Generated deliverables (not part of the plugin)
+dist/
+
+# Editor / tool caches
+.vscode/
+.phpunit.cache/
+
 # Misc
 messages.mo
 *.DS_Store
+.DS_Store

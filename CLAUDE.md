@@ -159,3 +159,16 @@ npm run lint:css     # CSS lint
 - PayPay テスト: アカウント・上限・手順は `docs/testing.md` 参照（¥100 上限・要全額返金）
 - Webhook テスト: PAY.JP ダッシュボードから送信。ローカルは着信不可のため REST 経由で手動発火
 - wp-env 新規インストールは `woocommerce_coming_soon` の解除が必要（詳細は `docs/testing.md`）
+
+---
+
+## WordPress.org 申請（要点）
+
+- 配布 ZIP は `.distignore` 準拠で生成し、**生成した ZIP の展開物に対して** Plugin Check を実行する
+  （wp-env に plugin-check 同梱済み。リポジトリ直下への実行は開発用ファイルのノイズが大量に出る）
+- Plugin Check の `wc` スラッグ警告は許容される（ソース上 "allowed, but shows a warning"）。
+  申請フォームの「誤検知を除く」宣言に含めてよい
+- WP.org のスラッグは Plugin Name から自動生成される（→ pay-jp-for-woocommerce になる見込み）。
+  text domain `payjp-for-wc` と一致させるため、**アップロード後・審査開始前の 1 回だけ可能な
+  スラッグ変更**で `payjp-for-wc` に直すこと（言語パック配信の前提）
+- `Tested up to` の更新は必ず実環境で動作確認してから（wp-env は `core: null` で常に最新 WP）

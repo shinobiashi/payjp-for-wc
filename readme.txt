@@ -1,5 +1,5 @@
 === PAY.JP for WooCommerce ===
-Contributors:      shohei1978
+Contributors:      payjp4woocommerce
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.1

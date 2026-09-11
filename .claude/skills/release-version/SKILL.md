@@ -44,14 +44,21 @@ git log --oneline <前回リリースコミット>..HEAD
 
 ### 2. バージョン番号を更新する
 
-以下 4 箇所（`X.Y.Z` は新バージョン）:
+以下 5 箇所（`X.Y.Z` は新バージョン）:
 
 ```bash
 # payjp-for-wc.php — 2箇所: ヘッダーコメントの Version と PAYJP_FOR_WC_VERSION 定数
 # package.json — "version"
 # package-lock.json — "version" 2箇所（トップレベルと packages[""]）
 # readme.txt — Stable tag
+# languages/payjp-for-wc-ja.po — "Project-Id-Version" ヘッダー
 ```
+
+`languages/payjp-for-wc-ja.po` の `Project-Id-Version` は要注意: `wp i18n make-pot` は
+プラグインヘッダーの `Version` から POT 側を正しく更新するが、`msgmerge` は既存 PO の
+`Project-Id-Version` をそのまま保持し POT 側の値で上書きしない。**バージョン番号だけの
+変更でもこのヘッダーは手動で更新し**、`msgfmt --check -o languages/payjp-for-wc-ja.mo
+languages/payjp-for-wc-ja.po` で MO を再生成すること（#35 の教訓）。
 
 ### 3. readme.txt に changelog / Upgrade Notice を追記する
 
@@ -91,8 +98,9 @@ vendor/bin/phpstan analyse --memory-limit=1G payjp-for-wc.php
 ### 6. i18n の更新漏れがないか確認する
 
 前回リリース以降のコミットでユーザー向け文字列（`__()` 等）を追加・変更したのに
-`languages/` が未更新なら、`update-i18n` スキルを先に実行してから続ける
-（バージョン番号だけの変更なら不要）。
+`languages/` が未更新なら、`update-i18n` スキルを先に実行してから続ける。
+`languages/payjp-for-wc-ja.po` の `Project-Id-Version` 更新自体は手順 2 で済んでいるので、
+ここでの `update-i18n` 実行はユーザー向け文字列自体を追加・変更した場合のみでよい。
 
 ### 7. 差分をユーザーに提示する
 
@@ -102,7 +110,8 @@ vendor/bin/phpstan analyse --memory-limit=1G payjp-for-wc.php
 
 ## 検証
 
-- [ ] 4ファイル全てで新バージョン番号が一致している
+- [ ] 5ファイル全てで新バージョン番号が一致している（`languages/payjp-for-wc-ja.po` の
+      `Project-Id-Version` を含む）
 - [ ] `== Changelog ==` の新エントリが既存エントリの直前（最新が先頭）に入っている
 - [ ] `== Upgrade Notice ==` にも新バージョンの要約がある
 - [ ] Tested up to を更新した場合、readme.txt と payjp-for-wc.php ヘッダーの両方が揃っている
@@ -117,3 +126,4 @@ vendor/bin/phpstan analyse --memory-limit=1G payjp-for-wc.php
 | changelog に内部実装の話（クラス名・メタキー名）が混ざる | エンドユーザー向けではない。既存エントリの文体を見て平易な言葉に言い換える |
 | Tested up to を憶測で更新してしまう | ユーザーから明示されたバージョン以外は書かない。動作確認していない値を書くと wordpress.org 審査・利用者双方に対して不正確な申告になる |
 | WC tested up to が readme.txt にしかない | `payjp-for-wc.php` のヘッダーコメントにも同じ値がある。片方だけ直すと不整合になる |
+| `languages/payjp-for-wc-ja.po` の `Project-Id-Version` が旧バージョンのまま | `msgmerge` は POT から `Project-Id-Version` を同期しない。手動更新が必要（#35 の教訓） |

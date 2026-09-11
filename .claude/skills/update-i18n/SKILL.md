@@ -83,6 +83,8 @@ PHP 文字列のみの変更では実行しない（不要なファイル変更�
 - [ ] `msgattrib --untranslated` の残りがプラグインメタデータのみ
 - [ ] `msgfmt --check` がエラーなしで完了し、`.mo` が更新されている
 - [ ] `msgattrib --only-fuzzy languages/payjp-for-wc-ja.po` が空（fuzzy 訳なし）
+- [ ] バージョンを上げた変更を含む場合、`ja.po` の `Project-Id-Version` も新バージョンと
+      一致している（`msgmerge` は同期しない。詳細は `release-version` スキル参照）
 
 ## 失敗モード
 

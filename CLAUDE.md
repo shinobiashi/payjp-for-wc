@@ -106,7 +106,8 @@ npm run lint:css     # CSS lint
   エラー表示は `role="alert" aria-live="polite"` 付き要素へ。`src/` を必ず同梱
 - i18n: テキストドメイン `payjp-for-wc`。`load_plugin_textdomain()` は `plugins_loaded` で。
   変数の直接結合禁止 → `sprintf()` / `printf()`。
-  ユーザー向け文字列を追加・変更したら同じ PR で `languages/`（POT / ja.po / ja.mo）も更新する
+  ユーザー向け文字列を追加・変更したら同じ PR で `languages/`（POT / ja.po / ja.mo）も更新する。
+  プラグインヘッダー（Author / Author URI 等）の変更も `wp i18n make-pot` の抽出対象なので同様（#35 の教訓）
 - `JP4WC_Logger::log_error()` に構造化 context 引数はない（`log_event()` と違う）。
   flow_id 等の識別子はメッセージ文字列に埋め込むこと（例: `'... (flow_id=' . $flow_id . ')'`）
 - Webhook ペイロードの値は truthy 判定に頼らず型を検証してから使う
@@ -151,6 +152,10 @@ npm run lint:css     # CSS lint
    の後、PAY.JP のリトライ配信で古い `payment_failed` が成功処理より後に届き得る。
    `handle_payment_failed()` は `is_paid()` ガード必須（成功側 `is_paid()` ガードと対称。
    #30 の教訓）
+10. **PAY.JP API レスポンスの所有者フィールドは fail-closed で検証する**: `customer_id` 等の
+    所有者判定に使うフィールドが欠落・非文字列の場合、照合を「スキップ」して通すのではなく
+    「拒否」する。両者が空文字列同士で `hash_equals()` が偶然一致するような抜け道を作らない
+    （Setup Flow の `customer_id` 検証漏れ、#35 の教訓）
 
 ---
 

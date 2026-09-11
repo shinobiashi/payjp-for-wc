@@ -480,8 +480,8 @@ readme.txt への明記と利用規約リンクを**義務付けている**。
 
 This plugin connects to PAY.JP (https://pay.jp) to process payments.
 Data is transmitted when the customer completes checkout.
-- Terms of Service: https://pay.jp/terms
-- Privacy Policy: https://pay.jp/privacy
+- Terms of Service: https://pay.jp/legal/tos
+- Privacy Policy: https://pay.co.jp/privacy
 
 This plugin loads PAY.JP payments.js from the following URL on checkout pages:
   https://js.pay.jp/payments.js

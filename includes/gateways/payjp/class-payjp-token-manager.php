@@ -123,7 +123,11 @@ class Payjp_Token_Manager {
 	 * a WooCommerce Payment Token for the user. Registered on template_redirect.
 	 */
 	public static function handle_setup_return(): void {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- setup_flow_id verified against PAY.JP API server-side.
+		// No nonce: this URL is the return_url PAY.JP redirects the customer to after
+		// the hosted Setup Flow, so the request does not originate from a WP form.
+		// Security is enforced by requiring a logged-in user and by verifying the
+		// setup_flow_id (status + customer ownership) against the PAY.JP API server-side.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- see above.
 		if ( empty( $_GET['payjp-setup-return'] ) ) {
 			return;
 		}
@@ -163,6 +167,18 @@ class Payjp_Token_Manager {
 
 		if ( 'succeeded' !== $status ) {
 			wc_add_notice( __( 'Card setup was not completed. Please try again.', 'payjp-for-wc' ), 'error' );
+			wp_safe_redirect( wc_get_account_endpoint_url( 'payment-methods' ) );
+			exit;
+		}
+
+		// Ownership check: the Setup Flow must belong to the PAY.JP Customer bound to
+		// the current WordPress user. Prevents saving a card from someone else's flow
+		// by tampering with the setup_flow_id query argument.
+		$flow_customer_id = isset( $flow['customer_id'] ) && is_string( $flow['customer_id'] ) ? $flow['customer_id'] : '';
+		$own_customer_id  = self::get_customer_id( $user_id );
+
+		if ( '' !== $flow_customer_id && ( '' === $own_customer_id || ! hash_equals( $own_customer_id, $flow_customer_id ) ) ) {
+			wc_add_notice( __( 'Invalid card setup session.', 'payjp-for-wc' ), 'error' );
 			wp_safe_redirect( wc_get_account_endpoint_url( 'payment-methods' ) );
 			exit;
 		}

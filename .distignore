@@ -49,6 +49,12 @@ TEST_CHECKLIST.md
 # WP.org directory assets (banners/icons go to SVN /assets/, not plugin ZIP)
 .wordpress-org/
 
+# Compiled translations are delivered as language packs from translate.wordpress.org.
+# They stay in the repository for the Japanized for WooCommerce bundle; only the POT ships in the ZIP.
+languages/*.po
+languages/*.mo
+languages/*.json
+
 # Generated deliverables (not part of the plugin)
 dist/
 

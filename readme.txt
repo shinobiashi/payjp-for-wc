@@ -3,7 +3,7 @@ Contributors:      payjp4woocommerce
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.1
-Stable tag:        0.9.6
+Stable tag:        0.9.7
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   11.1.0
@@ -71,8 +71,8 @@ Used to create and manage Payment Flows, process payments, issue refunds, and ma
 * **Endpoint:** `https://api.pay.jp/v2`
 * **When called:** At checkout when a payment is initiated, on order completion, on refund, and during webhook processing.
 * **Data sent:** Payment Flow ID, order amount, currency, and (for saved cards) PAY.JP Customer ID. Raw card numbers are **never** sent to your server or to the API directly from WordPress.
-* **Privacy Policy:** https://pay.jp/privacy
-* **Terms of Service:** https://pay.jp/terms
+* **Privacy Policy:** https://pay.co.jp/privacy
+* **Terms of Service:** https://pay.jp/legal/tos
 
 === 2. PAY.JP payments.js (CDN) ===
 
@@ -171,6 +171,11 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 0.9.7 =
+* Security: The settings save handler now re-verifies the WooCommerce settings nonce itself, and the saved-card return handler verifies that the card setup session belongs to the current customer.
+* Changed: Translation files are no longer bundled in the distribution package; translations are delivered as language packs from translate.wordpress.org.
+* Changed: Corrected the PAY.JP Privacy Policy and Terms of Service links, and updated the plugin author information.
+
 = 0.9.6 =
 * Added: WooCommerce is now declared as a required plugin, so WordPress prevents activating this plugin when WooCommerce is not installed.
 * Fixed: A stale payment-failure notification delivered by PAY.JP after the payment had already succeeded on a retry no longer affects the paid order.
@@ -233,6 +238,9 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 * Added: Uninstall cleanup for all plugin options.
 
 == Upgrade Notice ==
+
+= 0.9.7 =
+Security hardening for the settings page and saved-card flow, plus WordPress.org packaging changes. Recommended update.
 
 = 0.9.6 =
 Compatibility release for WordPress 7.1 and WooCommerce 11.1, plus a fix so late payment-failure notifications never affect already-paid orders. Recommended update.

@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PAY.JP for WooCommerce 0.9.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/payjp-for-wc\n"
-"POT-Creation-Date: 2026-07-15T07:15:16+00:00\n"
-"PO-Revision-Date: 2026-05-30 00:00+0000\n"
-"Last-Translator: Shohei Tanaka <shohei.t@artws.info>\n"
+"POT-Creation-Date: 2026-09-11T07:49:59+00:00\n"
+"PO-Revision-Date: 2026-09-11 00:00+0000\n"
+"Last-Translator: PAY, Inc. <payjp-woocommerce@binc.jp>\n"
 "Language-Team: Japanese <ja@li.org>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -34,12 +34,12 @@ msgstr ""
 
 #. Author of the plugin
 #: payjp-for-wc.php
-msgid "Shohei Tanaka"
+msgid "PAY, Inc."
 msgstr ""
 
 #. Author URI of the plugin
 #: payjp-for-wc.php
-msgid "https://artws.info"
+msgid "https://pay.jp/"
 msgstr ""
 
 #: includes/admin/class-payjp-admin-settings-page.php:49
@@ -288,12 +288,12 @@ msgstr "PAY.JP で不明なエラーが発生しました。"
 msgid "PAY.JP API returned HTTP %d."
 msgstr "PAY.JP API が HTTP %d を返しました。"
 
-#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:191
+#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:220
 msgid "PAY.JP: Payment confirmed via status polling."
 msgstr "PAY.JP: ステータスポーリングにより決済が確認されました。"
 
 #. translators: PAY.JP order note shown in WooCommerce admin for manual-capture orders confirmed via status polling.
-#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:210
+#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:239
 msgid ""
 "PAY.JP authorised via status polling. Payment will be captured when the "
 "order is marked Completed."
@@ -302,7 +302,7 @@ msgstr ""
 "更するとキャプチャが実行されます。"
 
 #. translators: %s: PAY.JP Payment Flow status (e.g. "payment_failed").
-#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:229
+#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:258
 #, php-format
 msgid ""
 "PAY.JP payment did not complete (status: %s, detected via status polling)."
@@ -310,7 +310,7 @@ msgstr ""
 "PAY.JP 決済が完了しませんでした（ステータス: %s、ステータスポーリングで検"
 "出）。"
 
-#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:294
+#: includes/gateways/payjp/class-payjp-pending-payment-monitor.php:323
 msgid ""
 "PAY.JP: Payment could not be confirmed by status polling. The order is again "
 "subject to the standard automatic cancellation of unpaid orders."
@@ -342,24 +342,25 @@ msgstr "PAY.JP 顧客の作成に失敗しました。"
 msgid "Failed to create card setup session."
 msgstr "カードセットアップセッションの作成に失敗しました。"
 
-#: includes/gateways/payjp/class-payjp-token-manager.php:143
+#: includes/gateways/payjp/class-payjp-token-manager.php:147
+#: includes/gateways/payjp/class-payjp-token-manager.php:183
 msgid "Invalid card setup session."
 msgstr "無効なカードセットアップセッションです。"
 
-#: includes/gateways/payjp/class-payjp-token-manager.php:165
+#: includes/gateways/payjp/class-payjp-token-manager.php:169
 msgid "Card setup was not completed. Please try again."
 msgstr "カードの設定が完了しませんでした。もう一度お試しください。"
 
-#: includes/gateways/payjp/class-payjp-token-manager.php:175
+#: includes/gateways/payjp/class-payjp-token-manager.php:193
 msgid "Card setup completed but no payment method was returned."
 msgstr "カードの設定は完了しましたが、支払い方法が返されませんでした。"
 
-#: includes/gateways/payjp/class-payjp-token-manager.php:190
+#: includes/gateways/payjp/class-payjp-token-manager.php:208
 msgid "Card saved successfully."
 msgstr "カードを保存しました。"
 
 #. translators: 1: PAY.JP PaymentMethod ID, 2: error message
-#: includes/gateways/payjp/class-payjp-token-manager.php:365
+#: includes/gateways/payjp/class-payjp-token-manager.php:383
 #, php-format
 msgid "PAY.JP: Failed to save card %1$s after payment: %2$s"
 msgstr "PAY.JP: 支払い後にカード %1$s の保存に失敗しました: %2$s"
@@ -490,12 +491,12 @@ msgid "PAY.JP authorization received for a closed order"
 msgstr "PAY.JP: 確定済み注文へのオーソリ受信"
 
 #. translators: PAY.JP failed payment note shown in WooCommerce admin
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:515
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:520
 msgid "PAY.JP payment failed (webhook)."
 msgstr "PAY.JP 決済が失敗しました（Webhook）。"
 
 #. translators: 1: PAY.JP refund ID, 2: refund amount in JPY
-#: includes/gateways/payjp/class-payjp-webhook-handler.php:560
+#: includes/gateways/payjp/class-payjp-webhook-handler.php:565
 #, php-format
 msgid "PAY.JP refund created (webhook). Refund ID: %1$s. Amount: ¥%2$s."
 msgstr "PAY.JP 返金が作成されました（Webhook）。返金 ID: %1$s。金額: ¥%2$s。"
@@ -815,7 +816,7 @@ msgid "%1$s: Automatic refund on cancellation failed — %2$s"
 msgstr "%1$s: キャンセル時の自動返金に失敗しました — %2$s"
 
 #. translators: %s: WooCommerce plugin name
-#: payjp-for-wc.php:110
+#: payjp-for-wc.php:111
 #, php-format
 msgid "PAY.JP for WooCommerce requires %s to be installed and active."
 msgstr ""

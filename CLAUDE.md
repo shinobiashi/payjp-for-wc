@@ -53,6 +53,8 @@
 - PHPStan → `wp-phpstan` スキル
 - WooCommerce Marketplace 提出 → `woo-marketplace-submission` スキル
 
+共有スキル（上記の `payjp-v2-woocommerce`、`wc-development`、`wp-*`、`woo-marketplace-*` と `check-pr`）はこのリポジトリに同梱しない。元本は [shinobiashi/claude-skills](https://github.com/shinobiashi/claude-skills) で、`bash install.sh` により `~/.claude/skills/` に配置して使う（2026-09-09 から）。`.claude/skills/` にはプロジェクト固有の `release-version` / `update-i18n` だけを置く。
+
 ---
 
 ## コード作成後の必須チェック（省略不可）

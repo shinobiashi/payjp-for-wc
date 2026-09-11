@@ -269,8 +269,8 @@ This plugin is distributed in two forms:
 | PAY.JP API | `https://api.pay.jp/v2` | Payment processing, refunds, customer management |
 | PAY.JP payments.js | `https://js.pay.jp/payments.js` | PCI DSS compliant card/PayPay widget |
 
-- [PAY.JP Privacy Policy](https://pay.jp/privacy)
-- [PAY.JP Terms of Service](https://pay.jp/terms)
+- [PAY.JP Privacy Policy](https://pay.co.jp/privacy)
+- [PAY.JP Terms of Service](https://pay.jp/legal/tos)
 
 ---
 
@@ -278,4 +278,4 @@ This plugin is distributed in two forms:
 
 GPL-2.0-or-later — see [LICENSE](https://www.gnu.org/licenses/gpl-2.0.html).
 
-Copyright (C) 2024 [Shohei Tanaka / Artisan Workshop](https://artws.info).
+Copyright (C) 2024 [PAY, Inc.](https://pay.jp/).

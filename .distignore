@@ -49,6 +49,21 @@ TEST_CHECKLIST.md
 # WP.org directory assets (banners/icons go to SVN /assets/, not plugin ZIP)
 .wordpress-org/
 
+# Compiled PHP translations (.po/.mo) are delivered as language packs from
+# translate.wordpress.org. They stay in the repository for the Japanized for
+# WooCommerce bundle. The handle-named JS translation file
+# (payjp-for-wc-ja-payjp-blocks-checkout.json) is KEPT because
+# wp_set_script_translations() resolves it by script handle at runtime; only the
+# intermediate per-source-file JSON files and the webpack map are excluded.
+# `wp i18n make-json` names intermediate files payjp-for-wc-<locale>-<32-char
+# md5-hash>.json (see scripts/merge-block-translations.js); matching by the
+# fixed 32-character hash length (rather than hardcoding today's hash values)
+# keeps this exclusion correct even after future source-file/build-path changes.
+languages/*.po
+languages/*.mo
+languages/payjp-for-wc-webpack-map.json
+languages/payjp-for-wc-*-????????????????????????????????.json
+
 # Generated deliverables (not part of the plugin)
 dist/
 

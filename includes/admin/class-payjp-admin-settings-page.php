@@ -447,7 +447,11 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 
 	/**
 	 * Persist settings from POST to the payjp_settings option.
-	 * WooCommerce verifies the 'woocommerce-settings' nonce before this fires.
+	 *
+	 * WooCommerce already verifies the 'woocommerce-settings' nonce before the
+	 * woocommerce_settings_save_payjp action fires, but the nonce is re-checked
+	 * here so this handler is safe on its own (e.g. if invoked outside the
+	 * WC_Admin_Settings::save() flow).
 	 *
 	 * Also syncs each gateway's individual WC 'enabled' option so that
 	 * WC_Payment_Gateway::is_available() (called by parent) correctly reflects
@@ -458,7 +462,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 			return;
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Missing -- Nonce checked by WooCommerce before woocommerce_settings_save_payjp fires.
+		check_admin_referer( 'woocommerce-settings' );
+
 		$settings = array(
 			'test_mode'       => ! empty( $_POST['payjp_test_mode'] ) && is_scalar( $_POST['payjp_test_mode'] ),
 			'test_public_key' => sanitize_text_field( wp_unslash( is_string( $_POST['payjp_test_public_key'] ?? '' ) ? $_POST['payjp_test_public_key'] : '' ) ),
@@ -487,7 +492,6 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 				)
 			),
 		);
-		// phpcs:enable WordPress.Security.NonceVerification.Missing
 
 		// Merge with existing settings so custom keys added by extensions via the
 		// woocommerce_get_settings_payjp filter are not erased on each save.

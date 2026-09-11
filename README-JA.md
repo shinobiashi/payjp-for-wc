@@ -412,7 +412,7 @@ PAY.JP ダッシュボード → **Webhooks** → **テスト送信** からイ�
 - **Payment Flow ID**: サーバーサイドで PAY.JP API を通じて検証（クライアントからの値を無条件に信頼しない）
 - **PCI DSS**: カード番号・CVV をログに出力しない。機密情報には `mask_sensitive()` を実装済み
 
-セキュリティの脆弱性を発見された場合は、公開 Issue ではなく [shohei.t@artws.info](mailto:shohei.t@artws.info) までメールでご報告ください。
+セキュリティの脆弱性を発見された場合は、公開 Issue ではなく [payjp-woocommerce@binc.jp](mailto:payjp-woocommerce@binc.jp) までメールでご報告ください。
 
 ---
 
@@ -425,7 +425,7 @@ PAY.JP ダッシュボード → **Webhooks** → **テスト送信** からイ�
 | PAY.JP API | `https://api.pay.jp/v2` | 決済処理・返金・カード管理 |
 | PAY.JP payments.js | `https://js.pay.jp/payments.js` | PCI 準拠の Payment Widgets |
 
-PAY.JP の[利用規約](https://pay.jp/terms)および[プライバシーポリシー](https://pay.jp/privacy)をご確認ください。
+PAY.JP の[利用規約](https://pay.jp/legal/tos)および[プライバシーポリシー](https://pay.co.jp/privacy)をご確認ください。
 
 ---
 
@@ -437,9 +437,8 @@ GPL-2.0-or-later — 詳細は [LICENSE](LICENSE) ファイルを参照してく
 
 ## 作者
 
-**田中昌平 / Artisan Workshop**
-- Web: [https://artws.info](https://artws.info)
-- PAY.JP: [https://pay.jp](https://pay.jp)
+**PAY, Inc.**
+- Web: [https://pay.jp](https://pay.jp)
 
 ---
 

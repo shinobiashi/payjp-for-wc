@@ -57,7 +57,7 @@ msgattrib --untranslated languages/payjp-for-wc-ja.po | grep '^msgid'
 - プレースホルダー（`%s` / `%1$s`）は訳文にも必ず残す
 - 80 桁前後で PO の複数行文字列に折り返す（既存エントリの体裁に合わせる）
 - 次のエントリは**プラグインメタデータなので未翻訳のまま残す**:
-  プラグイン URL・作者名（`Shohei Tanaka`）・作者 URL
+  プラグイン URL・作者名（`PAY, Inc.`）・作者 URL
 
 ### 4. MO 再生成
 

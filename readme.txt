@@ -173,7 +173,7 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 = 0.9.7 =
 * Security: The settings save handler now re-verifies the WooCommerce settings nonce itself, and the saved-card return handler verifies that the card setup session belongs to the current customer.
-* Changed: Translation files are no longer bundled in the distribution package; translations are delivered as language packs from translate.wordpress.org.
+* Changed: PHP translation files (.po/.mo) are no longer bundled in the distribution package; translations are delivered as language packs from translate.wordpress.org.
 * Changed: Corrected the PAY.JP Privacy Policy and Terms of Service links, and updated the plugin author information.
 
 = 0.9.6 =

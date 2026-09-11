@@ -171,13 +171,15 @@ class Payjp_Token_Manager {
 			exit;
 		}
 
-		// Ownership check: the Setup Flow must belong to the PAY.JP Customer bound to
-		// the current WordPress user. Prevents saving a card from someone else's flow
-		// by tampering with the setup_flow_id query argument.
+		// Ownership check (fail closed): the Setup Flow must belong to the PAY.JP
+		// Customer bound to the current WordPress user. Flows created by this plugin
+		// always carry a customer_id, so a missing/non-string customer_id on either
+		// side is treated as a mismatch. Prevents saving a card from someone else's
+		// flow by tampering with the setup_flow_id query argument.
 		$flow_customer_id = isset( $flow['customer_id'] ) && is_string( $flow['customer_id'] ) ? $flow['customer_id'] : '';
 		$own_customer_id  = self::get_customer_id( $user_id );
 
-		if ( '' !== $flow_customer_id && ( '' === $own_customer_id || ! hash_equals( $own_customer_id, $flow_customer_id ) ) ) {
+		if ( '' === $flow_customer_id || '' === $own_customer_id || ! hash_equals( $own_customer_id, $flow_customer_id ) ) {
 			wc_add_notice( __( 'Invalid card setup session.', 'payjp-for-wc' ), 'error' );
 			wp_safe_redirect( wc_get_account_endpoint_url( 'payment-methods' ) );
 			exit;

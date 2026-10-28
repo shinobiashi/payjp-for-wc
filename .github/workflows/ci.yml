@@ -6,6 +6,8 @@ on:
       - main
       - 'feature/**'
   pull_request:
+  # Called from release.yml so a tag is deployed only after these checks pass.
+  workflow_call:
 
 jobs:
   phpcs:

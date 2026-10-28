@@ -1,3 +1,10 @@
+# After pushing a new tag (vX.Y.Z), this workflow runs the CI checks and, only if every job
+# passes, deploys the plugin to the WordPress.org plugin repository and creates a new release
+# on GitHub with the attached zip file. If the checks fail nothing is deployed: delete the tag,
+# fix on main, and push the tag again.
+# Requires the SVN_USERNAME and SVN_PASSWORD secrets (WordPress.org SVN credentials) in the
+# "wp-org" environment.
+# git push origin vX.Y.Z
 name: Release
 
 on:
@@ -6,9 +13,15 @@ on:
       - 'v*.*.*'
 
 jobs:
+  test:
+    name: CI checks
+    uses: ./.github/workflows/ci.yml
+
   release:
-    name: Build & Release
+    name: Deploy & Release
+    needs: test
     runs-on: ubuntu-latest
+    environment: wp-org
     permissions:
       contents: write
     env:
@@ -17,6 +30,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # The WordPress.org SVN tag is named after the git tag, while WordPress.org serves the
+      # version named by "Stable tag:". Refuse to deploy when they disagree.
+      # VERSION comes from the tag name, so steps read it from env instead of interpolating
+      # ${{ }} into the script (a tag can contain shell metacharacters).
+      - name: Check the tag matches the plugin version
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          HEADER_VERSION=$(sed -n 's/^ \* Version:[[:space:]]*//p' payjp-for-wc.php)
+          STABLE_TAG=$(sed -n 's/^Stable tag:[[:space:]]*//p' readme.txt)
+          if [ "$HEADER_VERSION" != "$VERSION" ] || [ "$STABLE_TAG" != "$VERSION" ]; then
+            echo "::error::Tag ${VERSION} does not match Version (${HEADER_VERSION}) in payjp-for-wc.php or Stable tag (${STABLE_TAG}) in readme.txt."
+            exit 1
+          fi
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -29,16 +61,13 @@ jobs:
           npm ci
           npm run build
 
-      - name: Get version from tag
-        id: version
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-
       - name: Extract changelog for this version
         id: changelog
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
-          # Extract lines between "= VERSION =" and the next "= X.Y.Z =" heading
-          BODY=$(awk "/^= ${VERSION} =/{found=1; next} found && /^= [0-9]+\.[0-9]+/{exit} found && NF{print}" readme.txt)
+          # Extract lines between "= VERSION =" and the next "= X.Y.Z =" or "== Section ==" heading
+          BODY=$(awk -v version="$VERSION" '$0 == "= " version " =" {found=1; next} found && /^=/{exit} found && NF{print}' readme.txt)
           # Write to GITHUB_OUTPUT as multiline value
           {
             echo "BODY<<EOF"
@@ -46,10 +75,16 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Install SVN ( Subversion )
+        run: |
+          sudo apt-get update
+          sudo apt-get install subversion
+
       - name: Create plugin zip
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           PLUGIN_SLUG="payjp-for-wc"
-          VERSION="${{ steps.version.outputs.VERSION }}"
           DEST="${PLUGIN_SLUG}-${VERSION}"
 
           # Copy release files to staging directory
@@ -64,6 +99,20 @@ jobs:
 
           # Move to workspace
           mv "${PLUGIN_SLUG}-${VERSION}.zip" "$GITHUB_WORKSPACE/"
+
+      # Syncs the workspace into SVN trunk (honouring .distignore), .wordpress-org/ into
+      # assets/, and copies trunk to tags/<version> (the leading "v" of the git tag is dropped).
+      # Pinned to a reviewed commit because this step receives SVN_PASSWORD; update the pin
+      # deliberately after reviewing upstream changes.
+      - name: WordPress Plugin Deploy
+        id: deploy
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        with:
+          generate-zip: false
+        env:
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SLUG: 'payjp-for-wc'
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

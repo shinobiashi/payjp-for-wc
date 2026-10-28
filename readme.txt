@@ -3,10 +3,10 @@ Contributors:      payjp4woocommerce
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.1
-Stable tag:        0.9.7
+Stable tag:        1.0.0
 Requires PHP:      8.3
 WC requires at least: 9.0
-WC tested up to:   11.1.0
+WC tested up to:   11.2.1
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -171,94 +171,24 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
-= 0.9.7 =
-* Security: The settings save handler now re-verifies the WooCommerce settings nonce itself, and the saved-card return handler verifies that the card setup session belongs to the current customer.
-* Changed: PHP translation files (.po/.mo) are no longer bundled in the distribution package; translations are delivered as language packs from translate.wordpress.org.
-* Changed: Corrected the PAY.JP Privacy Policy and Terms of Service links, and updated the plugin author information.
+= 1.0.0 =
+Initial release.
 
-= 0.9.6 =
-* Added: WooCommerce is now declared as a required plugin, so WordPress prevents activating this plugin when WooCommerce is not installed.
-* Fixed: A stale payment-failure notification delivered by PAY.JP after the payment had already succeeded on a retry no longer affects the paid order.
-* Fixed: WordPress.org Plugin Check compliance — development-only files are now fully excluded from the distribution package.
-* Changed: Confirmed compatibility with WordPress 7.1 and WooCommerce 11.1.
-
-= 0.9.5 =
-* Added: Orders paid with asynchronous methods such as PayPay now hold WooCommerce's automatic "unpaid order" cancellation while the payment is still in progress, and confirm automatically once the result is known — polling the PAY.JP API as a fallback if the confirmation webhook is delayed.
-* Fixed: Switching the payment method on a pending order (e.g. away from PayPay) could silently revert back to PayPay when the order was reloaded; legitimate payment method changes are now preserved correctly.
-* Fixed: A payment could be marked as completed on an already-cancelled order if its confirmation webhook arrived late.
-* Fixed: A payment confirmation webhook arriving after an order was already finalized (e.g. refunded or cancelled) no longer changes the order status; the late notification is now recorded as an order note and an admin email instead.
-* Fixed: If cancelling a PAY.JP payment failed because the payment had already succeeded moments earlier, the order is now automatically refunded instead of being left charged on a cancelled order.
-
-= 0.9.4 =
-* Added: PayPay refund processing via the PAY.JP API — full and partial refunds now work from the WooCommerce order screen for PayPay orders, not just credit card.
-* Added: The PAY.JP Payment Flow is automatically cancelled when a WooCommerce order is cancelled; already-captured payments are refunded automatically to prevent stuck charges.
-* Fixed: Payment Flow status `processing` (seen with asynchronous methods such as PayPay) was incorrectly treated as a failed payment on return from checkout — the customer now sees the order confirmation page and the order completes automatically once the `payment_flow.succeeded` webhook arrives.
-* Fixed: WooCommerce Blocks' cart-sync/Hydration requests could overwrite `payment_method` and `payment_method_title` on the order-pay page, occasionally showing a PayPay order as "Credit Card". The correct gateway and title are now restored before the order is saved, without interfering with legitimate payment method changes made in wp-admin.
-* Fixed: Duplicate refunds could be issued when an order was cancelled more than once; a guard now prevents re-processing an already-refunded cancellation.
-
-= 0.9.3 =
-* Fixed: Removed discouraged load_plugin_textdomain() call — WordPress 4.6+ loads translations automatically.
-* Fixed: Hook names fired by the plugin now use the payjp_for_wc_ prefix (Plugin Check compliance).
-* Fixed: Global variables in uninstall.php wrapped in a prefixed function to satisfy PrefixAllGlobals rule.
-* Fixed: Removed hidden file languages/.gitkeep (replaced by actual translation files).
-* Fixed: Added .distignore to its own exclusion list so it is not included in WordPress.org distribution ZIPs.
-
-= 0.9.2 =
-* Fixed: PayPay payments recorded as credit card when saved card tokens exist (Block Checkout default payment method conflict).
-* Fixed: Correct payment_method written to HPOS after payment_complete() using _payjp_payment_method meta as authority.
-* Fixed: Manual capture for authorized orders — empty request body now serialized as {} (JSON object) instead of [] (JSON array).
-* Fixed: Authorized orders now set to processing status instead of on-hold for clearer merchant workflow.
-* Fixed: Card token deletion now calls POST /payment_methods/{id}/detach on PAY.JP to sync removal.
-* Added: Manual capture (authorize only) support for PayPay payments — mirrors credit card capture behaviour.
-* Added: Payment capture setting in PAY.JP PayPay individual gateway settings (immediate / authorize only).
-
-= 0.9.1 =
-* Fixed: Refund endpoint corrected from /refunds to /payment_refunds.
-* Fixed: Refund request parameter corrected from payment_flow to payment_flow_id.
-* Fixed: PayPay return handling — requires_action status now redirects to order-received page instead of showing an error.
-* Fixed: Setup Flow customer parameter corrected from customer to customer_id.
-* Fixed: Setup Flow return URL now includes setup_flow_id so card save completes correctly.
-* Fixed: Subscription renewal payment parameters corrected (payment_method_id, customer_id).
-* Changed: REST API namespace updated from payjp/v1 to payjp/v2.
-* Added: PAY.JP Dashboard / sign-up button in admin settings.
-* Added: Test card and PayPay test account links shown when test mode is active.
-* Added: Webhook URL display with setup instructions in admin settings.
-
-= 0.9.0 =
-* Added: Credit card payments via PAY.JP v2 Payment Widgets (embedded, PCI DSS compliant).
-* Added: PayPay payments via PAY.JP v2 Payment Widgets (embedded).
-* Added: Saved cards via PAY.JP Setup Flow and WooCommerce Token API.
-* Added: WooCommerce Subscriptions support for automatic recurring billing.
-* Added: Block Checkout (WooCommerce 8.3+) and Classic Checkout compatibility.
-* Added: Webhook processing for payment_flow.succeeded, payment_flow.payment_failed, and refund.created.
-* Added: Full and partial refunds from the WooCommerce order screen.
-* Added: Test mode and Live mode toggle.
-* Added: HPOS (High-Performance Order Storage) compatibility.
-* Added: Multisite compatibility.
-* Added: Uninstall cleanup for all plugin options.
+* Credit card payments via embedded PAY.JP v2 Payment Widgets — no redirect, and raw card data never reaches your server.
+* PayPay payments via embedded PAY.JP v2 Payment Widgets.
+* Saved cards for faster repeat checkout, backed by PAY.JP Setup Flow and WooCommerce payment tokens.
+* WooCommerce Subscriptions support for automatic recurring billing with saved cards.
+* Immediate capture or authorize only (capture when the order is marked Completed) for both credit card and PayPay.
+* Full and partial refunds from the WooCommerce order screen for credit card and PayPay orders.
+* Cancelling a WooCommerce order cancels the PAY.JP payment automatically, and payments that were already captured are refunded automatically.
+* Orders paid with asynchronous methods such as PayPay are kept from WooCommerce's automatic "unpaid order" cancellation while the payment is in progress, and are confirmed automatically once the result is known.
+* Webhook processing for `payment_flow.succeeded`, `payment_flow.payment_failed`, and `refund.created`. A notification that arrives after an order is already finalized is recorded as an order note and an admin email instead of changing the order status.
+* One shared settings page for API keys, test/live mode, and the webhook secret, with links to the PAY.JP dashboard and test card / PayPay test account information in test mode.
+* Block Checkout and Classic Checkout support.
+* HPOS (High-Performance Order Storage) and multisite compatible.
+* Clean uninstall that removes all plugin options.
 
 == Upgrade Notice ==
 
-= 0.9.7 =
-Security hardening for the settings page and saved-card flow, plus WordPress.org packaging changes. Recommended update.
-
-= 0.9.6 =
-Compatibility release for WordPress 7.1 and WooCommerce 11.1, plus a fix so late payment-failure notifications never affect already-paid orders. Recommended update.
-
-= 0.9.5 =
-Fixes several edge cases around PayPay and other asynchronous payments: pending orders no longer get auto-cancelled mid-payment, late webhooks no longer alter already-finalized orders, and cancel/payment-success races now fall back to an automatic refund. Recommended update.
-
-= 0.9.4 =
-Adds PayPay refunds and automatic payment cancellation on order cancel; fixes a false "payment failed" message for asynchronous payments and a Block Checkout issue that could mislabel the payment method on the order. Recommended update.
-
-= 0.9.3 =
-Code quality and Plugin Check compliance fixes. No functional changes. Safe to update.
-
-= 0.9.2 =
-Important fixes for Block Checkout payment method handling with saved cards, capture API, and card token deletion sync. Recommended update.
-
-= 0.9.1 =
-Bug fixes for refunds, PayPay return handling, card save via Setup Flow, and subscription renewals. Recommended update.
-
-= 0.9.0 =
+= 1.0.0 =
 Initial release.

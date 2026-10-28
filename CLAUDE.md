@@ -169,13 +169,16 @@ npm run lint:css     # CSS lint
 
 ---
 
-## WordPress.org 申請（要点）
+## WordPress.org 公開・リリース（要点）
 
 - 配布 ZIP は `.distignore` 準拠で生成し、**生成した ZIP の展開物に対して** Plugin Check を実行する
   （wp-env に plugin-check 同梱済み。リポジトリ直下への実行は開発用ファイルのノイズが大量に出る）
 - Plugin Check の `wc` スラッグ警告は許容される（ソース上 "allowed, but shows a warning"）。
   申請フォームの「誤検知を除く」宣言に含めてよい
-- WP.org のスラッグは Plugin Name から自動生成される（→ pay-jp-for-woocommerce になる見込み）。
-  text domain `payjp-for-wc` と一致させるため、**アップロード後・審査開始前の 1 回だけ可能な
-  スラッグ変更**で `payjp-for-wc` に直すこと（言語パック配信の前提）
-- `Tested up to` の更新は必ず実環境で動作確認してから（wp-env は `core: null` で常に最新 WP）
+- リリースは main でタグ `vX.Y.Z` を push → `release.yml` が CI → WP.org SVN（trunk / tags / assets）
+  → GitHub Release まで自動で行う。タグと `Version:` / `Stable tag:` が食い違うとデプロイ前に止まる。
+  SVN 認証情報は Environment `wp-org` の secrets（リポジトリ secrets ではない）
+- 10up のデプロイはワークスペース全体を `.distignore` で rsync する。`release.yml` でワークスペースに
+  生成物を足したら `.distignore` にも足す（リリース ZIP が配布物に混入しかけた。#36 の教訓）
+- `Tested up to` の更新は必ず実環境で動作確認してから（wp-env は `core: null` で常に最新 WP。
+  WC はベータ版が入ることがあるので、先に WC のバージョンを確かめる）

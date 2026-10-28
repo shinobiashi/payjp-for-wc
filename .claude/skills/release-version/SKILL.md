@@ -5,9 +5,9 @@ description: PAY.JP for WooCommerce のバージョンを上げてリリース�
 
 # バージョンリリーススキル（payjp-for-wc）
 
-このプラグインをバージョンアップするたびに触る箇所は毎回同じ 4 ファイルで、
-過去のリリースコミット（例: `f79d509` 0.9.4→、`d9ea11b`/`c38125b` 0.9.5→）が
-そのままテンプレートになる。このスキルはその手順を再現する。
+このプラグインをバージョンアップするたびに触る箇所は毎回同じ（手順 2 の 6 ファイル + readme の
+changelog）で、過去のリリースコミット（例: `f79d509` 0.9.4→、`d9ea11b`/`c38125b` 0.9.5→、
+`d92cf4f` 1.0.0）がそのままテンプレートになる。このスキルはその手順を再現する。
 
 ## 前提
 
@@ -44,21 +44,22 @@ git log --oneline <前回リリースコミット>..HEAD
 
 ### 2. バージョン番号を更新する
 
-以下 5 箇所（`X.Y.Z` は新バージョン）:
+以下 6 ファイル（`X.Y.Z` は新バージョン）:
 
 ```bash
 # payjp-for-wc.php — 2箇所: ヘッダーコメントの Version と PAYJP_FOR_WC_VERSION 定数
 # package.json — "version"
 # package-lock.json — "version" 2箇所（トップレベルと packages[""]）
 # readme.txt — Stable tag
+# languages/payjp-for-wc.pot — "Project-Id-Version" ヘッダー
 # languages/payjp-for-wc-ja.po — "Project-Id-Version" ヘッダー
 ```
 
-`languages/payjp-for-wc-ja.po` の `Project-Id-Version` は要注意: `wp i18n make-pot` は
-プラグインヘッダーの `Version` から POT 側を正しく更新するが、`msgmerge` は既存 PO の
-`Project-Id-Version` をそのまま保持し POT 側の値で上書きしない。**バージョン番号だけの
-変更でもこのヘッダーは手動で更新し**、`msgfmt --check -o languages/payjp-for-wc-ja.mo
-languages/payjp-for-wc-ja.po` で MO を再生成すること（#35 の教訓）。
+`languages/` の 2 つの `Project-Id-Version` は要注意。POT は `wp i18n make-pot` を実行したときだけ
+プラグインヘッダーの `Version` で書き換わるので、文字列を変えずにバージョンだけ上げる回は
+古いまま残る（#36 の教訓）。`msgmerge` は既存 PO の `Project-Id-Version` をそのまま保持し
+POT 側の値で上書きしない（#35 の教訓）。**どちらもバージョン番号だけの変更でも手動で更新し**、
+`msgfmt --check -o languages/payjp-for-wc-ja.mo languages/payjp-for-wc-ja.po` で MO を再生成すること。
 
 ### 3. readme.txt に changelog / Upgrade Notice を追記する
 
@@ -108,9 +109,19 @@ vendor/bin/phpstan analyse --memory-limit=1G payjp-for-wc.php
 ユーザーがコミット・プッシュした後、依頼があれば `gh pr create` で PR を作成する
 （PR作成前にユーザーに確認する）。
 
+### 8. リリース（PR のマージ後）
+
+main でタグ `vX.Y.Z` を push すると、`.github/workflows/release.yml` が CI → WordPress.org SVN
+（trunk / tags / assets）→ GitHub Release（ZIP 添付）まで自動で行う。タグと `Version:` /
+`Stable tag:` が食い違うとデプロイ前に止まる。
+
+- **タグの push はユーザーが明示的に指示するまで行わない**（グローバル規約）。条件が揃ったら状況を報告して待つ。
+- push 後は Actions の run を確認し、`https://api.wordpress.org/plugins/info/1.0/payjp-for-wc.json` の
+  `version` で反映を確かめる。WP.org 側のチェックで反映まで最大 24 時間かかるので、遅くても再コミットしない。
+
 ## 検証
 
-- [ ] 5ファイル全てで新バージョン番号が一致している（`languages/payjp-for-wc-ja.po` の
+- [ ] 6ファイル全てで新バージョン番号が一致している（`languages/` の POT と ja.po の
       `Project-Id-Version` を含む）
 - [ ] `== Changelog ==` の新エントリが既存エントリの直前（最新が先頭）に入っている
 - [ ] `== Upgrade Notice ==` にも新バージョンの要約がある
@@ -127,3 +138,4 @@ vendor/bin/phpstan analyse --memory-limit=1G payjp-for-wc.php
 | Tested up to を憶測で更新してしまう | ユーザーから明示されたバージョン以外は書かない。動作確認していない値を書くと wordpress.org 審査・利用者双方に対して不正確な申告になる |
 | WC tested up to が readme.txt にしかない | `payjp-for-wc.php` のヘッダーコメントにも同じ値がある。片方だけ直すと不整合になる |
 | `languages/payjp-for-wc-ja.po` の `Project-Id-Version` が旧バージョンのまま | `msgmerge` は POT から `Project-Id-Version` を同期しない。手動更新が必要（#35 の教訓） |
+| `languages/payjp-for-wc.pot` の `Project-Id-Version` が旧バージョンのまま | 文字列を変えない回は `make-pot` を実行しないので POT が書き換わらない。手動更新が必要（#36 の教訓） |

@@ -37,9 +37,12 @@ jobs:
 
       # The WordPress.org SVN tag is named after the git tag, while WordPress.org serves the
       # version named by "Stable tag:". Refuse to deploy when they disagree.
+      # VERSION comes from the tag name, so steps read it from env instead of interpolating
+      # ${{ }} into the script (a tag can contain shell metacharacters).
       - name: Check the tag matches the plugin version
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
           HEADER_VERSION=$(sed -n 's/^ \* Version:[[:space:]]*//p' payjp-for-wc.php)
           STABLE_TAG=$(sed -n 's/^Stable tag:[[:space:]]*//p' readme.txt)
           if [ "$HEADER_VERSION" != "$VERSION" ] || [ "$STABLE_TAG" != "$VERSION" ]; then
@@ -60,10 +63,11 @@ jobs:
 
       - name: Extract changelog for this version
         id: changelog
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
-          VERSION="${{ steps.version.outputs.VERSION }}"
           # Extract lines between "= VERSION =" and the next "= X.Y.Z =" or "== Section ==" heading
-          BODY=$(awk "/^= ${VERSION} =/{found=1; next} found && /^=/{exit} found && NF{print}" readme.txt)
+          BODY=$(awk -v version="$VERSION" '$0 == "= " version " =" {found=1; next} found && /^=/{exit} found && NF{print}' readme.txt)
           # Write to GITHUB_OUTPUT as multiline value
           {
             echo "BODY<<EOF"
@@ -77,9 +81,10 @@ jobs:
           sudo apt-get install subversion
 
       - name: Create plugin zip
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
         run: |
           PLUGIN_SLUG="payjp-for-wc"
-          VERSION="${{ steps.version.outputs.VERSION }}"
           DEST="${PLUGIN_SLUG}-${VERSION}"
 
           # Copy release files to staging directory
@@ -97,9 +102,11 @@ jobs:
 
       # Syncs the workspace into SVN trunk (honouring .distignore), .wordpress-org/ into
       # assets/, and copies trunk to tags/<version> (the leading "v" of the git tag is dropped).
+      # Pinned to a reviewed commit because this step receives SVN_PASSWORD; update the pin
+      # deliberately after reviewing upstream changes.
       - name: WordPress Plugin Deploy
         id: deploy
-        uses: 10up/action-wordpress-plugin-deploy@stable
+        uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         with:
           generate-zip: false
         env:

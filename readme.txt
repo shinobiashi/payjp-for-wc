@@ -10,55 +10,30 @@ WC tested up to:   11.2.1
 License:           GPLv2 or later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-Accept credit card and PayPay payments in WooCommerce via PAY.JP v2 Payment Widgets. PCI DSS compliant, no raw card data on your server.
+The official plugin for adding PAY.JP payments (credit card and PayPay) to WooCommerce. Supports both one-time payments and subscriptions.
 
 == Description ==
 
-**PAY.JP for WooCommerce** integrates the [PAY.JP](https://pay.jp/) v2 Payment Widgets into your WooCommerce store, enabling you to accept credit card payments and PayPay payments securely and easily.
+=== What is PAY.JP? ===
 
-Raw card data never touches your server. The PAY.JP payments.js widget handles card entry entirely in a PCI DSS compliant iframe, keeping your integration simple and your compliance scope minimal.
+[PAY.JP](https://pay.jp/) is an online payment service provided by PAY, Inc. Guided by its core message, "Making payment integration simple," PAY.JP offers a simple API and a rich set of libraries that make it easy to add payments to web services and mobile apps. It also provides support for both integration and day-to-day operation, helping a wide range of businesses, including startups, grow.
+
+=== Plugin Overview ===
+
+PAY.JP for WooCommerce is the official plugin for adding PAY.JP payment features to online stores built with WooCommerce.
 
 === Key Features ===
 
-**Credit Card Payments**
+* **API:** PAY.JP API v2
+* **Payment methods:** Credit card payments (with 3D Secure authentication) and PayPay payments (QR code and PayPay app)
+* **Billing types:** One-time payments and subscription billing (subscriptions are available for credit card payments only)
+* **UI/UX:** Payment form embedded in your checkout page
+* **WooCommerce admin integration:** Handle basic operations such as full refunds, partial refunds, and amount changes directly from the WooCommerce admin
 
-* Embedded PAY.JP v2 Payment Widgets (no redirect, PCI DSS compliant)
-* Save cards to customer accounts for faster repeat checkout
-* Full and partial refunds directly from the WooCommerce order screen
+=== Recommended For ===
 
-**PayPay Payments**
-
-* Embedded PayPay widget via PAY.JP v2 Payment Widgets
-* Seamless in-page payment experience
-* Full and partial refunds directly from the WooCommerce order screen
-
-**Subscriptions**
-
-* WooCommerce Subscriptions compatible for automatic recurring billing
-* Saved card via PAY.JP Setup Flow powers subscription renewals
-
-**Developer & Store Friendly**
-
-* Block Checkout (WooCommerce 8.3+) and Classic Checkout both supported
-* HPOS (High-Performance Order Storage) compatible
-* Multisite compatible
-* Test mode / Live mode toggle — no code changes required
-* Webhook processing for `payment_flow.succeeded`, `payment_flow.payment_failed`, and `refund.created` events
-* Clean uninstall — removes all plugin data and options on deletion
-
-=== How It Works ===
-
-1. The checkout page loads the PAY.JP payments.js widget from PAY.JP's CDN.
-2. The customer enters card details (or selects PayPay) entirely within the secure widget.
-3. PAY.JP returns a Payment Flow ID to your server — raw card data never reaches WordPress.
-4. WooCommerce processes the order and the plugin completes the payment via the PAY.JP v2 API.
-
-=== Requirements ===
-
-* WordPress 6.9 or later
-* WooCommerce 9.0 or later
-* PHP 8.3 or later
-* A [PAY.JP account](https://pay.jp/) (free to register)
+* Those launching a new online store with WooCommerce
+* Those reviewing their current payment service or considering switching to a new one
 
 == External Services ==
 

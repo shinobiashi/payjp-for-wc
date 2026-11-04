@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the Plugins - PAY.JP for WooCommerce - Stable Readme (latest release) package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2026-10-29 00:00+0000\n"
+"PO-Revision-Date: 2026-11-04 00:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,8 +13,8 @@ msgstr ""
 
 #. Short description.
 #, gp-priority: high
-msgid "Accept credit card and PayPay payments in WooCommerce via PAY.JP v2 Payment Widgets. PCI DSS compliant, no raw card data on your server."
-msgstr "PAY.JP v2 Payment Widgets で、WooCommerce にクレジットカード決済と PayPay 決済を導入します。PCI DSS 準拠で、カード情報がサーバーを通ることはありません。"
+msgid "The official plugin for adding PAY.JP payments (credit card and PayPay) to WooCommerce. Supports both one-time payments and subscriptions."
+msgstr "WooCommerce に PAY.JP 決済（クレジットカード・PayPay）を導入できる公式プラグイン。都度課金・サブスク課金に対応します。"
 
 #. Plugin name.
 #, gp-priority: high
@@ -206,28 +206,12 @@ msgid "This plugin connects to the following external services. By using this pl
 msgstr "このプラグインは次の外部サービスに接続します。このプラグインを使用することで、各サービスの利用規約とプライバシーポリシーに同意したものとみなされます。"
 
 #. Found in description paragraph.
-msgid "<strong>Developer &amp; Store Friendly</strong>"
-msgstr "<strong>開発者にもストア運営者にも使いやすく</strong>"
+msgid "PAY.JP for WooCommerce is the official plugin for adding PAY.JP payment features to online stores built with WooCommerce."
+msgstr "WooCommerce を利用した EC サイトに、PAY.JP の決済機能を導入できる公式プラグインです。"
 
 #. Found in description paragraph.
-msgid "<strong>Subscriptions</strong>"
-msgstr "<strong>サブスクリプション</strong>"
-
-#. Found in description paragraph.
-msgid "<strong>PayPay Payments</strong>"
-msgstr "<strong>PayPay 決済</strong>"
-
-#. Found in description paragraph.
-msgid "<strong>Credit Card Payments</strong>"
-msgstr "<strong>クレジットカード決済</strong>"
-
-#. Found in description paragraph.
-msgid "Raw card data never touches your server. The PAY.JP payments.js widget handles card entry entirely in a PCI DSS compliant iframe, keeping your integration simple and your compliance scope minimal."
-msgstr "カード情報がサーバーを通ることはありません。カードの入力は PAY.JP payments.js のウィジェットが PCI DSS 準拠の iframe 内ですべて処理するため、導入はシンプルなまま、PCI DSS への対応範囲も最小限に抑えられます。"
-
-#. Found in description paragraph.
-msgid "<strong>PAY.JP for WooCommerce</strong> integrates the <a href=\"https://pay.jp/\">PAY.JP</a> v2 Payment Widgets into your WooCommerce store, enabling you to accept credit card payments and PayPay payments securely and easily."
-msgstr "<strong>PAY.JP for WooCommerce</strong> は、<a href=\"https://pay.jp/\">PAY.JP</a> の v2 Payment Widgets を WooCommerce ストアに組み込み、クレジットカード決済と PayPay 決済を安全かつ手軽に受け付けられるようにするプラグインです。"
+msgid "<a href=\"https://pay.jp/\">PAY.JP</a> is an online payment service provided by PAY, Inc. Guided by its core message, \"Making payment integration simple,\" PAY.JP offers a simple API and a rich set of libraries that make it easy to add payments to web services and mobile apps. It also provides support for both integration and day-to-day operation, helping a wide range of businesses, including startups, grow."
+msgstr "<a href=\"https://pay.jp/\">PAY.JP</a> は、PAY株式会社が提供するオンライン決済サービスです。「決済導入をシンプルに」をコアメッセージに掲げ、シンプルな API と豊富なライブラリにより、Web サービスやモバイルアプリへ決済機能をかんたんに組み込めます。導入・運用を支えるサポートを提供し、スタートアップをはじめとするさまざまな事業者のビジネスを支援しています。"
 
 #. Found in description list item.
 msgid "<strong>Data handled:</strong> Card details entered by the customer are tokenized entirely within this script and its iframe — they are never accessible to your WordPress site."
@@ -262,88 +246,32 @@ msgid "<strong>Endpoint:</strong> <code>https://api.pay.jp/v2</code>"
 msgstr "<strong>エンドポイント:</strong> <code>https://api.pay.jp/v2</code>"
 
 #. Found in description list item.
-msgid "A <a href=\"https://pay.jp/\">PAY.JP account</a> (free to register)"
-msgstr "<a href=\"https://pay.jp/\">PAY.JP アカウント</a>（無料で登録できます）"
+msgid "Those reviewing their current payment service or considering switching to a new one"
+msgstr "現在利用している決済サービスの見直しや乗り換えを検討している方"
 
 #. Found in description list item.
-msgid "PHP 8.3 or later"
-msgstr "PHP 8.3 以降"
+msgid "Those launching a new online store with WooCommerce"
+msgstr "WooCommerce でこれから EC サイトを立ち上げる方"
 
 #. Found in description list item.
-msgid "WooCommerce 9.0 or later"
-msgstr "WooCommerce 9.0 以降"
+msgid "<strong>WooCommerce admin integration:</strong> Handle basic operations such as full refunds, partial refunds, and amount changes directly from the WooCommerce admin"
+msgstr "<strong>管理画面連携:</strong> WooCommerce 管理画面から「全額返金」「一部返金」「金額変更」などの基本運用操作に連携"
 
 #. Found in description list item.
-msgid "WordPress 6.9 or later"
-msgstr "WordPress 6.9 以降"
+msgid "<strong>UI/UX:</strong> Payment form embedded in your checkout page"
+msgstr "<strong>UI/UX:</strong> 決済画面埋め込み型"
 
 #. Found in description list item.
-msgid "WooCommerce processes the order and the plugin completes the payment via the PAY.JP v2 API."
-msgstr "WooCommerce が注文を処理し、プラグインが PAY.JP v2 API で決済を完了します。"
+msgid "<strong>Billing types:</strong> One-time payments and subscription billing (subscriptions are available for credit card payments only)"
+msgstr "<strong>課金形態:</strong> 都度課金、およびサブスクリプション課金（クレジットカードのみ対応）"
 
 #. Found in description list item.
-msgid "PAY.JP returns a Payment Flow ID to your server — raw card data never reaches WordPress."
-msgstr "PAY.JP がサーバーに Payment Flow ID を返します。カード情報が WordPress に届くことはありません。"
+msgid "<strong>Payment methods:</strong> Credit card payments (with 3D Secure authentication) and PayPay payments (QR code and PayPay app)"
+msgstr "<strong>決済手段:</strong> クレジットカード決済（3D セキュア認証対応）、PayPay 決済（QR コード・アプリ連携）"
 
 #. Found in description list item.
-msgid "The customer enters card details (or selects PayPay) entirely within the secure widget."
-msgstr "お客様は、安全なウィジェットの中だけでカード情報を入力（または PayPay を選択）します。"
-
-#. Found in description list item.
-msgid "The checkout page loads the PAY.JP payments.js widget from PAY.JP's CDN."
-msgstr "チェックアウトページが、PAY.JP の CDN から PAY.JP payments.js のウィジェットを読み込みます。"
-
-#. Found in description list item.
-msgid "Clean uninstall — removes all plugin data and options on deletion"
-msgstr "クリーンなアンインストール — 削除時にプラグインのデータと設定をすべて削除"
-
-#. Found in description list item.
-msgid "Webhook processing for <code>payment_flow.succeeded</code>, <code>payment_flow.payment_failed</code>, and <code>refund.created</code> events"
-msgstr "<code>payment_flow.succeeded</code>、<code>payment_flow.payment_failed</code>、<code>refund.created</code> イベントの Webhook 処理"
-
-#. Found in description list item.
-msgid "Test mode / Live mode toggle — no code changes required"
-msgstr "テストモード / 本番モードの切り替え — コードの変更は不要"
-
-#. Found in description list item.
-msgid "Multisite compatible"
-msgstr "マルチサイト対応"
-
-#. Found in description list item.
-msgid "HPOS (High-Performance Order Storage) compatible"
-msgstr "HPOS（高パフォーマンス注文ストレージ）対応"
-
-#. Found in description list item.
-msgid "Block Checkout (WooCommerce 8.3+) and Classic Checkout both supported"
-msgstr "ブロックチェックアウト（WooCommerce 8.3 以降）とクラシックチェックアウトの両方に対応"
-
-#. Found in description list item.
-msgid "Saved card via PAY.JP Setup Flow powers subscription renewals"
-msgstr "PAY.JP Setup Flow で保存したカードでサブスクリプションを自動更新"
-
-#. Found in description list item.
-msgid "WooCommerce Subscriptions compatible for automatic recurring billing"
-msgstr "WooCommerce Subscriptions に対応し、定期的な自動課金が可能"
-
-#. Found in description list item.
-msgid "Seamless in-page payment experience"
-msgstr "ページを離れずに完了するスムーズな支払い"
-
-#. Found in description list item.
-msgid "Embedded PayPay widget via PAY.JP v2 Payment Widgets"
-msgstr "PAY.JP v2 Payment Widgets による PayPay ウィジェットの埋め込み"
-
-#. Found in description list item.
-msgid "Full and partial refunds directly from the WooCommerce order screen"
-msgstr "WooCommerce の注文画面から直接、全額返金・部分返金が可能"
-
-#. Found in description list item.
-msgid "Save cards to customer accounts for faster repeat checkout"
-msgstr "カードを顧客アカウントに保存して、次回以降のチェックアウトを短縮"
-
-#. Found in description list item.
-msgid "Embedded PAY.JP v2 Payment Widgets (no redirect, PCI DSS compliant)"
-msgstr "PAY.JP v2 Payment Widgets の埋め込み（リダイレクトなし、PCI DSS 準拠）"
+msgid "<strong>API:</strong> PAY.JP API v2"
+msgstr "<strong>API:</strong> PAY.JP API v2"
 
 #. Found in description header.
 msgid "2. PAY.JP payments.js (CDN)"
@@ -358,16 +286,20 @@ msgid "External Services"
 msgstr "外部サービス"
 
 #. Found in description header.
-msgid "Requirements"
-msgstr "動作要件"
-
-#. Found in description header.
-msgid "How It Works"
-msgstr "仕組み"
+msgid "Recommended For"
+msgstr "こんな方におすすめ"
 
 #. Found in description header.
 msgid "Key Features"
-msgstr "主な機能"
+msgstr "主な搭載機能"
+
+#. Found in description header.
+msgid "Plugin Overview"
+msgstr "プラグイン概要"
+
+#. Found in description header.
+msgid "What is PAY.JP?"
+msgstr "PAY.JP とは？"
 
 #. Screenshot description.
 msgid "WooCommerce order detail screen showing PAY.JP payment information and refund controls."

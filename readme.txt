@@ -14,23 +14,23 @@ The official plugin for adding PAY.JP payments (credit card and PayPay) to WooCo
 
 == Description ==
 
-=== What is PAY.JP? ===
+### What is PAY.JP?
 
 [PAY.JP](https://pay.jp/) is an online payment service provided by PAY, Inc. Guided by its core message, "Making payment integration simple," PAY.JP offers a simple API and a rich set of libraries that make it easy to add payments to web services and mobile apps. It also provides support for both integration and day-to-day operation, helping a wide range of businesses, including startups, grow.
 
-=== Plugin Overview ===
+### Plugin Overview
 
 PAY.JP for WooCommerce is the official plugin for adding PAY.JP payment features to online stores built with WooCommerce.
 
-=== Key Features ===
+### Key Features
 
 * **API:** PAY.JP API v2
 * **Payment methods:** Credit card payments (with 3D Secure authentication) and PayPay payments (QR code and PayPay app)
-* **Billing types:** One-time payments and subscription billing (subscriptions are available for credit card payments only)
+* **Billing types:** One-time payments and subscription billing (subscriptions require the WooCommerce Subscriptions extension and are available for credit card payments only)
 * **UI/UX:** Payment form embedded in your checkout page
-* **WooCommerce admin integration:** Handle basic operations such as full refunds, partial refunds, and amount changes directly from the WooCommerce admin
+* **WooCommerce admin integration:** Handle basic operations such as full refunds and partial refunds directly from the WooCommerce admin
 
-=== Recommended For ===
+### Recommended For
 
 * Those launching a new online store with WooCommerce
 * Those reviewing their current payment service or considering switching to a new one

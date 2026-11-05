@@ -254,16 +254,16 @@ msgid "Those launching a new online store with WooCommerce"
 msgstr "WooCommerce でこれから EC サイトを立ち上げる方"
 
 #. Found in description list item.
-msgid "<strong>WooCommerce admin integration:</strong> Handle basic operations such as full refunds, partial refunds, and amount changes directly from the WooCommerce admin"
-msgstr "<strong>管理画面連携:</strong> WooCommerce 管理画面から「全額返金」「一部返金」「金額変更」などの基本運用操作に連携"
+msgid "<strong>WooCommerce admin integration:</strong> Handle basic operations such as full refunds and partial refunds directly from the WooCommerce admin"
+msgstr "<strong>管理画面連携:</strong> WooCommerce 管理画面から「全額返金」「一部返金」などの基本運用操作に連携"
 
 #. Found in description list item.
 msgid "<strong>UI/UX:</strong> Payment form embedded in your checkout page"
 msgstr "<strong>UI/UX:</strong> 決済画面埋め込み型"
 
 #. Found in description list item.
-msgid "<strong>Billing types:</strong> One-time payments and subscription billing (subscriptions are available for credit card payments only)"
-msgstr "<strong>課金形態:</strong> 都度課金、およびサブスクリプション課金（クレジットカードのみ対応）"
+msgid "<strong>Billing types:</strong> One-time payments and subscription billing (subscriptions require the WooCommerce Subscriptions extension and are available for credit card payments only)"
+msgstr "<strong>課金形態:</strong> 都度課金、およびサブスクリプション課金（WooCommerce Subscriptions が必要。クレジットカードのみ対応）"
 
 #. Found in description list item.
 msgid "<strong>Payment methods:</strong> Credit card payments (with 3D Secure authentication) and PayPay payments (QR code and PayPay app)"

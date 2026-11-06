@@ -91,4 +91,9 @@ abstract class WC_Order {
 	 * @return string
 	 */
 	abstract public function get_edit_order_url(): string;
+
+	/**
+	 * @return string
+	 */
+	abstract public function get_currency(): string;
 }

@@ -23,6 +23,8 @@ require_once __DIR__ . '/stubs/class-wp-rest-request.php';
 require_once __DIR__ . '/stubs/class-wp-rest-response.php';
 require_once __DIR__ . '/stubs/class-wc-order.php';
 require_once __DIR__ . '/stubs/class-wc-payment-gateway.php';
+require_once __DIR__ . '/stubs/class-wc-settings-page.php';
+require_once __DIR__ . '/stubs/class-wc-subscription.php';
 require_once __DIR__ . '/stubs/class-payjp-api.php';
 
 // Plugin classes under test.
@@ -30,7 +32,10 @@ require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-settings
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-webhook-handler.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-pending-payment-monitor.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-admin-notifier.php';
+require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-token-manager.php';
+require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-payjp-subscriptions.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-card.php';
 require_once dirname( __DIR__ ) . '/includes/gateways/payjp/class-wc-gateway-payjp-paypay.php';
+require_once dirname( __DIR__ ) . '/includes/admin/class-payjp-admin-settings-page.php';
 require_once dirname( __DIR__ ) . '/includes/class-payjp-loader.php';

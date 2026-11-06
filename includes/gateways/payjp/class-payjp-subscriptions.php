@@ -64,13 +64,26 @@ class Payjp_Subscriptions {
 	 * completed during automatic renewals, so any non-immediate status is
 	 * treated as a failure and WCS retry scheduling is triggered.
 	 *
-	 * @param float    $amount        Amount to charge in the store currency.
+	 * @param float    $amount        Amount to charge in the renewal order's currency.
 	 * @param WC_Order $renewal_order WooCommerce renewal order.
 	 */
 	public static function handle_scheduled_payment( float $amount, WC_Order $renewal_order ): void {
 		// Free trials or $0 renewals: complete immediately without charging.
 		if ( $amount <= 0.0 ) {
 			$renewal_order->payment_complete();
+			return;
+		}
+
+		// The amount would otherwise be charged as yen, unconverted.
+		if ( ! Payjp_Settings::is_supported_currency( $renewal_order->get_currency() ) ) {
+			$renewal_order->update_status(
+				'failed',
+				sprintf(
+					/* translators: %s: Currency code of the renewal order, e.g. USD. */
+					__( 'PAY.JP: This renewal was not charged because PAY.JP supports only Japanese yen (JPY). The order currency is %s.', 'payjp-for-wc' ),
+					esc_html( $renewal_order->get_currency() )
+				)
+			);
 			return;
 		}
 
@@ -112,7 +125,7 @@ class Payjp_Subscriptions {
 				'/payment_flows',
 				array(
 					'amount'            => (int) round( $amount ),
-					'currency'          => strtolower( get_woocommerce_currency() ),
+					'currency'          => 'jpy',
 					'payment_method_id' => $pm_id,
 					'customer_id'       => $customer_id,
 					'confirm'           => true,

@@ -101,8 +101,8 @@ API に届く前の入口 3 箇所で止める。判定は `Payjp_Settings::is_s
 
 | 入口 | 見る通貨 | 非対応のとき |
 |---|---|---|
-| `is_available()` | order-pay ページでは注文の通貨、それ以外は `get_woocommerce_currency()` | ゲートウェイを隠す。Block Checkout も `is_active()` 経由で追従する |
-| `process_payment()`（card / PayPay） | `$order->get_currency()` | 通知を出して `failure`。古いチェックアウト画面や Store API の既存注文の支払い（`CheckoutOrder`）は、ストア通貨で判定された `is_available()` を通過できるため、ここでも止める |
+| `is_available()` | `order-pay` のクエリ変数があれば注文の通貨、それ以外は `get_woocommerce_currency()` | ゲートウェイを隠す。Block Checkout も `is_active()` 経由で追従する |
+| `process_payment()`（card / PayPay） | `$order->get_currency()` | 通知を出して `failure`。Store API の既存注文の支払い（`CheckoutOrder`）には `order-pay` のクエリ変数が無く、`is_available()` がストア通貨で判定するので、ここでも止める。`?order-pay=` を付けた新規チェックアウトも同様 |
 | `Payjp_Subscriptions::handle_scheduled_payment()` | `$renewal_order->get_currency()` | 注文を `failed` にしてメモを残す。$0 の更新は API を呼ばないので対象外 |
 
 - 多通貨プラグインは `woocommerce_currency` をフィルタするので、`get_option( 'woocommerce_currency' )` は

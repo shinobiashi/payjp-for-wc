@@ -154,10 +154,10 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	/**
 	 * Get the currency the customer is paying in right now.
 	 *
-	 * On the order-pay page this is the order's currency, which can differ from the
-	 * store's under a multi-currency plugin or after the store currency was changed.
-	 * Elsewhere get_woocommerce_currency() applies, so a multi-currency plugin's
-	 * filter is honored. The order lookup mirrors WC_Payment_Gateway::get_order_total().
+	 * With the order-pay query var this is the order's currency, which can differ from
+	 * the store's under a multi-currency plugin or after the store currency was changed.
+	 * Otherwise get_woocommerce_currency() applies, so a multi-currency plugin's filter
+	 * is honored. The order lookup mirrors WC_Payment_Gateway::get_order_total().
 	 */
 	private function get_checkout_currency(): string {
 		$order_id = absint( get_query_var( 'order-pay' ) );
@@ -169,9 +169,10 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	/**
 	 * Reject an order whose currency PAY.JP cannot charge, adding a customer-facing notice.
 	 *
-	 * A gateway hidden by is_available() can still reach process_payment() from a stale
-	 * checkout page or a Store API request for an existing order. Call this before anything
-	 * is sent to PAY.JP: the order total would otherwise be charged as yen, unconverted.
+	 * Passing is_available() does not prove the order's currency. A Store API payment for
+	 * an existing order has no order-pay query var, so the store currency is judged instead,
+	 * and an order-pay query var on a new checkout names a different order. Call this before
+	 * anything is sent to PAY.JP: the order total would otherwise be charged as yen, unconverted.
 	 *
 	 * @param WC_Order $order WooCommerce order.
 	 * @return bool True when the order can be paid through PAY.JP.

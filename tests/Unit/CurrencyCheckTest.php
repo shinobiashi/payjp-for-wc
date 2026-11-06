@@ -178,17 +178,21 @@ class CurrencyCheckTest extends TestCase {
 
 	#[Test]
 	public function order_pay_page_falls_back_to_the_store_currency_when_the_order_is_missing(): void {
-		Functions\when( 'get_woocommerce_currency' )->justReturn( 'USD' );
 		Functions\when( 'get_query_var' )->justReturn( '42' );
 		Functions\when( 'wc_get_order' )->justReturn( false );
 
-		$this->assertFalse( $this->make_gateway( WC_Gateway_Payjp_Card::class )->is_available() );
+		$this->assertTrue( $this->make_gateway( WC_Gateway_Payjp_Card::class )->is_available(), 'JPY store' );
+
+		Functions\when( 'get_woocommerce_currency' )->justReturn( 'USD' );
+
+		$this->assertFalse( $this->make_gateway( WC_Gateway_Payjp_Card::class )->is_available(), 'USD store' );
 	}
 
 	// ── process_payment() ─────────────────────────────────────────────────────
 
 	/**
-	 * A stale checkout can reach process_payment() after is_available() turned false.
+	 * A Store API payment for an existing order passes is_available() on the store's
+	 * currency, so process_payment() has to check the order's own.
 	 *
 	 * @param class-string<WC_Gateway_Payjp> $gateway_class Gateway class.
 	 */

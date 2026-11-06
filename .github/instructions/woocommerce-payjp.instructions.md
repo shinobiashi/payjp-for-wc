@@ -34,7 +34,7 @@ applyTo: "includes/**/*.php"
 
 ## Code Style
 
-- Short array syntax `[]` required everywhere; `array()` is banned project-wide.
+- Long array syntax `array()` required (enforced by `phpcs.xml`); short `[]` fails PHPCS.
 - All output escaped: `esc_html()`, `esc_attr()`, `esc_url()`, or `wp_kses_post()` as appropriate.
 - Text domain: `payjp-for-wc` on every translatable string; no bare `__( 'text' )` without the domain.
 - No `curl`, no hardcoded secret keys, no `var_dump` / `error_log` in committed code.

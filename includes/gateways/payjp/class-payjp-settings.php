@@ -38,6 +38,25 @@ class Payjp_Settings {
 	const OPTION_KEY = 'payjp_settings';
 
 	/**
+	 * The only currency PAY.JP can charge, in the form WooCommerce reports it.
+	 *
+	 * @var string
+	 */
+	const SUPPORTED_CURRENCY = 'JPY';
+
+	/**
+	 * Whether PAY.JP can charge the given currency.
+	 *
+	 * An empty value is rejected: it means the currency is unknown, not that
+	 * the check can be skipped.
+	 *
+	 * @param string $currency Currency code, e.g. the result of $order->get_currency().
+	 */
+	public static function is_supported_currency( string $currency ): bool {
+		return self::SUPPORTED_CURRENCY === strtoupper( $currency );
+	}
+
+	/**
 	 * Get a single setting value.
 	 *
 	 * @param string $key      Setting key.

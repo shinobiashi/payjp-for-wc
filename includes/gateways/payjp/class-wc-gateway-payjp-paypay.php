@@ -161,6 +161,10 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			return array( 'result' => 'failure' );
 		}
 
+		if ( ! $this->ensure_supported_currency( $order ) ) {
+			return array( 'result' => 'failure' );
+		}
+
 		// Always overwrite payment_method and payment_method_title to guarantee the
 		// correct values are persisted. Block Checkout's update_order_from_request()
 		// may fix the gateway ID (string call) without updating payment_method_title,
@@ -298,7 +302,9 @@ class WC_Gateway_Payjp_Paypay extends WC_Gateway_Payjp {
 			return;
 		}
 
-		if ( ! $order->get_meta( '_payjp_client_secret' ) ) {
+		// An unsupported currency also lands here: payment_scripts() does not enqueue the
+		// widget for such an order, which would leave a pay button that does nothing.
+		if ( ! $order->get_meta( '_payjp_client_secret' ) || ! Payjp_Settings::is_supported_currency( $order->get_currency() ) ) {
 			// Headers are already sent at this point (inside the order-pay template),
 			// so wp_safe_redirect() would fail. Render an inline error with a link instead.
 			printf(

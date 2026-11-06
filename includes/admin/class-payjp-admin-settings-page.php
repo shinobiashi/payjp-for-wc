@@ -223,6 +223,8 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 	 * against individual option keys (which we don't use).
 	 */
 	public function output(): void {
+		$this->output_currency_notice();
+
 		$current   = Payjp_Settings::get_all();
 		$test_mode = isset( $current['test_mode'] ) ? (bool) $current['test_mode'] : true;
 
@@ -250,6 +252,37 @@ class Payjp_Admin_Settings_Page extends WC_Settings_Page {
 		foreach ( array_keys( $option_map ) as $key ) {
 			remove_filter( "pre_option_{$key}", $closures[ $key ] );
 		}
+	}
+
+	/**
+	 * Output a warning when the store currency is not one PAY.JP can charge.
+	 * Otherwise WC_Gateway_Payjp::is_available() hides the gateways from checkout
+	 * with nothing telling the merchant why.
+	 */
+	public function output_currency_notice(): void {
+		$currency = get_woocommerce_currency();
+
+		if ( Payjp_Settings::is_supported_currency( $currency ) ) {
+			return;
+		}
+		?>
+		<div class="notice notice-warning inline">
+			<p>
+				<?php
+				echo wp_kses(
+					sprintf(
+						/* translators: 1: Store currency code, e.g. USD, 2: Opening <a> tag linking to the WooCommerce general settings, 3: Closing </a> tag */
+						__( 'PAY.JP supports only Japanese yen (JPY). PAY.JP payment methods are hidden at checkout because the store currency is %1$s. To use them, change the currency in %2$sWooCommerce &gt; Settings &gt; General%3$s.', 'payjp-for-wc' ),
+						esc_html( $currency ),
+						'<a href="' . esc_url( admin_url( 'admin.php?page=wc-settings&tab=general' ) ) . '">',
+						'</a>'
+					),
+					array( 'a' => array( 'href' => array() ) )
+				);
+				?>
+			</p>
+		</div>
+		<?php
 	}
 
 	/**

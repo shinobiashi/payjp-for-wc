@@ -126,11 +126,17 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 	}
 
 	/**
-	 * Available when the parent check passes, the method is enabled in shared settings,
-	 * and API keys are configured.
+	 * Available when the parent check passes, the currency is one PAY.JP can charge,
+	 * the method is enabled in shared settings, and API keys are configured.
+	 *
+	 * Block Checkout follows this too: Payjp_Blocks_Integration::is_active() delegates here.
 	 */
 	public function is_available(): bool {
 		if ( ! parent::is_available() ) {
+			return false;
+		}
+
+		if ( ! Payjp_Settings::is_supported_currency( $this->get_checkout_currency() ) ) {
 			return false;
 		}
 
@@ -143,6 +149,44 @@ abstract class WC_Gateway_Payjp extends WC_Payment_Gateway {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Get the currency the customer is paying in right now.
+	 *
+	 * On the order-pay page this is the order's currency, which can differ from the
+	 * store's under a multi-currency plugin or after the store currency was changed.
+	 * Elsewhere get_woocommerce_currency() applies, so a multi-currency plugin's
+	 * filter is honored. The order lookup mirrors WC_Payment_Gateway::get_order_total().
+	 */
+	private function get_checkout_currency(): string {
+		$order_id = absint( get_query_var( 'order-pay' ) );
+		$order    = 0 < $order_id ? wc_get_order( $order_id ) : false;
+
+		return $order ? $order->get_currency() : get_woocommerce_currency();
+	}
+
+	/**
+	 * Reject an order whose currency PAY.JP cannot charge, adding a customer-facing notice.
+	 *
+	 * A gateway hidden by is_available() can still reach process_payment() from a stale
+	 * checkout page or a Store API request for an existing order. Call this before anything
+	 * is sent to PAY.JP: the order total would otherwise be charged as yen, unconverted.
+	 *
+	 * @param WC_Order $order WooCommerce order.
+	 * @return bool True when the order can be paid through PAY.JP.
+	 */
+	protected function ensure_supported_currency( WC_Order $order ): bool {
+		if ( Payjp_Settings::is_supported_currency( $order->get_currency() ) ) {
+			return true;
+		}
+
+		wc_add_notice(
+			esc_html__( 'PAY.JP supports only Japanese yen (JPY). Please choose another payment method.', 'payjp-for-wc' ),
+			'error'
+		);
+
+		return false;
 	}
 
 	/**

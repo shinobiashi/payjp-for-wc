@@ -24,6 +24,9 @@ abstract class WC_Payment_Gateway {
 	public string $enabled = 'no';
 
 	/** @var string */
+	public string $icon = '';
+
+	/** @var string */
 	public string $method_title = '';
 
 	/** @var string */

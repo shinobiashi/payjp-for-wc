@@ -127,7 +127,7 @@ npm run lint:css     # CSS lint
 2. **payments.js は CDN 読み込み**: PCI 準拠目的で wordpress.org 審査上も正当。
    `readme.txt` の External Services 開示が必須
 3. **`is_available()` の連動**: `Payjp_Settings::is_method_enabled()` が false なら
-   ゲートウェイもチェックアウトから非表示
+   ゲートウェイもチェックアウトから非表示。通貨が JPY 以外のときも同じ（#11）
 4. **支払い方法変更の正当性判定**: `class-payjp-loader.php` のガード群は
    セッションの `chosen_payment_method` を基準に正当な切り替えを判定。
    切り替え許可時は `_payjp_*` メタと **`transaction_id` の両方**をクリアする
@@ -158,6 +158,12 @@ npm run lint:css     # CSS lint
     所有者判定に使うフィールドが欠落・非文字列の場合、照合を「スキップ」して通すのではなく
     「拒否」する。両者が空文字列同士で `hash_equals()` が偶然一致するような抜け道を作らない
     （Setup Flow の `customer_id` 検証漏れ、#35 の教訓）
+11. **PAY.JP へ金額を送る経路は、注文の通貨を自分で確かめる**: 金額は変換せずに送られるので、
+    USD 100.00 は ¥100 として課金される。フローや課金を作る経路を足したら
+    `Payjp_Settings::is_supported_currency( $order->get_currency() )` で止める。
+    `is_available()` だけでは足りない（Store API の既存注文の支払いには `order-pay` の
+    クエリ変数が無く、ストア通貨で判定される）。`get_option( 'woocommerce_currency' )` は
+    多通貨プラグインのフィルタを通らないので使わない（#38 の教訓）
 
 ---
 

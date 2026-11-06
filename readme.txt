@@ -101,6 +101,10 @@ Yes. Raw card data never touches your server. All card entry is handled by the P
 
 Enable **Test Mode** in the plugin settings and use your PAY.JP test API keys. For PayPay test payments, use one of the reserved test phone numbers: 080-1111-5912 through 080-1111-5921. Each PayPay test transaction is capped at ¥100.
 
+= Which currencies are supported? =
+
+Japanese yen (JPY) only. PAY.JP payment methods are not shown at checkout when the store currency is anything else, and a notice on the PAY.JP settings page explains why.
+
 = Does this plugin support WooCommerce Subscriptions? =
 
 Yes. When a customer completes their first subscription payment, their card is saved via PAY.JP Setup Flow. Subsequent automatic renewal payments are processed against the saved PAY.JP Customer ID without requiring the customer to re-enter their card.

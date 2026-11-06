@@ -22,6 +22,10 @@ msgid "PAY.JP for WooCommerce"
 msgstr "PAY.JP for WooCommerce"
 
 #. Found in faq paragraph.
+msgid "Japanese yen (JPY) only. PAY.JP payment methods are not shown at checkout when the store currency is anything else, and a notice on the PAY.JP settings page explains why."
+msgstr "日本円（JPY）のみです。ストアの通貨がそれ以外の場合、チェックアウトに PAY.JP の決済手段は表示されず、PAY.JP の設定ページに理由を示す通知が表示されます。"
+
+#. Found in faq paragraph.
 msgid "Yes. The plugin is compatible with WordPress multisite. Each site in the network uses its own PAY.JP API keys and settings."
 msgstr "はい。WordPress マルチサイトに対応しています。ネットワーク内の各サイトで、それぞれ別の PAY.JP API キーと設定を使います。"
 
@@ -76,6 +80,10 @@ msgstr "PAY.JP ダッシュボードにログインし、<strong>Webhook</strong
 #. Found in faq list item.
 msgid "In the PAY.JP for WooCommerce settings, copy the <strong>Webhook URL</strong> (<code>https://yoursite.com/wp-json/payjp/v2/webhook</code>)."
 msgstr "PAY.JP for WooCommerce の設定画面で <strong>Webhook URL</strong>（<code>https://yoursite.com/wp-json/payjp/v2/webhook</code>）をコピーします。"
+
+#. Found in faq header.
+msgid "Which currencies are supported?"
+msgstr "どの通貨に対応していますか？"
 
 #. Found in faq header.
 msgid "Is multisite supported?"

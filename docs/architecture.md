@@ -92,6 +92,30 @@ PCI 準拠が目的であり、wordpress.org 審査で認められているパ�
 
 `Payjp_Settings::is_method_enabled( 'card' )` が `false` を返した場合、
 `WC_Gateway_Payjp_Card::is_available()` も `false` を返し、チェックアウトから非表示になる。
+通貨が JPY でない場合も同様（次節）。
+
+### 通貨は JPY のみ（#38）
+
+注文合計は変換せずそのまま PAY.JP に送るので、USD 100.00 の注文は ¥100 として課金されてしまう。
+API に届く前の入口 3 箇所で止める。判定は `Payjp_Settings::is_supported_currency()` に集約している。
+
+| 入口 | 見る通貨 | 非対応のとき |
+|---|---|---|
+| `is_available()` | order-pay ページでは注文の通貨、それ以外は `get_woocommerce_currency()` | ゲートウェイを隠す。Block Checkout も `is_active()` 経由で追従する |
+| `process_payment()`（card / PayPay） | `$order->get_currency()` | 通知を出して `failure`。古いチェックアウト画面や Store API の既存注文の支払い（`CheckoutOrder`）は、ストア通貨で判定された `is_available()` を通過できるため、ここでも止める |
+| `Payjp_Subscriptions::handle_scheduled_payment()` | `$renewal_order->get_currency()` | 注文を `failed` にしてメモを残す。$0 の更新は API を呼ばないので対象外 |
+
+- 多通貨プラグインは `woocommerce_currency` をフィルタするので、`get_option( 'woocommerce_currency' )` は
+  使わない。注文があるときは注文の通貨を見る
+- 通貨で隠れたゲートウェイは理由が見えないので、PAY.JP 設定ページに通知を出す（`output_currency_notice()`）
+- `receipt_page()` も非対応通貨の注文にはウィジェットを出さない。`payment_scripts()` が早期 return するので、
+  出すと押しても動かないボタンになる
+- 公式ドキュメントに対応通貨の一覧は無い。根拠は `/v2/guide/developers/error-response` のバリデーション
+  エラー例（`currency`: `Input should be 'jpy'`）と、コード例がすべて `jpy` であること
+
+決済確定時（Webhook / `handle_return()` / ポーラー）にフローの金額・通貨を注文と照合することはしていない。
+入口を閉じたので JPY 以外のフローは新規に作られず、残るのは「すでに課金された後に不一致が見つかった」ときの
+扱いで、これは #22 / #23 / #25 のガードと合わせて設計する別の問題になる（`docs/review-backlog.md`）。
 
 ### 支払い方法変更の正当性判定（`class-payjp-loader.php`）
 

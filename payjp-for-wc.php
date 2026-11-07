@@ -14,7 +14,7 @@
  * Text Domain: payjp-for-wc
  * Domain Path: /languages
  * WC requires at least: 9.0
- * WC tested up to: 11.2.1
+ * WC tested up to: 11.2.2
  *
  * @package Payjp_For_WooCommerce
  */

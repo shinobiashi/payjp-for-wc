@@ -3,7 +3,7 @@ Contributors:      payjp4woocommerce
 Tags:              woocommerce, payment, payjp, paypay, checkout
 Requires at least: 6.9
 Tested up to:      7.1
-Stable tag:        1.0.0
+Stable tag:        1.0.1
 Requires PHP:      8.3
 WC requires at least: 9.0
 WC tested up to:   11.2.1
@@ -150,6 +150,11 @@ Yes. The plugin is compatible with WordPress multisite. Each site in the network
 
 == Changelog ==
 
+= 1.0.1 =
+* Added: A notice on the PAY.JP settings page now explains why the payment methods are unavailable when the store currency is not Japanese yen (JPY).
+* Fixed: Order totals were sent to PAY.JP without currency conversion, so a USD 100.00 order could be charged as ¥100. PAY.JP payment methods are now hidden at checkout, and payment is refused, when the store or order currency is not JPY.
+* Fixed: Subscription renewals in a currency other than JPY are now marked as failed with an order note and are not sent to PAY.JP.
+
 = 1.0.0 =
 Initial release.
 
@@ -168,6 +173,9 @@ Initial release.
 * Clean uninstall that removes all plugin options.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+PAY.JP supports only Japanese yen. Stores and orders in any other currency can no longer pay with PAY.JP, which stops a USD 100.00 order from being charged as ¥100. Recommended update.
 
 = 1.0.0 =
 Initial release.

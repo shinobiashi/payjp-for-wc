@@ -187,11 +187,11 @@ npm run lint:css     # CSS lint
 - 10up のデプロイはワークスペース全体を `.distignore` で rsync する。`release.yml` でワークスペースに
   生成物を足したら `.distignore` にも足す（リリース ZIP が配布物に混入しかけた。#36 の教訓）
 - `Tested up to` の更新は必ず実環境で動作確認してから（wp-env は `core: null` で常に最新 WP。
-  WC はベータ版が入ることがあるので、先に WC のバージョンを確かめる）
+  WC はベータ版が入ることがあるので、先に WC のバージョンを確かめる。固定する手順は `docs/testing.md`）
 - readme.txt の Description 内の小見出しは `###` を使う。`== Description ==` の直後に `=== … ===` を
   置くと、WP.org のパーサーが Description を空と判定し、Short Description を先頭に補ってしまう（#37 の教訓）
 - readme に表は使わない。WP.org の kses で除去され、翻訳対象にもならない（抽出されるのは見出し・`dt`・
   `li`・`p` だけ）。ラベル付きの箇条書きにする
 - readme.txt の文言を変えたら `docs/wporg/` の PO も同じ PR で更新し、取り込みは新しい readme の公開後に
-  行う（Stable Readme の原文は stable tag の readme から作られる）。機能の主張は、クライアントの文面でも
+  行う（Stable Readme の原文は stable tag の readme から作られる。Changelog も翻訳対象で、Upgrade Notice は対象外）。機能の主張は、クライアントの文面でも
   実装で裏を取る（#37 で「金額変更」が未実装と判明）

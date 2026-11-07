@@ -6,7 +6,7 @@ description: PAY.JP for WooCommerce のバージョンを上げてリリース�
 # バージョンリリーススキル（payjp-for-wc）
 
 このプラグインをバージョンアップするたびに触る箇所は毎回同じ（手順 2 の 6 ファイル + readme の
-changelog）で、過去のリリースコミット（例: `f79d509` 0.9.4→、`d9ea11b`/`c38125b` 0.9.5→、
+changelog + `docs/wporg/` の PO）で、過去のリリースコミット（例: `f79d509` 0.9.4→、`d9ea11b`/`c38125b` 0.9.5→、
 `d92cf4f` 1.0.0）がそのままテンプレートになる。このスキルはその手順を再現する。
 
 ## 前提
@@ -29,12 +29,14 @@ changelog）で、過去のリリースコミット（例: `f79d509` 0.9.4→、
 
 ### 1. 前回リリース以降の変更点を集める
 
-前回のバージョンアップコミットを探して差分を取る:
+前回のリリースタグとの差分を取る:
 
 ```bash
-git log --oneline --all --grep="^chore: \(update\|bump\) version" -i | head -5
-git log --oneline <前回リリースコミット>..HEAD
+git log --oneline "$(git describe --tags --abbrev=0)"..HEAD
 ```
+
+`chore: update/bump version` のコミットを grep しない。squash 後の題名は `chore: release X.Y.Z (#N)` なので、
+古いリリースを前回と取り違える（1.0.1 の準備では 0.9.6 が返った）。
 
 ユーザー影響のある変更（`fix:` / `feat:`、PR番号付きのマージコミット）を中心に拾う。
 `docs:` や内部リファクタのみのコミットは changelog に載せない。各コミットの詳細は
@@ -73,6 +75,10 @@ POT 側の値で上書きしない（#35 の教訓）。**どちらもバージ�
 
 `== Upgrade Notice ==` の直後にも 1〜3 文程度の要約を追記する
 （過去の例: 「Recommended update.」「No functional changes. Safe to update.」等の締め）。
+
+追加した Changelog の各行は `docs/wporg/payjp-for-wc-stable-readme-ja.po` にも訳を足し、`PO-Revision-Date` を更新する。
+既存の Changelog の項目と同じく `#. Found in changelog list item.` と `#, gp-priority: low` を付ける。
+Upgrade Notice は WP.org の抽出対象ではないので PO に入れない。
 
 ### 4. Tested up to を更新する（指定があれば）
 
@@ -118,6 +124,9 @@ main でタグ `vX.Y.Z` を push すると、`.github/workflows/release.yml` が
 - **タグの push はユーザーが明示的に指示するまで行わない**（グローバル規約）。条件が揃ったら状況を報告して待つ。
 - push 後は Actions の run を確認し、`https://api.wordpress.org/plugins/info/1.0/payjp-for-wc.json` の
   `version` で反映を確かめる。WP.org 側のチェックで反映まで最大 24 時間かかるので、遅くても再コミットしない。
+  デプロイ直後の API は応答が揺れる（1.0.1 の直後に 1.0.0 が返った）ので、連続して同じ値が返ることと公開ページの表示で判断する。
+- 公開後、`docs/wporg/payjp-for-wc-stable-readme-ja.po` を translate.wordpress.org の Stable Readme へ取り込む。
+  新しい原文が GlotPress に現れてから行う。翻訳の権限が必要なので、ユーザーの作業として報告する。
 
 ## 検証
 
@@ -125,6 +134,7 @@ main でタグ `vX.Y.Z` を push すると、`.github/workflows/release.yml` が
       `Project-Id-Version` を含む）
 - [ ] `== Changelog ==` の新エントリが既存エントリの直前（最新が先頭）に入っている
 - [ ] `== Upgrade Notice ==` にも新バージョンの要約がある
+- [ ] Changelog の新しい行の訳が `docs/wporg/` の PO に入っている
 - [ ] Tested up to を更新した場合、readme.txt と payjp-for-wc.php ヘッダーの両方が揃っている
 - [ ] PHPCS / PHPStan がエラー0件
 - [ ] コミット・プッシュはしていない（ユーザーの手動作業として残す）

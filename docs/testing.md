@@ -56,6 +56,25 @@ msgfmt -o languages/payjp-for-wc-ja.mo languages/payjp-for-wc-ja.po
   メール送信は WP Mail Logging、cron ジョブは WP Crontrol、
   クエリ・フックのデバッグは Query Monitor で確認できる。
 
+## WC を特定バージョンに固定して確認する
+
+`WC tested up to` を更新する前に使う。`.wp-env.json` の `woocommerce.zip` はベータ版を落とすことがあり、
+`wp plugin install --force` はマウント先を壊すおそれがあるので、gitignore 済みの `.wp-env.override.json` で差し替える。
+
+1. `https://downloads.wordpress.org/plugin/woocommerce.X.Y.Z.zip` を scratchpad に展開する
+2. `.wp-env.override.json` の `plugins` に `.wp-env.json` の一覧を写し、WC の URL だけを展開先の絶対パスに替える
+   （override は一覧を丸ごと置き換える。ディレクトリ名は `woocommerce` のままにする）
+3. `npm run env:start` のあと、`wp plugin list` で WC のバージョンを確かめる
+4. テストキーがダミーなら、`pre_http_request` で `PAYJP_API_BASE` 宛ての応答を返す一時 mu-plugin を
+   `docker cp` で `wp-content/mu-plugins/` に置く
+5. Store API で注文 → order-pay を表示 → `/?payjp-return=1&order_id=<ID>&key=<注文キー>` へアクセスし、
+   注文が `processing` になること、`wp-content/debug.log` に新しいエラーが無いことを確かめる
+6. テスト注文、mu-plugin、`.wp-env.override.json` を削除し、`npm run env:start` で元の WC に戻す
+
+- `localhost` が IPv6 で別のプロセスに届く環境では `curl -4` を使う。
+- 古い WC へ差し替えても DB は戻らず、`woocommerce_version` は新しい版のまま残る。結果を報告するときに書き添える。
+- 影響の見当は、前後の ZIP の `src/StoreApi/` と `includes/class-wc-checkout.php` を `diff` すると付けやすい。
+
 ## PAY.JP v2 ドキュメント
 
 | リソース | URL |
